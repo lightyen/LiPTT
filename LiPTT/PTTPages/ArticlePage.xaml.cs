@@ -40,6 +40,7 @@ namespace LiPTT
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            LoadingIndicator.IsActive = true;
             article = LiPTT.CurrentArticle;
 
             ArticleHeaderListBox.Items.Clear();
@@ -111,6 +112,8 @@ namespace LiPTT
                     webview.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
                 }
             }
+
+            LoadingIndicator.IsActive = false;
         }
 
         private async Task LoadArticle(ScreenBuffer screen)

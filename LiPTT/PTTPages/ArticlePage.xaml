@@ -59,6 +59,9 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Grid>
+            <Grid Grid.Column="1" Grid.RowSpan="3">
+                <ProgressRing x:Name="LoadingIndicator" IsActive="True" Width="100" Height="100"/>
+            </Grid>
             <Grid Grid.Row="2" Grid.Column="1">
                 <ScrollViewer x:Name="ContentScrollViewer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalScrollMode="Disabled" VerticalScrollMode="Enabled" >
                     <StackPanel>

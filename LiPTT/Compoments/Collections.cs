@@ -242,15 +242,52 @@ namespace LiPTT
                     //內文(非網址)
                     else
                     {
-                        //row++; ParsedLine++;
+                        int color = RawLines[row][0].ForegroundColor;
+                        int index = 0;
+                        for (int i = 0; i < RawLines[row].Length; i++)
+                        {
+                            Block b = RawLines[row][i];
+                            if (color != b.ForegroundColor)
+                            {
+                                string text = LiPTT.GetString(RawLines[row], index, i - index);
+                                Run run = new Run()
+                                {
+                                    Text = text.Replace('\0', ' '),
+                                    FontSize = ArticleFontSize,
+                                    FontFamily = ArticleFontFamily,
+                                    Foreground = GetForegroundBrush(RawLines[row][index]),
+                                };
+                                paragraph.Inlines.Add(run);
+                                index = i;
+                                color = b.ForegroundColor;
+                            }
+                        }
+
+                        if (index + 1 < RawLines[row].Length)
+                        {
+                            string text = LiPTT.GetString(RawLines[row], index, RawLines[row].Length - index);
+                            Run run = new Run()
+                            {
+                                Text = text.Replace('\0', ' '),
+                                FontSize = ArticleFontSize,
+                                FontFamily = ArticleFontFamily,
+                                Foreground = GetForegroundBrush(RawLines[row][index]),
+                            };
+                            paragraph.Inlines.Add(run);
+                        }
+
+                        paragraph.Inlines.Add(new LineBreak());
+                        /***
                         Run run = new Run()
                         {
                             Text = str.Replace('\0', ' '),
                             FontSize = ArticleFontSize,
                             FontFamily = ArticleFontFamily,
+                            Foreground = new SolidColorBrush(Colors.Yellow),
                         };
                         paragraph.Inlines.Add(run);
                         paragraph.Inlines.Add(new LineBreak());
+                        /***/
                     }
                 }
 
@@ -458,7 +495,48 @@ namespace LiPTT
             }
         }
 
-        public WebView GetYoutubeView(string youtubeID, double width = 0, double height = 0)
+        private SolidColorBrush GetForegroundBrush(Block b)
+        {
+            switch (b.ForegroundColor)
+            {
+                case 30:
+                    return b.Mode.HasFlag(AttributeMode.Bold) ?
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x80, 0x80)):
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00));
+                case 31:
+                    return b.Mode.HasFlag(AttributeMode.Bold) ?
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0x00, 0x00)):
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x00, 0x00));
+                case 32:
+                    return b.Mode.HasFlag(AttributeMode.Bold) ?
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xFF, 0x00)):
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x80, 0x00));
+                case 33:
+                    return b.Mode.HasFlag(AttributeMode.Bold) ?
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0x00)):
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x80, 0x00));
+                case 34:
+                    return b.Mode.HasFlag(AttributeMode.Bold) ?
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0xFF)):
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x80));
+                case 35:
+                    return b.Mode.HasFlag(AttributeMode.Bold) ?
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0x00, 0xFF)):
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x00, 0x80));
+                case 36:
+                    return b.Mode.HasFlag(AttributeMode.Bold) ?
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xFF, 0xFF)):
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x80, 0x80));
+                case 37:
+                    return b.Mode.HasFlag(AttributeMode.Bold) ?
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF)):
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0));
+                default:
+                    return new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0));
+            }
+        }
+
+        private WebView GetYoutubeView(string youtubeID, double width = 0, double height = 0)
         {
             double w = width == 0 ? 800 : width;
             double h = height == 0 ? width * 0.5625 : height;
@@ -598,7 +676,13 @@ namespace LiPTT
             }
             else
             {
-                HyperlinkButton hyper = new HyperlinkButton() { Content = uri.OriginalString, NavigateUri = uri, FontSize = ArticleFontSize, FontFamily = ArticleFontFamily };
+                HyperlinkButton hyper = new HyperlinkButton()
+                {
+                    Content = new TextBlock() { Text = uri.OriginalString, IsTextSelectionEnabled = true },
+                    NavigateUri = uri,
+                    FontSize = ArticleFontSize,
+                    FontFamily = ArticleFontFamily,  
+                };
                 return Tuple.Create(insert_index, (object)hyper);
             }
         }

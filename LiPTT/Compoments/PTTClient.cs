@@ -1045,35 +1045,35 @@ namespace LiPTT
             switch (ForegroundColor)
             {
                 case 30: //black
-                    return (Mode & AttributeMode.Bold) == AttributeMode.Bold ?
+                    return Mode.HasFlag(AttributeMode.Bold) ?
                         new SharpDX.Color(0xFF808080) :
                         new SharpDX.Color(0xFF000000);
                 case 31: //red
-                    return (Mode & AttributeMode.Bold) == AttributeMode.Bold ?
+                    return Mode.HasFlag(AttributeMode.Bold) ?
                         new SharpDX.Color(0xFF0000FF) :
                         new SharpDX.Color(0xFF000080);
                 case 32: //green
-                    return (Mode & AttributeMode.Bold) == AttributeMode.Bold ?
+                    return Mode.HasFlag(AttributeMode.Bold) ?
                         new SharpDX.Color(0xFF00FF00) :
                         new SharpDX.Color(0xFF008000);
                 case 33: //yellow
-                    return (Mode & AttributeMode.Bold) == AttributeMode.Bold ?
+                    return Mode.HasFlag(AttributeMode.Bold) ?
                         new SharpDX.Color(0xFF00FFFF) :
                         new SharpDX.Color(0xFF008080);
                 case 34: //blue
-                    return (Mode & AttributeMode.Bold) == AttributeMode.Bold ?
+                    return Mode.HasFlag(AttributeMode.Bold) ?
                         new SharpDX.Color(0xFFFF0000) :
                         new SharpDX.Color(0xFF800000);
                 case 35: //magenta
-                    return (Mode & AttributeMode.Bold) == AttributeMode.Bold ?
+                    return Mode.HasFlag(AttributeMode.Bold) ?
                         new SharpDX.Color(0xFFFF00FF) :
                         new SharpDX.Color(0xFF800080);
                 case 36: //cyan
-                    return (Mode & AttributeMode.Bold) == AttributeMode.Bold ?
+                    return Mode.HasFlag(AttributeMode.Bold) ?
                         new SharpDX.Color(0xFFFFFF00) :
                         new SharpDX.Color(0xFF808000);
                 case 37: //white
-                    return (Mode & AttributeMode.Bold) == AttributeMode.Bold ?
+                    return Mode.HasFlag(AttributeMode.Bold) ?
                         new SharpDX.Color(0xFFFFFFFF) :
                         new SharpDX.Color(0xFFC0C0C0);
                 default: // dark white

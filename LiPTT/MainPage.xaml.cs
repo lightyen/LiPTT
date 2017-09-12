@@ -136,7 +136,7 @@ namespace LiPTT
             var pointerPosition = Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition;
             var x = pointerPosition.X - Window.Current.Bounds.X;
 
-            if (SplitView1.IsPaneOpen == false && x < this.ActualWidth * 0.025)
+            if (SplitView1.IsPaneOpen == false && x < this.ActualWidth * 0.010)
             {
                 SplitView1.IsPaneOpen = true;
             }

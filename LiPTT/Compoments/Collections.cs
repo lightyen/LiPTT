@@ -1211,7 +1211,13 @@ namespace LiPTT
                     if (v == 100) return "爆";
                     else return string.Format("{0}", v);
                 }
-                else if (v < 0) return string.Format("X{0}", -v / 10);
+                else if (v < 0)
+                {
+                    if (v == -100)
+                        return string.Format("XX");
+                    else
+                        return string.Format("X{0}", -v / 10);
+                }
                 else
                 {
                     return "  ";

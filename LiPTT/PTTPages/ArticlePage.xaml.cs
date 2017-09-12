@@ -223,22 +223,22 @@ namespace LiPTT
                 {
                     LiPTT.PttEventEchoed -= BrowseArticle;
 
-                    int k = 0;
-                    foreach (var t in await Task.WhenAll(article.SomeTasks))
-                    {
-                        if (t.Item1 < article.Content.Count)
-                        {
-                            article.Content.Insert(t.Item1 + k, t.Item2);
-                            k++;
-                        }
-                        else
-                        {
-                            article.Content.Add(t.Item2);
-                        }
-                    }
-
                     var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                     {
+                        int k = 0;
+                        foreach (var t in await Task.WhenAll(article.SomeTasks))
+                        {
+                            if (t.Item1 < article.Content.Count)
+                            {
+                                article.Content.Insert(t.Item1 + k, t.Item2);
+                                k++;
+                            }
+                            else
+                            {
+                                article.Content.Add(t.Item2);
+                            }
+                        }
+
                         article.Echoes.Percent = bound.Percent;
 
                         article.LoadCompleted = true;
@@ -256,22 +256,24 @@ namespace LiPTT
             {
                 LiPTT.PttEventEchoed -= BrowseArticle;
 
-                int k = 0;
-                foreach (var t in await Task.WhenAll(article.SomeTasks))
-                {
-                    if (t.Item1 < article.Content.Count)
-                    {
-                        article.Content.Insert(t.Item1 + k, t.Item2);
-                        k++;
-                    }
-                    else
-                    {
-                        article.Content.Add(t.Item2);
-                    }
-                }
+                
 
                 var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
+                    int k = 0;
+                    foreach (var t in await Task.WhenAll(article.SomeTasks))
+                    {
+                        if (t.Item1 < article.Content.Count)
+                        {
+                            article.Content.Insert(t.Item1 + k, t.Item2);
+                            k++;
+                        }
+                        else
+                        {
+                            article.Content.Add(t.Item2);
+                        }
+                    }
+
                     article.Echoes.Percent = bound.Percent;
 
                     article.LoadCompleted = true;

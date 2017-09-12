@@ -13,7 +13,6 @@ namespace LiPTT
     {
         public PttPageViewModel()
         {
-            State = "未連線";
             LiPTT.PttEventEchoed += LiPTT_PttEventEchoed;
         }
 
@@ -62,6 +61,10 @@ namespace LiPTT
                     overloading = true;
                     State = "登入太頻繁 請稍後在試";
                     break;
+                case PttState.Kicked:
+                    overloading = true;
+                    State = "誰踢我?";
+                    break;
                 case PttState.WrongPassword:
                     State = "密碼不對或無此帳號";
                     break;
@@ -76,9 +79,6 @@ namespace LiPTT
                     break;
                 case PttState.PressAny:
                     State = "請按任意鍵繼續...";
-                    break;
-                case PttState.Kicked:
-                    State = "誰踢我?";
                     break;
                 default:
                     State = "未定義狀態";

@@ -37,6 +37,10 @@ namespace LiPTT
             {
                 DefaultUserAccount();
             }
+
+            UserText.IsEnabled = true;
+            PasswordText.IsEnabled = true;
+            MemoAcount.IsEnabled = true;
         }
 
         private void PasswordText_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -128,6 +132,7 @@ namespace LiPTT
                         {
                             UserText.IsEnabled = false;
                             PasswordText.IsEnabled = false;
+                            MemoAcount.IsEnabled = false;
                         });
                     }
                     break;
@@ -143,6 +148,7 @@ namespace LiPTT
                             LiPTT.TestConnectionTimer.Stop();
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
+                            MemoAcount.IsEnabled = true;
                         });
 
                         LiPTT.TryDisconnect();

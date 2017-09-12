@@ -41,7 +41,7 @@ namespace LiPTT
             if (!LiPTT.IsConnected)
             {
                 LiPTT.TestConnectionTimer.Stop();
-                LiPTT.ClearSubscriptions();
+
                 PTTFrame.Navigate(typeof(LoginPage));
             }
         }

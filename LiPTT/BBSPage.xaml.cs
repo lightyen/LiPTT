@@ -35,12 +35,14 @@ namespace LiPTT
 
         private async void Client_BellPlayed(object sender, EventArgs e)
         {
-            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
-
+            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                /***
                 if (DefaultBell.CurrentState == Windows.UI.Xaml.Media.MediaElementState.Paused)
                 {
                     DefaultBell.Play();
                 }
+                /***/
             });
         }
 

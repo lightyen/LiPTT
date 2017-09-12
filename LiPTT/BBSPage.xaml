@@ -8,7 +8,7 @@
     mc:Ignorable="d"    
     NavigationCacheMode="Enabled">
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <MediaElement x:Name="DefaultBell" Source="ms-appx:///Sounds//default beep.wav" AutoPlay="True"></MediaElement>
+        <!--<MediaElement x:Name="DefaultBell" Source="ms-appx:///Sounds//default beep.wav" AutoPlay="True"></MediaElement>-->
         <Grid Margin="30">
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*" />

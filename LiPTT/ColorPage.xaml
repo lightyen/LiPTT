@@ -1,0 +1,144 @@
+﻿<Page
+    x:Class="LiPTT.ColorPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:LiPTT"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" NavigationCacheMode="Disabled" >
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" HorizontalAlignment ="Stretch" x:Name="ColorTable">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="11*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20*" />
+            <ColumnDefinition Width="20*" />
+            <ColumnDefinition Width="40*" />
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0" Grid.Row="0">
+            <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" VerticalAlignment="Stretch" Text="前景文字 Dark" FontSize="35"/>
+        </Grid>
+        <Grid Grid.Column="0" Grid.Row="1">
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Button Content="[30m" Tag="Black" Background="#FF000000" x:Name="ButtonFore30" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="1">
+                    <Button Content="[31m" Tag="Red" Background="#FF800000" x:Name="ButtonFore31" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="2">
+                    <Button Content="[32m" Tag="Green" Background="#FF008000" x:Name="ButtonFore32" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="3">
+                    <Button Content="[33m" Tag="Yellow" Background="#FF808000" x:Name="ButtonFore33" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="4">
+                    <Button Content="[34m" Tag="Blue" Background="#FF000080" x:Name="ButtonFore34" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="5">
+                    <Button Content="[35m" Tag="Magenta" Background="#FF800080" x:Name="ButtonFore35" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="6">
+                    <Button Content="[36m" Tag="Cyan" Background="#FF008080" x:Name="ButtonFore36" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="7">
+                    <Button Content="[37m" Tag="White" Background="#FFC0C0C0" x:Name="ButtonFore37" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+            </Grid>
+        </Grid>
+        <Grid Grid.Column="1" Grid.Row="0">
+            <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" VerticalAlignment="Stretch" Text="前景文字 Light" FontSize="35"/>
+        </Grid>
+        <Grid Grid.Column="1" Grid.Row="1">
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Button Content="[1;30m" Tag="Black" Background="#FF808080" x:Name="ButtonFore130" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="1">
+                    <Button Content="[1;31m" Tag="Red" Background="#FFFF0000" x:Name="ButtonFore131" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="2">
+                    <Button Content="[1;32m" Tag="Green" Background="#FF00FF00" x:Name="ButtonFore132" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="3">
+                    <Button Content="[1;33m" Tag="Yellow" Background="#FFFFFF00" x:Name="ButtonFore133" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="4">
+                    <Button Content="[1;34m" Tag="Blue" Background="#FFFF0080" x:Name="ButtonFore134" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="5">
+                    <Button Content="[1;35m" Tag="Magenta" Background="#FFFF00FF" x:Name="ButtonFore135" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="6">
+                    <Button Content="[1;36m" Tag="Cyan" Background="#FF00FFFF" x:Name="ButtonFore136" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="7">
+                    <Button Content="[1;37m" Tag="White" Background="#FFFFFFFF" x:Name="ButtonFore137" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+            </Grid>
+        </Grid>
+        <Grid Grid.Column="2" Grid.Row="0">
+            <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" VerticalAlignment="Stretch" Text="背景顏色" FontSize="35"/>
+        </Grid>
+        <Grid Grid.Column="2" Grid.Row="1">
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Button Content="[40m" Tag="Black" Background="#FF000000" x:Name="ButtonFore40" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="1">
+                    <Button Content="[41m" Tag="Red" Background="#FF800000" x:Name="ButtonFore41" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="2">
+                    <Button Content="[42m" Tag="Green" Background="#FF008000" x:Name="ButtonFore42" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="3">
+                    <Button Content="[43m" Tag="Yellow" Background="#FF808000" x:Name="ButtonFore43" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="4">
+                    <Button Content="[44m" Tag="Blue" Background="#FFBB0080" x:Name="ButtonFore44" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="5">
+                    <Button Content="[45m" Tag="Magenta" Background="#FF800080" x:Name="ButtonFore45" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="6">
+                    <Button Content="[46m" Tag="Cyan" Background="#FF008080" x:Name="ButtonFore46" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+                <Grid Grid.Row="7">
+                    <Button Content="[47m" Tag="White" Background="#FFC0C0C0" x:Name="ButtonFore47" FontSize="27" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>

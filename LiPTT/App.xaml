@@ -1,0 +1,20 @@
+﻿<Application
+    x:Class="LiPTT.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:LiPTT"
+    RequestedTheme="Dark">
+    <Application.Resources>
+        <local:ArticleIDStringFormatConverter x:Key="MyArticleIDStringFormatConverter" />
+        <local:LikeStringFormatConverter x:Key="MyLikeStringFormatConverter"/>
+        <local:ReadTypeColorConverter x:Key="MyReadTypeColorConverter"/>
+        <local:ReadTypeStringFormatConverter x:Key="MyReadTypeStringFormatConverter" />
+        <local:LikeColorStringFormatConverter x:Key="MyLikeColorStringFormatConverter" />
+        <local:DateTimeOffsetStringFormatConverter x:Key="MyDateTimeOffsetStringFormatConverter" />
+        <local:ReplyColorConverter x:Key="MyReplyColorConverter" />
+        <local:ReplyStringFormatConverter x:Key="MyReplyStringFormatConverter" />
+        <local:EchoEvaluationStringFormatConverter x:Key="MyEchoEvaluationStringFormatConverter" />
+        <local:EchoDateStringFormatConverter x:Key="MyEchoDateStringFormatConverter" />
+        <local:EchoEvaluationColorConverter x:Key="MyEchoEvaluationColorConverter" />
+    </Application.Resources>
+</Application>

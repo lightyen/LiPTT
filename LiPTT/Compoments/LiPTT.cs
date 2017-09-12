@@ -141,7 +141,7 @@ namespace LiPTT
         {
             Current.ScreenLocker.Wait();
 
-            var x = Current.Screen.ToStringArray();
+            //var x = Current.Screen.ToStringArray();
 
             if (Current.MatchPattern(@"瀏覽", 23))
             {
@@ -384,7 +384,7 @@ namespace LiPTT
 
         public static void PageEnd()
         {
-            Current.Send(new byte[] { (byte)'$' });
+            Current.Send(new byte[] { 0x24 }); //'$'
         }
 
         public static void SendMessage(string s)

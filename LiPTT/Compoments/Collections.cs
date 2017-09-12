@@ -432,11 +432,29 @@ namespace LiPTT
 
                 BitmapImage bmp = await task;
 
-                Image img = new Image() { Source = bmp, HorizontalAlignment = HorizontalAlignment.Stretch, Width = bmp.PixelWidth < 800 ? bmp.PixelWidth : double.NaN };
+                Image img = new Image() { Source = bmp, HorizontalAlignment = HorizontalAlignment.Stretch };
 
-                ColumnDefinition c1 = new ColumnDefinition { Width = new GridLength(2.0, GridUnitType.Star) };
-                ColumnDefinition c2 = new ColumnDefinition { Width = new GridLength(8.0, GridUnitType.Star) };
-                ColumnDefinition c3 = new ColumnDefinition { Width = new GridLength(2.0, GridUnitType.Star) };
+                double ratio = (double)bmp.PixelWidth / bmp.PixelHeight;
+
+                ColumnDefinition c1, c2, c3;
+
+                double space = 0.2; //也就是佔總寬的80%
+
+                if (ratio >= 1.0)
+                {
+                    c1 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
+                    c2 = new ColumnDefinition { Width = new GridLength((1 - space), GridUnitType.Star) };
+                    c3 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
+                }
+                else
+                {
+
+                    double x = ratio * (1- space) / 2.0;
+                    c1 = new ColumnDefinition { Width = new GridLength(space / 2.0 + x, GridUnitType.Star) };
+                    c2 = new ColumnDefinition { Width = new GridLength((1 - space) * ratio, GridUnitType.Star) };
+                    c3 = new ColumnDefinition { Width = new GridLength(space / 2.0 + x, GridUnitType.Star) };
+                }
+                
 
                 Grid ImgGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
 

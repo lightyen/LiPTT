@@ -188,12 +188,12 @@ namespace LiPTT
                     if (!pressAny)
                     {
                         pressAny = true;
-                        LiPTT.PressAnyKey();
+                        LiPTT.SendMessage(0x20, 0x24);
                     }
                     
                     break;
                 case PttState.Board:
-                    LiPTT.PttEventEchoed -= GoToBoard;
+                    LiPTT.PttEventEchoed -= GoToBoard; 
                     var t = LiPTT.RunInUIThread(() => {
                         LiPTT.Frame.Navigate(typeof(BoardPage));
                     });

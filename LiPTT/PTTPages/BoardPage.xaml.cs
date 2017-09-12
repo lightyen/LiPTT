@@ -31,38 +31,16 @@ namespace LiPTT
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if (!CheckBoard())
+            if (true)
             {
                 Debug.WriteLine(">>載入新看板");
-                LiPTT.PageEnd();
-                LiPTT.PttEventEchoed += PttEventEchoed_Initialize;
+                Initialize(LiPTT.Current.Screen);
+                UpdateUI();
             }
             else
             {
-                Debug.WriteLine(">>Cache看板");
-            }
-        }
-
-        private void CheckBoardEchoed(PTTProvider sender, LiPttEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
-        {
-
-        }
-
-        private void PttEventEchoed_Initialize(PTTProvider sender, LiPttEventArgs e)
-        {
-            switch (e.State)
-            {
-                case PttState.PressAny:
-                    LiPTT.PressAnyKey();
-                    break;
-                case PttState.Board:
-                    Initialize(e.Screen);
-                    break;
+                Debug.WriteLine(">>看板已存在");
+                UpdateUI();
             }
         }
 
@@ -95,6 +73,14 @@ namespace LiPTT
                 return false;
             }
             
+        }
+
+        private void UpdateUI()
+        {
+            var act = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                ArticleList.ItemsSource = LiPTT.ArticleCollection;
+            });
         }
 
         private void Initialize(ScreenBuffer screen)
@@ -344,18 +330,11 @@ namespace LiPTT
                 });
             }
 
-            LiPTT.PttEventEchoed -= PttEventEchoed_Initialize;
-
             if (id > 1)
             {
                 LiPTT.ArticleCollection.CurrentIndex = (uint)(id - 1);
                 LiPTT.ArticleCollection.HasMoreItems = true;
             }
-
-            action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-            {
-                ArticleList.ItemsSource = LiPTT.ArticleCollection;
-            });
         }
 
         //進入文章

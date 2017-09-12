@@ -98,7 +98,7 @@ namespace LiPTT
 
         public bool ParsedContent { get; private set; }
         public int PageDownCount { get; set; }
-        private int ParsedLine;
+        public int ParsedLine { get; set; }
         private Paragraph paragraph;
 
         private static double ArticleFontSize = 24.0;
@@ -110,6 +110,18 @@ namespace LiPTT
             "bit.ly",
             "ppt.cc",
         };
+
+        public void DefaultState()
+        {
+            LoadCompleted = false;
+            RawLines = new List<Block[]>();
+            Content = new List<object>();
+            ParsedLine = 0;
+            PageDownCount = 0;
+            ParsedContent = false;
+            SomeTasks = new List<Task<Tuple<int, object>>>();
+            Echoes = new EchoCollection() { };
+        }
 
         public Article()
         {
@@ -197,7 +209,7 @@ namespace LiPTT
                             Content.Add(CreateTextBlock(paragraph));
                             paragraph = new Paragraph();
                         }
-                            
+
                         string url = str.Substring(match.Index, match.Length);
 
                         //把下載任務收集一下
@@ -251,7 +263,6 @@ namespace LiPTT
                         }
 
                         echo.Evaluation = Evaluation.推;
-                        Echoes.Add(echo);
                     }
                     else if (str.StartsWith("噓"))
                     {
@@ -278,7 +289,6 @@ namespace LiPTT
                         }
 
                         echo.Evaluation = Evaluation.噓;
-                        Echoes.Add(echo);
                     }
                     else if (str.StartsWith("→"))
                     {
@@ -305,52 +315,124 @@ namespace LiPTT
                         }
 
                         echo.Evaluation = Evaluation.箭頭;
-                        Echoes.Add(echo);
                     }
-                    else if (str.StartsWith("※ 編輯:"))
+                    else if (str.StartsWith("※"))
                     {
-                        //Echo echo = new Echo() { Content = str };
-                        //Echoes.Add(echo);
+                        Debug.WriteLine(str);
+                        echo = null;
                     }
                     else
                     {
                         //原POの文
+                        Debug.WriteLine(str);
+                        echo = null;
                     }
+
+                    if (echo != null) Echoes.Add(echo);
                 }
             }
             else
-            {
-                /***
+            { 
                 //過濾推文
                 for (; row < RawLines.Count; row++, ParsedLine++)
                 {
-                    str = LiPTT.GetString(RawLines[row]);
+                    str = LiPTT.GetString(RawLines[row], 0, RawLines[row].Length - 13);
+
+                    Echo echo = new Echo();
 
                     if (str.StartsWith("推"))
                     {
-                        Echo echo = new Echo() { Evaluation = Evaluation.推 };
+                        int index = 2;
+                        int end = index;
+                        while (str[end] != ':') end++;
+
+                        string auth = str.Substring(index, end - index);
+
+                        echo.Author = auth.Trim();
+
+                        echo.Content = str.Substring(end + 1);
+
+                        string time = LiPTT.GetString(RawLines[row], 67, 11);
+                        //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
+                        try
+                        {
+                            System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
+                            echo.Date = DateTimeOffset.ParseExact(time, "MM/dd HH:mm", provider);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex.ToString());
+                        }
+
+                        echo.Evaluation = Evaluation.推;
                     }
                     else if (str.StartsWith("噓"))
                     {
-                        Echo echo = new Echo() { Evaluation = Evaluation.噓 };
+                        int index = 2;
+                        int end = index;
+                        while (str[end] != ':') end++;
+
+                        string auth = str.Substring(index, end - index);
+
+                        echo.Author = auth.Trim();
+
+                        echo.Content = str.Substring(end + 1);
+
+                        string time = LiPTT.GetString(RawLines[row], 67, 11);
+
+                        try
+                        {
+                            System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
+                            echo.Date = DateTimeOffset.ParseExact(time, "MM/dd HH:mm", provider);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex.ToString());
+                        }
+
+                        echo.Evaluation = Evaluation.噓;
                     }
                     else if (str.StartsWith("→"))
                     {
-                        Echo echo = new Echo() { Evaluation = Evaluation.箭頭 };
-                    }
-                    else if (str.StartsWith("※ 編輯:"))
-                    {
+                        int index = 2;
+                        int end = index;
+                        while (str[end] != ':') end++;
 
+                        string auth = str.Substring(index, end - index);
+
+                        echo.Author = auth.Trim();
+
+                        echo.Content = str.Substring(end + 1);
+
+                        string time = LiPTT.GetString(RawLines[row], 67, 11);
+
+                        try
+                        {
+                            System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
+                            echo.Date = DateTimeOffset.ParseExact(time, "MM/dd HH:mm", provider);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex.ToString());
+                        }
+
+                        echo.Evaluation = Evaluation.箭頭;
+                    }
+                    else if (str.StartsWith("※"))
+                    {
+                        Debug.WriteLine(str);
+                        echo = null;
                     }
                     else
                     {
                         //原POの文
+                        Debug.WriteLine(str);
+                        echo = null;
                     }
-                    
-                }
-                /****/
-            }
 
+                    if (echo != null) Echoes.Add(echo);
+                }
+            }
         }
 
         public WebView GetYoutubeView(string youtubeID, double width = 0, double height = 0)
@@ -923,7 +1005,7 @@ namespace LiPTT
                 {
                     Article.RawLines.Add(screen[i]);
                     echo = CreateEcho(screen[i]);
-                    this.Add(echo);
+                    if (echo != null) this.Add(echo);
                 }
             }
             else if (Percent == 100)
@@ -933,7 +1015,7 @@ namespace LiPTT
                 {
                     Article.RawLines.Add(screen[i]);
                     echo = CreateEcho(screen[i]);
-                    this.Add(echo);
+                    if (echo != null) this.Add(echo);
                 }
             }
 
@@ -1025,14 +1107,15 @@ namespace LiPTT
 
                 echo.Evaluation = Evaluation.箭頭;
             }
-            else if (str.StartsWith("※ 編輯:"))
+            else if (str.StartsWith("※"))
             {
-                //Echo echo = new Echo() { Content = str };
-                //Echoes.Add(echo);
+                Debug.WriteLine(str);
+                echo = null;
             }
             else
             {
-                //原POの文
+                Debug.WriteLine(str);
+                echo = null;
             }
 
             return echo;

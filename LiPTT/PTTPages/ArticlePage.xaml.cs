@@ -47,10 +47,7 @@ namespace LiPTT
             ParagraphControl.ItemsSource = null;
             EchoView.ItemsSource = null;
 
-            article.LoadCompleted = false;
-            article.Content.Clear();
-            article.RawLines.Clear();
-            article.Echoes.Clear();
+            article.DefaultState();
 
             LoadingExtraData = false;
             pressAny = false;
@@ -243,6 +240,7 @@ namespace LiPTT
                     var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                     {
                         article.Echoes.Percent = bound.Percent;
+
                         article.LoadCompleted = true;
                         UpdateUI();
                         article.Echoes.HasMoreItems = true;
@@ -275,6 +273,7 @@ namespace LiPTT
                 var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
                     article.Echoes.Percent = bound.Percent;
+
                     article.LoadCompleted = true;
                     UpdateUI();
                     article.Echoes.HasMoreItems = false;

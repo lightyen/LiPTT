@@ -678,7 +678,7 @@ namespace LiPTT
             {
                 HyperlinkButton hyper = new HyperlinkButton()
                 {
-                    Content = new TextBlock() { Text = uri.OriginalString, IsTextSelectionEnabled = true },
+                    Content = new TextBlock() { Text = uri.OriginalString },
                     NavigateUri = uri,
                     FontSize = ArticleFontSize,
                     FontFamily = ArticleFontFamily,  

@@ -19,7 +19,8 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml;
-using Windows.ApplicationModel.Core;
+using System.Runtime.CompilerServices;
+
 namespace LiPTT
 {
     //https://www.ptt.cc/bbs/PttNewhand/M.1265292872.A.991.html
@@ -74,12 +75,11 @@ namespace LiPTT
         public string[] Leaders { get; set; }
     }
 
-    public class Article : IComparable<Article>
+    public class Article : IComparable<Article>, INotifyPropertyChanged
     {
         public uint ID { get; set; } //文章流水號
         public string AID { get; set; } //文章代碼
         public int Star { get; set; }
-        public ReadType ReadType { get; set; }
         public bool Deleted { get; set; }
         public int Like { get; set; } //推/噓
         public DateTimeOffset Date { get; set; }
@@ -100,9 +100,22 @@ namespace LiPTT
         public int PageDownCount { get; set; }
         public int ParsedLine { get; set; }
         private Paragraph paragraph;
-
         private static double ArticleFontSize = 24.0;
         private FontFamily ArticleFontFamily;
+
+        private ReadType readtype;
+        public ReadType ReadType
+        {
+            get
+            {
+                return readtype;
+            }
+            set
+            {
+                readtype = value;
+                NotifyPropertyChanged("ReadType");
+            }
+        }
 
         private static HashSet<string> ShortCutSet = new HashSet<string>() {
             "goo.gl",
@@ -110,6 +123,16 @@ namespace LiPTT
             "bit.ly",
             "ppt.cc",
         };
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }         
+        }
 
         public void DefaultState()
         {

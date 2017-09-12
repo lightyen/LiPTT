@@ -342,20 +342,20 @@ namespace LiPTT
 
             if (LiPTT.CurrentArticle.ID != int.MaxValue)
             {
-                var item = LiPTT.ArticleCollection.FirstOrDefault(i => i.ID == LiPTT.CurrentArticle.ID);
+                Article article = LiPTT.ArticleCollection.FirstOrDefault(i => i.ID == LiPTT.CurrentArticle.ID);
 
-                if (item != null)
+                if (article != null)
                 {
-                    item.ReadType = item.ReadType & ReadType.已讀;
+                    article.ReadType = article.ReadType & ReadType.已讀;
                 }
             }
             else //置底文
             {
-                var item = LiPTT.ArticleCollection.FirstOrDefault(i => (i.ID == int.MaxValue) && (i.Star == LiPTT.CurrentArticle.Star));
+                Article article = LiPTT.ArticleCollection.FirstOrDefault(i => (i.ID == int.MaxValue) && (i.Star == LiPTT.CurrentArticle.Star));
 
-                if (item != null)
+                if (article != null)
                 {
-                    item.ReadType = item.ReadType & ReadType.已讀;
+                    article.ReadType = article.ReadType & ReadType.已讀;
                 }
             }
         }

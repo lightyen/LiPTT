@@ -98,6 +98,8 @@ namespace LiPTT
             star = 0;
             uint id = 0;
 
+            LiPTT.ArticleCollection = this.DataContext as ArticleCollection;
+
             var x = screen.ToStringArray();
 
             IAsyncAction action;
@@ -169,7 +171,8 @@ namespace LiPTT
             /////////////////////////////
             ///置底文 and 其他文章
             ///
-            LiPTT.ArticleCollection = new ArticleCollection() { BoardInfo = Board };
+            LiPTT.ArticleCollection.Clear();
+            LiPTT.ArticleCollection.BoardInfo = Board;
 
             for (int i = 22; i >= 3; i--)
             {

@@ -178,7 +178,7 @@ namespace LiPTT
                 State = PttState.SearchBoard;
                 OnPttEventEchoed(State, pTTProvider.Screen);
             }
-            else if (Current.MatchPattern(@"文章選讀", 23) && !Current.MatchPattern(@"瀏覽", 23))
+            else if (Current.MatchPattern(@"【板主", 0))
             {
                 Debug.WriteLine("看板");
                 State = PttState.Board;

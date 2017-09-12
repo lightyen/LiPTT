@@ -16,6 +16,7 @@
 
         <Grid Grid.Row="0">
             <Button Content="Load" Click="Button_Click" Width="200" VerticalAlignment="Stretch"/>
+            <Button Content="StopVideo" Click="StopVideo" Margin="305,0,0,0" Height="135" Width="153" ></Button>
             <Rectangle x:Name="RectHello" VerticalAlignment="Stretch" HorizontalAlignment="Left" Margin="600,0,0,0" Width="300">
                 <Rectangle.Fill>
                     <SolidColorBrush Color="Red"/>
@@ -38,7 +39,7 @@
                     <RowDefinition Height="10*"/>
                 </Grid.RowDefinitions>
                 <WebView Grid.Row="0" x:Name="YoutubeWebView" Width="800" NavigationCompleted="WebView_NavigationCompleted" ContainsFullScreenElementChanged="WebView_ContainsFullScreenElementChanged"/>
-                
+
                 <RichTextBlock Grid.Row="1">
                     <Paragraph>
                         <Run Text="Hsdfsdfsd sdfeo sdfwesd sdfwe sdfe sdfe"></Run>
@@ -52,12 +53,12 @@
                         <Run Text="Hsdfsdfsd sdfeo sdfwesd sdfwe sdfe sdfe"></Run>
                         <LineBreak/>
                         <InlineUIContainer>
-                            
+
                         </InlineUIContainer>
                         <LineBreak/>
                     </Paragraph>
                 </RichTextBlock>
-                
+
                 <Rectangle Fill="Red" Margin="38,481,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="300"  Height="92"></Rectangle>
                 <Rectangle Fill="Bisque" Margin="106,658,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="600" Height="411"></Rectangle>
             </Grid>

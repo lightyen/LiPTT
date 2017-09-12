@@ -22,14 +22,11 @@ namespace LiPTT
 
         private Queue<string> cache_filename;
 
-        //private SemaphoreSlim locker;
-
         public ImageCache()
         {
             MaxMemoryCacheCount = 500;
             CacheDuration = TimeSpan.FromHours(12);
             cache_filename = new Queue<string>();
-            //locker = new SemaphoreSlim(1, 1);
         }
 
         public async Task ClearAllCache()
@@ -84,11 +81,7 @@ namespace LiPTT
             {
                 string name = arr.Last();
 
-                //await locker.WaitAsync();
-                
                 cache_filename.Enqueue(name);
-
-                
 
                 var file = await GetFileFromLocalCache(name);
 
@@ -98,8 +91,6 @@ namespace LiPTT
                     await SaveFile(buffer, name);
                     file = await GetFileFromLocalCache(name);
                 }
-
-                //locker.Release();
 
                 return await GetBitmapImage(file);
             }

@@ -173,6 +173,20 @@ namespace LiPTT
 
             YoutubeWebView.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
         }
+
+        private async void StopVideo(object sender, RoutedEventArgs e)
+        {
+            string script = @"player.stopVideo();";
+            try
+            {
+                string returnStr = await YoutubeWebView.InvokeScriptAsync("eval", new string[] { script });
+
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Script Running Error" + ex.ToString() + script);
+            }
+        }
     }
 
     public struct YoutubeBorderInfo

@@ -115,7 +115,9 @@ namespace LiPTT
 
         private async Task LoadArticle(ScreenBuffer screen)
         {
-            var x = screen.ToStringArray();
+            //var x = screen.ToStringArray();
+
+            article.ViewWidth = ContentScrollViewer.ViewportWidth;
 
             IAsyncAction action = null;
 
@@ -216,6 +218,8 @@ namespace LiPTT
                 });
             }
 
+            article.PageDownPercent = bound.Percent;
+
             //捲到下一頁
             if (bound.Percent < 100)
             {
@@ -248,15 +252,12 @@ namespace LiPTT
                 }
                 else
                 {
-                    article.PageDownCount++;
                     LiPTT.PageDown();
                 }
             }
             else
             {
                 LiPTT.PttEventEchoed -= BrowseArticle;
-
-                
 
                 var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
@@ -310,8 +311,26 @@ namespace LiPTT
             }
         }
 
-        private void GoBack_Click(object sender, RoutedEventArgs e)
+        private async void GoBack_Click(object sender, RoutedEventArgs e)
         {
+            foreach (var o in LiPTT.CurrentArticle.Content)
+            {
+                if (o is WebView youtu)
+                {
+                    string script = @"document.getElementById('player').stopVideo();";
+
+                    try
+                    {
+                        await youtu.InvokeScriptAsync("eval", new string[] { script });
+                    }
+                    catch (Exception ex)
+                    {
+                        youtu.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
+                        Debug.WriteLine(ex.ToString());
+                    }
+                }
+            }
+
             GoBack();
         }
 
@@ -319,6 +338,7 @@ namespace LiPTT
         {
             if (LiPTT.State == PttState.Article && article.LoadCompleted)
             {
+                
                 LiPTT.PttEventEchoed += PttEventEchoed_UpdateArticleTag;
                 LiPTT.Left();
             }

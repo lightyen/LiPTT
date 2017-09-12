@@ -605,8 +605,6 @@ namespace LiPTT
 
         private void SearchIDEnter(PTTProvider sender, LiPttEventArgs e)
         {
-            LiPTT.PttEventEchoed -= SearchIDEnter;
-
             Match match;
 
             if ((match = new Regex("請按任意鍵繼續").Match(e.Screen.ToString(23))).Success)
@@ -615,6 +613,8 @@ namespace LiPTT
             }
             else
             {
+                LiPTT.PttEventEchoed -= SearchIDEnter;
+
                 Article article = ParseArticleTag(e.Screen.CurrentBlocks);
 
                 if (article != null)
@@ -626,13 +626,15 @@ namespace LiPTT
                         LiPTT.Frame.Navigate(typeof(ArticlePage));
                     });
 
-                } 
+                }
+
+                var action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    SearchIDTextBox.Text = "";
+                });
             }
 
-            var action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-            {
-                SearchIDTextBox.Text = "";
-            });
+            
 
         }
     }

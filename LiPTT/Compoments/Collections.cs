@@ -96,8 +96,10 @@ namespace LiPTT
         public EchoCollection Echoes { get; set; } //推文集
         public List<Task<Tuple<int, object>>>  SomeTasks { get; set; }
 
+        public double ViewWidth { get; set; }
+
         public bool ParsedContent { get; private set; }
-        public int PageDownCount { get; set; }
+        public int PageDownPercent { get; set; }
         public int ParsedLine { get; set; }
         private Paragraph paragraph;
         private static double ArticleFontSize = 24.0;
@@ -117,11 +119,12 @@ namespace LiPTT
             }
         }
 
-        private static HashSet<string> ShortCutSet = new HashSet<string>() {
-            "goo.gl",
+        private static HashSet<string> ShortCutSet = new HashSet<string>()
+        { 
             "youtu.be",
-            "bit.ly",
-            "ppt.cc",
+            //"goo.gl",
+            //"bit.ly",
+            //"ppt.cc",
         };
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -140,7 +143,7 @@ namespace LiPTT
             RawLines = new List<Block[]>();
             Content = new List<object>();
             ParsedLine = 0;
-            PageDownCount = 0;
+            PageDownPercent = 0;
             ParsedContent = false;
             SomeTasks = new List<Task<Tuple<int, object>>>();
             Echoes = new EchoCollection() { };
@@ -151,7 +154,7 @@ namespace LiPTT
             RawLines = new List<Block[]>();
             Content = new List<object>();
             ParsedLine = 0;
-            PageDownCount = 0;
+            PageDownPercent = 0;
             ParsedContent = false;
             SomeTasks = new List<Task<Tuple<int, object>>>();
             var action = LiPTT.RunInUIThread(() =>
@@ -299,6 +302,16 @@ namespace LiPTT
                         paragraph.Inlines.Add(new LineBreak());
                         /***/
                     }
+                }
+
+                if (PageDownPercent == 100 && ParsedContent == false)
+                {
+                    if (paragraph.Inlines.Count > 0)
+                    {
+                        Content.Add(CreateTextBlock(paragraph));
+                        paragraph = new Paragraph();
+                    }
+                    ParsedContent = true;
                 }
 
                 //過濾推文
@@ -574,9 +587,9 @@ namespace LiPTT
 
         private WebView GetYoutubeView(string youtubeID, double width = 0, double height = 0)
         {
-            double w = width == 0 ? 800 : width;
-            double h = height == 0 ? width * 0.5625 : height;
-            WebView wv = new WebView() { Width = w, Height = h, DefaultBackgroundColor = Windows.UI.Colors.Black };
+            double w = width == 0 ? ViewWidth * 0.8 : width;
+            double h = height == 0 ? w * 0.5625 : height;
+            WebView wv = new WebView() { Width = w, Height = h, DefaultBackgroundColor = Colors.Black };
 
             wv.DOMContentLoaded += async (a, b) => {
 
@@ -634,7 +647,7 @@ namespace LiPTT
         {
             Uri uri = new Uri(url);
 
-            /***
+            //***
             if (IsShortCut(uri.Host))
             {
                 WebRequest webRequest = WebRequest.Create(url);
@@ -643,10 +656,10 @@ namespace LiPTT
             }
             /***/
 
+            Debug.WriteLine("request: " + uri.OriginalString);
+
             if (IsPictureUri(uri))
             {
-                Debug.WriteLine("request: " + uri.OriginalString);
-
                 Task<BitmapImage> task = LiPTT.ImageCache.GetFromCacheAsync(uri);
 
                 BitmapImage bmp = await task;
@@ -667,7 +680,6 @@ namespace LiPTT
                 }
                 else
                 {
-
                     double x = ratio * (1- space) / 2.0;
                     c1 = new ColumnDefinition { Width = new GridLength(space / 2.0 + x, GridUnitType.Star) };
                     c2 = new ColumnDefinition { Width = new GridLength((1 - space) * ratio, GridUnitType.Star) };
@@ -697,17 +709,17 @@ namespace LiPTT
             else if (IsYoutubeUri(uri))
             {
                 string[] query = uri.Query.Split(new char[] { '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
-
                 string youtubeID = "";
-
                 foreach (string s in query)
                 {
                     if (s.StartsWith("v"))
                     {
                         youtubeID = s.Substring(s.IndexOf("=") + 1);
+                        break;
                     }
                 }
-                WebView webview = GetYoutubeView(youtubeID, 800);
+                WebView webview = GetYoutubeView(youtubeID);
+
                 return Tuple.Create(insert_index, (object)webview);
             }
             else

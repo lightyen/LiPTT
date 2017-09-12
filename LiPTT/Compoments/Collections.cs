@@ -185,7 +185,11 @@ namespace LiPTT
 
                     if ((match = new Regex("(發信站:)").Match(str)).Success)
                     {
-                        Content.Add(CreateTextBlock(paragraph));
+                        if (paragraph.Inlines.Count > 0)
+                        {
+                            Content.Add(CreateTextBlock(paragraph));
+                            paragraph = new Paragraph();
+                        }
 
                         TextBlock tb = new TextBlock()
                         {
@@ -194,14 +198,17 @@ namespace LiPTT
                             FontSize = ArticleFontSize - 8,
                             FontFamily = ArticleFontFamily
                         };
-
                         Content.Add(tb);
-
-                        paragraph = new Paragraph();
                         Debug.WriteLine(str);
                     }
                     else if ((match = new Regex("(文章網址:)").Match(str)).Success)
                     {
+                        if (paragraph.Inlines.Count > 0)
+                        {
+                            Content.Add(CreateTextBlock(paragraph));
+                            paragraph = new Paragraph();
+                        }
+
                         if ((match = new Regex(http_exp).Match(str)).Success)
                         {
                             Uri uri = new Uri(str.Substring(match.Index, match.Length));
@@ -242,6 +249,7 @@ namespace LiPTT
                     //內文(非網址)
                     else
                     {
+                        //***
                         int color = RawLines[row][0].ForegroundColor;
                         int index = 0;
                         for (int i = 0; i < RawLines[row].Length; i++)
@@ -254,8 +262,9 @@ namespace LiPTT
                                 {
                                     Text = text.Replace('\0', ' '),
                                     FontSize = ArticleFontSize,
-                                    FontFamily = ArticleFontFamily,
+                                    FontFamily = ArticleFontFamily,      
                                     Foreground = GetForegroundBrush(RawLines[row][index]),
+                                    
                                 };
                                 paragraph.Inlines.Add(run);
                                 index = i;
@@ -277,6 +286,7 @@ namespace LiPTT
                         }
 
                         paragraph.Inlines.Add(new LineBreak());
+                        /***/
                         /***
                         Run run = new Run()
                         {
@@ -533,6 +543,32 @@ namespace LiPTT
                         new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0));
                 default:
                     return new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0));
+            }
+        }
+
+        /// TextBlock系列似乎沒有Background......
+        private SolidColorBrush GetBackgroundBrush(Block b)
+        {
+            switch (b.ForegroundColor)
+            {
+                case 40:
+                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00));
+                case 41:
+                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x00, 0x00));
+                case 42:
+                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x80, 0x00));
+                case 43:
+                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x80, 0x00));
+                case 44:
+                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x80));
+                case 45:
+                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x00, 0x80));
+                case 46:
+                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x80, 0x80));
+                case 47:
+                    return new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0));
+                default:
+                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00));
             }
         }
 

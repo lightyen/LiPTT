@@ -1176,6 +1176,11 @@ namespace LiPTT
             }
         }
 
+        public Block[] CurrentBlocks
+        {
+            get { return Screen[Y]; }
+        }
+
         private AttributeMode CurrentMode
         {
             get; set;
@@ -1230,7 +1235,7 @@ namespace LiPTT
         /// <summary>
         /// 獲得某行字串資訊
         /// </summary>
-        /// <param name="row">列</param>
+        /// <param name="row">列 從0開始</param>
         /// <param name="begin_x">X游標位置</param>
         /// <param name="length">長度</param>
         /// <returns></returns>

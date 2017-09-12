@@ -54,7 +54,6 @@ namespace LiPTT
             LoadingExtraData = false;
             pressAny = false;
             article.Echoes.Article = article;
-            
 
 
             LiPTT.PttEventEchoed += ReadAIDandExtra;

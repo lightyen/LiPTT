@@ -42,6 +42,13 @@ namespace LiPTT
                 Debug.WriteLine(">>看板已存在");
                 UpdateUI();
             }
+
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+        }
+
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         }
 
         int star;
@@ -89,7 +96,7 @@ namespace LiPTT
             Match match;
             string str;
             star = 0;
-            int id = 0;
+            uint id = 0;
 
             var x = screen.ToStringArray();
 
@@ -175,18 +182,17 @@ namespace LiPTT
 
                 if (match.Success)
                 {
-                    article.ID = id = Convert.ToInt32(str.Substring(match.Index, match.Length));
+                    article.ID = id = Convert.ToUInt32(str.Substring(match.Index, match.Length));
+                }
+                else if (str.IndexOf('★') != -1)
+                {
+                    article.ID = uint.MaxValue;
+                    article.Star = star++;
+                    LiPTT.ArticleCollection.StarCount = article.Star;
                 }
                 else
                 {
-                    regex = new Regex(@"★");
-                    match = regex.Match(str);
-                    if (match.Success)
-                    {
-                        article.ID = int.MaxValue;
-                        article.Star = star++;
-                        LiPTT.ArticleCollection.StarCount = article.Star;
-                    }
+                    continue;
                 }
 
                 //推文數
@@ -332,7 +338,7 @@ namespace LiPTT
 
             if (id > 1)
             {
-                LiPTT.ArticleCollection.CurrentIndex = (uint)(id - 1);
+                LiPTT.ArticleCollection.CurrentIndex = id - 1;
                 LiPTT.ArticleCollection.HasMoreItems = true;
             }
         }
@@ -345,7 +351,7 @@ namespace LiPTT
 
             LiPTT.CurrentArticle = article;
 
-            if (article.ID != int.MaxValue)
+            if (article.ID != uint.MaxValue)
             {
                 LiPTT.SendMessage(article.ID.ToString(), 0x0D);
             }
@@ -375,6 +381,256 @@ namespace LiPTT
         {
             LiPTT.Left();
             LiPTT.Frame.Navigate(typeof(MainFunctionPage));
+        }
+
+        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        {
+            int key = (int)args.VirtualKey;
+
+            if ((key >= 0x30 && key <= 0x39))
+            {
+                Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+                SearchIDTextBox.Text = ((char)key).ToString();
+                SearchIDTextBox.SelectionStart = 1;
+                SearchIDTextBox.Focus(FocusState.Programmatic);
+            }
+        }
+
+        private void SearchIDTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+        }
+
+        private Article ParseArticleTag(Block[] b)
+        {
+            string str;
+
+            //ID流水號
+            str = LiPTT.GetString(b, 0, 8);
+            Regex regex = new Regex(@"(\d+)");
+            Match match = regex.Match(str);
+
+            Article article = new Article();
+
+            uint id;
+
+            if (match.Success)
+            {
+                article.ID = id = Convert.ToUInt32(str.Substring(match.Index, match.Length));
+            }
+            else if (str.IndexOf('★') != -1)
+            {
+                article.ID = uint.MaxValue;
+                article.Star = star++;
+                LiPTT.ArticleCollection.StarCount = article.Star;
+            }
+            else
+            {
+                return null;
+            }
+
+            //推文數
+            str = LiPTT.GetString(b, 9, 2);
+
+            if (str[0] == '爆')
+            {
+                article.Like = 100;
+            }
+            else if (str[0] == 'X')
+            {
+                if (str[1] == 'X')
+                {
+                    article.Like = -100;
+                }
+                else
+                {
+                    article.Like = Convert.ToInt32(str[1].ToString());
+                    article.Like = -article.Like * 10;
+                }
+            }
+            else
+            {
+                regex = new Regex(@"(\d+)");
+                match = regex.Match(str);
+                if (match.Success) article.Like = Convert.ToInt32(str.Substring(match.Index, match.Length));
+                else article.Like = 0;
+            }
+
+            //ReadType
+            char c = (char)b[8].Content;
+            switch (c)
+            {
+                case '+':
+                    article.ReadType = ReadType.None;
+                    break;
+                case 'M':
+                    article.ReadType = ReadType.被標記;
+                    break;
+                case 'S':
+                    article.ReadType = ReadType.待處理;
+                    break;
+                case 'm':
+                    article.ReadType = ReadType.已讀 | ReadType.被標記;
+                    break;
+                case 's':
+                    article.ReadType = ReadType.已讀 | ReadType.待處理;
+                    break;
+                case '!':
+                    article.ReadType = ReadType.被鎖定;
+                    break;
+                case '~':
+                    article.ReadType = ReadType.有推文;
+                    break;
+                case '=':
+                    article.ReadType = ReadType.有推文 | ReadType.被標記;
+                    break;
+                case ' ':
+                    article.ReadType = ReadType.已讀;
+                    break;
+                default:
+                    article.ReadType = ReadType.Undefined;
+                    break;
+            }
+
+            //日期
+            str = LiPTT.GetString(b, 11, 5);
+            try
+            {
+                article.Date = DateTimeOffset.Parse(str);
+            }
+            catch
+            {
+                return null;
+            }
+
+            //作者
+            str = LiPTT.GetString(b, 17, 13).Replace('\0', ' ');
+            regex = new Regex(@"[\w\S]+");
+            match = regex.Match(str);
+            if (match.Success) article.Author = str.Substring(match.Index, match.Length);
+
+            //標題
+            str = LiPTT.GetString(b, 30, LiPTT.Current.Screen.Width - 30).Replace('\0', ' ');
+            regex = new Regex(@"(R:)");
+            match = regex.Match(str);
+            if (match.Success) article.Reply = true;
+            else article.Reply = false;
+
+            //是否被刪除?
+            if (article.Author == "-") article.Deleted = true;
+            else article.Deleted = false;
+
+            if (article.Deleted)
+            {
+                article.Title = str;
+                regex = new Regex(@"\[\S+\]");
+                match = regex.Match(str);
+                if (match.Success)
+                {
+                    //刪除的人
+                    article.Author = str.Substring(match.Index + 1, match.Length - 2);
+                    article.Title = "(本文已被刪除)";
+                }
+                else
+                {
+                    //被其他人刪除
+                    regex = new Regex(@"\(已被\S+刪除\)");
+                    match = regex.Match(str);
+                    if (match.Success)
+                    {
+                        article.Author = str.Substring(match.Index + 3, match.Length - 6);
+                    }
+                    article.Title = str.Substring(1);
+                }
+            }
+            else
+            {
+                //標題, 分類
+                regex = new Regex(@"\[\S+\]");
+                match = regex.Match(str);
+                if (match.Success)
+                {
+                    article.Subtitle = str.Substring(match.Index + 1, match.Length - 2);
+                    str = str.Substring(match.Index + match.Length);
+                    int k = 0;
+                    while (k < str.Length && str[k] == ' ') k++;
+                    int j = str.Length - 1;
+                    while (j >= 0 && str[j] == ' ') j--;
+                    if (k <= j) article.Title = str.Substring(k, j - k + 1);
+                }
+                else
+                {
+                    article.Title = str.Substring(2);
+                }
+            }
+
+            return article;
+        }
+
+        private void SearchIDTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Escape)
+            {
+                SearchIDTextBox.Text = "";
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
+            }
+            else if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
+
+                if (SearchIDTextBox.Text.StartsWith("#"))
+                {
+                    LiPTT.SendMessage(SearchIDTextBox.Text, 0x0D);
+                    LiPTT.PttEventEchoed += SearchIDEnter;
+                }
+                else
+                {
+                    try
+                    {
+                        uint id = Convert.ToUInt32(SearchIDTextBox.Text);
+                        LiPTT.SendMessage(id.ToString(), 0x0D);
+
+                        LiPTT.PttEventEchoed += SearchIDEnter;
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        private void SearchIDEnter(PTTProvider sender, LiPttEventArgs e)
+        {
+            LiPTT.PttEventEchoed -= SearchIDEnter;
+
+            Match match;
+
+            if ((match = new Regex("請按任意鍵繼續").Match(e.Screen.ToString(23))).Success)
+            {
+                LiPTT.PressAnyKey();
+            }
+            else
+            {
+                Article article = ParseArticleTag(e.Screen.CurrentBlocks);
+
+                if (article != null)
+                {
+                    LiPTT.CurrentArticle = article;
+
+                    var b = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        LiPTT.Frame.Navigate(typeof(ArticlePage));
+                    });
+
+                } 
+            }
+
+            var action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                SearchIDTextBox.Text = "";
+            });
+
         }
     }
 

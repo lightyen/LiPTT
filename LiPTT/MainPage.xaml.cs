@@ -303,7 +303,7 @@ namespace LiPTT
                     DisplayFrame.Navigate(typeof(PttMainPage));
                 }
             }
-
         }
+
     }
 }

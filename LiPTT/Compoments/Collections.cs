@@ -76,7 +76,7 @@ namespace LiPTT
 
     public class Article : IComparable<Article>
     {
-        public int ID { get; set; } //文章流水號
+        public uint ID { get; set; } //文章流水號
         public string AID { get; set; } //文章代碼
         public int Star { get; set; }
         public ReadType ReadType { get; set; }
@@ -517,13 +517,6 @@ namespace LiPTT
             }
         }
 
-        private bool IsYoutubeUrl(string url)
-        {
-            Uri uri = new Uri(url);
-            if (uri.Host == "www.youtube.com") return true; 
-            else return false;
-        }
-
         private bool IsYoutubeUri(Uri uri)
         {
             if (uri.Host == "www.youtube.com")
@@ -589,13 +582,13 @@ namespace LiPTT
 
         public int CompareTo(Article other)
         {
-            if (this.ID != int.MaxValue && other.ID != int.MaxValue)
+            if (this.ID != uint.MaxValue && other.ID != uint.MaxValue)
             {
                 if (this.ID > other.ID) return -1; //大的排前面
                 else if (this.ID < other.ID) return 1;
                 else return 0;
             }
-            else if (this.ID == int.MaxValue && other.ID == int.MaxValue)
+            else if (this.ID == uint.MaxValue && other.ID == uint.MaxValue)
             {
                 if (this.Star > other.Star) return -1;
                 else if (this.Star < other.Star) return 1;
@@ -603,8 +596,8 @@ namespace LiPTT
             }
             else
             {
-                if (this.ID == int.MaxValue) return -1;
-                else if (other.ID == int.MaxValue) return 1;
+                if (this.ID == uint.MaxValue) return -1;
+                else if (other.ID == uint.MaxValue) return 1;
                 else return 0;
             }
         }
@@ -639,7 +632,8 @@ namespace LiPTT
                 reading = true;
                 LiPTT.PttEventEchoed += ReadBoard_EventEchoed;
                 //向上滾 爬舊文
-                LiPTT.PageUp();
+                LiPTT.SendMessage(CurrentIndex.ToString(), 0x0D);
+                //LiPTT.PageUp();
             }
 
             return new LoadMoreItemsResult { Count = CurrentIndex };
@@ -655,8 +649,6 @@ namespace LiPTT
             }
         }
 
-        private const uint ItemPerLoadCount = 100;
-
         private void ReadBoard(ScreenBuffer screen)
         {
             Regex regex;
@@ -665,6 +657,8 @@ namespace LiPTT
             int star = StarCount + 1;
             /////////////////////////////
             ///文章
+            ///
+            uint id = uint.MaxValue;
 
             for (int i = 22; i >= 3; i--)
             {
@@ -677,19 +671,21 @@ namespace LiPTT
 
                 if (match.Success)
                 {
-                    article.ID = Convert.ToInt32(str.Substring(match.Index, match.Length));
+                    id = Convert.ToUInt32(str.Substring(match.Index, match.Length));
+                    article.ID = id;
+                }
+                else if (str.IndexOf('★') != -1)
+                {
+                    article.ID = uint.MaxValue;
+                    article.Star = star++;
+                    StarCount = article.Star;
                 }
                 else
                 {
-                    regex = new Regex(@"★");
-                    match = regex.Match(str);
-                    if (match.Success)
-                    {
-                        article.ID = int.MaxValue;
-                        article.Star = star++;
-                        StarCount = article.Star;
-                    }
+                    continue;
                 }
+
+                if (this.Any(x => x.ID == article.ID)) continue;
 
                 //推文數
                 str = screen.ToString(i, 9, 2);
@@ -832,19 +828,21 @@ namespace LiPTT
                 });
             }
 
+            CurrentIndex = id - 1;
+
             LiPTT.PttEventEchoed -= ReadBoard_EventEchoed;
             reading = false;
             locker.Release();
         }
 
         /// <summary>
-        /// 當前未讀取位置
+        /// 當前位置
         /// </summary>
         public uint CurrentIndex;
 
         public ArticleCollection()
         {
-            CurrentIndex = int.MaxValue;
+            CurrentIndex = uint.MaxValue;
             StarCount = 0;
             locker = new SemaphoreSlim(1, 1);
             BoardInfo = new BoardInfo();
@@ -1172,11 +1170,11 @@ namespace LiPTT
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value == null) return int.MaxValue.ToString();
+            if (value == null) return uint.MaxValue.ToString();
 
-            if (value is int v)
+            if (value is uint v)
             {
-                if (v != int.MaxValue)
+                if (v != uint.MaxValue)
                 {
                     return v.ToString();
                 }
@@ -1186,7 +1184,7 @@ namespace LiPTT
                 }
             }
 
-            return int.MaxValue.ToString();
+            return uint.MaxValue.ToString();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

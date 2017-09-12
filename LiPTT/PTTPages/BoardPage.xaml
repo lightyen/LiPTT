@@ -19,6 +19,13 @@
         <Grid Grid.Row="0" Grid.Column="0">
             <Button Content="back" Click="GoLeft" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
         </Grid>
+        <Grid Grid.Row="0" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="1" x:Name="SearchIDTextBox" BorderThickness="0" LostFocus="SearchIDTextBox_LostFocus" KeyDown="SearchIDTextBox_KeyDown" VerticalAlignment="Center"/>
+        </Grid>
         <Grid Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Grid x:Name="ArticleListGrid" Grid.Column="1" HorizontalAlignment="Stretch">
                 <ListView x:Name="ArticleList" VerticalContentAlignment="Stretch" IsItemClickEnabled="True" ItemClick="ArticleList_ItemClick">

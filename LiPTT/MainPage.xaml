@@ -5,7 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     PointerMoved="Page_PointerMoved"
-    SizeChanged="Page_SizeChanged">
+    SizeChanged="Page_SizeChanged" >
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <SplitView x:Name="SplitView1" CompactPaneLength="100" OpenPaneLength="200" DisplayMode="Overlay" PanePlacement="Left" IsPaneOpen="False">
             <SplitView.PaneBackground>

@@ -93,7 +93,7 @@ namespace LiPTT
 
             ViewSource.IsSourceGrouped = true;
 
-            ViewSource.View.Add(collection1);
+            //ViewSource.View.Add(collection1);
 
 
             this.DataContext = this;

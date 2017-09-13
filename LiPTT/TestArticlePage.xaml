@@ -20,21 +20,17 @@
             </Grid>
             
             <Grid Grid.Row="1">
-                <ScrollViewer>
-                    <StackPanel x:Name="stackpanel" VirtualizingStackPanel.VirtualizationMode="Recycling">
-                        <ItemsControl x:Name="MyControl" ItemsSource="{Binding Source={StaticResource src}}">
-                            <DataTemplate x:DataType="TextBlock">
-                                <TextBlock Text="{x:Bind Text}" />
-                            </DataTemplate>
-                            <DataTemplate x:DataType="HyperlinkButton">
-                                <HyperlinkButton Content="{x:Bind Content}" NavigateUri="{x:Bind NavigateUri}"/>
-                            </DataTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </ScrollViewer>
-                <ListView>
-
-                </ListView>
+                <RichTextBlock>
+                    <Paragraph>
+                        <InlineUIContainer>
+                            <Border Background="Red">
+                                <TextBlock Text="Hello world">
+                                    
+                                </TextBlock>
+                            </Border>
+                        </InlineUIContainer>
+                    </Paragraph>
+                </RichTextBlock>
             </Grid>
         </Grid>
         

@@ -286,15 +286,36 @@ namespace LiPTT
                             if (color != b.ForegroundColor)
                             {
                                 string text = LiPTT.GetString(RawLines[row], index, i - index);
-                                Run run = new Run()
+
+                                /****
+                                InlineUIContainer container = new InlineUIContainer
+                                {
+                                    Child = new Border()
+                                    {
+                                        Background = GetBackgroundBrush(RawLines[row][index]),
+                                        Child = new TextBlock()
+                                        {
+                                            IsTextSelectionEnabled = true,
+                                            Text = text.Replace('\0', ' '),
+                                            FontSize = ArticleFontSize,
+                                            FontFamily = ArticleFontFamily,
+                                            Foreground = GetForegroundBrush(RawLines[row][index]),
+                                        }
+                                    }
+                                };
+                                /***/
+                                Run container = new Run()
                                 {
                                     Text = text.Replace('\0', ' '),
                                     FontSize = ArticleFontSize,
-                                    FontFamily = ArticleFontFamily,      
+                                    FontFamily = ArticleFontFamily,
                                     Foreground = GetForegroundBrush(RawLines[row][index]),
-                                    
                                 };
-                                paragraph.Inlines.Add(run);
+
+                                paragraph.Inlines.Add(container);
+                                
+
+
                                 index = i;
                                 color = b.ForegroundColor;
                             }
@@ -303,29 +324,37 @@ namespace LiPTT
                         if (index + 1 < RawLines[row].Length)
                         {
                             string text = LiPTT.GetString(RawLines[row], index, RawLines[row].Length - index);
-                            Run run = new Run()
+
+                            /***
+                            InlineUIContainer container = new InlineUIContainer
+                            {
+                                Child = new Border()
+                                {
+                                    Background = GetBackgroundBrush(RawLines[row][index]),
+                                    Child = new TextBlock()
+                                    {
+                                        IsTextSelectionEnabled = true,
+                                        Text = text.Replace('\0', ' '),
+                                        FontSize = ArticleFontSize,
+                                        FontFamily = ArticleFontFamily,
+                                        Foreground = GetForegroundBrush(RawLines[row][index]),
+                                    }
+                                }
+                            };
+                            /***/
+                            //***
+                            Run container = new Run()
                             {
                                 Text = text.Replace('\0', ' '),
                                 FontSize = ArticleFontSize,
                                 FontFamily = ArticleFontFamily,
                                 Foreground = GetForegroundBrush(RawLines[row][index]),
                             };
-                            paragraph.Inlines.Add(run);
+                            /***/
+                            paragraph.Inlines.Add(container);
                         }
 
                         paragraph.Inlines.Add(new LineBreak());
-                        /***/
-                        /***
-                        Run run = new Run()
-                        {
-                            Text = str.Replace('\0', ' '),
-                            FontSize = ArticleFontSize,
-                            FontFamily = ArticleFontFamily,
-                            Foreground = new SolidColorBrush(Colors.Yellow),
-                        };
-                        paragraph.Inlines.Add(run);
-                        paragraph.Inlines.Add(new LineBreak());
-                        /***/
                     }
                 }
 
@@ -584,10 +613,9 @@ namespace LiPTT
             }
         }
 
-        /// TextBlock系列似乎沒有Background......
         private SolidColorBrush GetBackgroundBrush(Block b)
         {
-            switch (b.ForegroundColor)
+            switch (b.BackgroundColor)
             {
                 case 40:
                     return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00));

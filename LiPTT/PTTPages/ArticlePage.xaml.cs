@@ -112,11 +112,13 @@ namespace LiPTT
                 }
             }
 
-            LoadingIndicator.IsActive = false;
+            //LoadingIndicator.IsActive = false;
         }
 
         private async Task UpdatePicture()
         {
+            //LoadingIndicator.IsActive = true;
+
             int k = 0;
             foreach (var t in await Task.WhenAll(article.SomeTasks))
             {
@@ -130,10 +132,10 @@ namespace LiPTT
                     article.Content.Add(t.Item2);
                 }
             }
-            var temp = ParagraphControl.ItemTemplate;
-            ParagraphControl.ItemTemplate = null;
-            ParagraphControl.ItemTemplate = temp;
+
             ParagraphControl.ItemsSource = article.Content;
+
+            LoadingIndicator.IsActive = false;
         }
 
         private void LoadArticle(ScreenBuffer screen)

@@ -176,7 +176,7 @@ namespace LiPTT
 
         public void Parse()
         {
-            string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w ./?%&=]*)?";
+            string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w-./?%&=]*)?";
             string str;
             int row = ParsedLine;
 
@@ -1723,7 +1723,7 @@ namespace LiPTT
             if (value is string str)
             {
                 Match match;
-                string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w ./?%&=]*)?";
+                string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w-./?%&=]*)?";
 
                 if ((match = new Regex(http_exp).Match(str)).Success)
                 {
@@ -1735,6 +1735,7 @@ namespace LiPTT
                         {
                             HorizontalAlignment = HorizontalAlignment.Left,
                             FontSize = 22,
+                            VerticalAlignment = VerticalAlignment.Center,
                             Foreground = new SolidColorBrush(Colors.Gold),
                             Text = str.Substring(0, match.Index),
                         });
@@ -1754,6 +1755,7 @@ namespace LiPTT
                         {
                             HorizontalAlignment = HorizontalAlignment.Left,
                             FontSize = 22,
+                            VerticalAlignment = VerticalAlignment.Center,
                             Foreground = new SolidColorBrush(Colors.Gold),
                             Text = str.Substring(match.Index + match.Length, str.Length - (match.Index + match.Length)),
                         });

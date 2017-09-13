@@ -6,7 +6,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-
+    <Page.Resources>
+        <CollectionViewSource x:Key="src" Source="{Binding Path=ViewSource}"/>
+    </Page.Resources>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid>
             <Grid.RowDefinitions>
@@ -14,17 +16,19 @@
                 <RowDefinition Height="8*"/>
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
-                <Image Source="ms-appdata:///localcache/qcndahE.gif" Width="300" Height="300" HorizontalAlignment="Left"/>
-                <Button Content="AddImage" Click="AddImage" Margin="804,12,0,36"/>
-                <Button Content="AddPara" Click="AddPara" Margin="998,22,0,26"/>
-                <Button Content="AddYoutube" Click="AddYoutube" Margin="1108,48,0,116"/>
+                <Button Content="AddItem" Click="Button_Click"></Button>
             </Grid>
             
             <Grid Grid.Row="1">
                 <ScrollViewer>
                     <StackPanel x:Name="stackpanel" VirtualizingStackPanel.VirtualizationMode="Recycling">
-                        
-                        <ItemsControl x:Name="MyControl">
+                        <ItemsControl x:Name="MyControl" ItemsSource="{Binding Source={StaticResource src}}">
+                            <DataTemplate x:DataType="TextBlock">
+                                <TextBlock Text="{x:Bind Text}" />
+                            </DataTemplate>
+                            <DataTemplate x:DataType="HyperlinkButton">
+                                <HyperlinkButton Content="{x:Bind Content}" NavigateUri="{x:Bind NavigateUri}"/>
+                            </DataTemplate>
                         </ItemsControl>
                     </StackPanel>
                 </ScrollViewer>

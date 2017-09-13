@@ -133,7 +133,6 @@ namespace LiPTT
             Current.Kicked -= PTTKicked;
             Current.ScreenUpdated -= Current_ScreenUpdated;
             CurrentArticle = null;
-            if (ArticleCollection != null) ArticleCollection = null;
             OnPttEventEchoed(State, pTTProvider.Screen);
         }
 
@@ -428,6 +427,33 @@ namespace LiPTT
             pTTProvider.Dispose();
             var task = Task.Run(async () => { await ImageCache.ClearAllCache(); });
             task.Wait();
+        }
+
+        public static ReadType GetReadType(char readtype)
+        {
+            switch (readtype)
+            {
+                case '+':
+                    return ReadType.None;
+                case 'M':
+                    return ReadType.被標記;
+                case 'S':
+                    return ReadType.待處理;
+                case 'm':
+                    return ReadType.已讀 | ReadType.被標記;
+                case 's':
+                    return ReadType.已讀 | ReadType.待處理;
+                case '!':
+                    return ReadType.被鎖定;
+                case '~':
+                    return ReadType.有推文;
+                case '=':
+                    return ReadType.有推文 | ReadType.被標記;
+                case ' ':
+                    return ReadType.已讀;
+                default:
+                    return ReadType.Undefined;
+            }
         }
 
         public static string GetString(Block[] blocks)

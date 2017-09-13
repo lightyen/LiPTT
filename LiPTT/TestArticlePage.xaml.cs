@@ -20,9 +20,14 @@ using Windows.Storage.Streams;
 using Windows.Web.Http;
 using System.Diagnostics;
 
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
+using System.Collections.ObjectModel;
+
 namespace LiPTT
 {
-    public sealed partial class TestArticlePage : Page
+    public sealed partial class TestArticlePage : Page, INotifyPropertyChanged
     {
 
         public TestArticlePage()
@@ -30,13 +35,69 @@ namespace LiPTT
             this.InitializeComponent();
         }
 
-        List<object> list = new List<object>();
+        CollectionViewSource source;
 
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        CollectionViewSource ViewSource
         {
-            
+            get
+            {
+                return source;
+            }
+            set
+            {
+                value = source;
+                NotifyPropertyChanged("ViewSource");
+            }
+        }
 
-            MyControl.ItemsSource = list;
+        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            source = new CollectionViewSource();
+
+            ObservableCollection<RichTextBlock> collection1 = new ObservableCollection<RichTextBlock>();
+
+            for (int i = 0; i < 3; i++)
+            {
+                RichTextBlock tb = new RichTextBlock();
+
+                Paragraph para = new Paragraph();
+
+                para.Inlines.Add(new Run() { Text = "Hello world" });
+                para.Inlines.Add(new LineBreak());
+                tb.Blocks.Add(para);
+
+
+                collection1.Add(tb);
+            }
+
+            ObservableCollection<HyperlinkButton> collection2 = new ObservableCollection<HyperlinkButton>();
+
+            for (int i = 0; i < 3; i++)
+            {
+                HyperlinkButton hyper = new HyperlinkButton();
+
+                hyper.Content = "hello world";
+                hyper.NavigateUri = new Uri("https://www.google.com.tw/");
+                collection2.Add(hyper);
+            }
+
+            ViewSource.IsSourceGrouped = true;
+
+            ViewSource.View.Add(collection1);
+
+
+            this.DataContext = this;
+
         }
 
         public async Task<Image> GetImage(string url, double width, double height)
@@ -90,7 +151,6 @@ namespace LiPTT
             stream.Dispose();
         }
      
-
         public async Task<BitmapImage> LoadImage(StorageFile file)
         {
             BitmapImage bitmapImage = new BitmapImage();
@@ -108,59 +168,38 @@ namespace LiPTT
             return bitmapImage;
         }
 
-        private void AddPara(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            RichTextBlock tb1 = new RichTextBlock() { IsTextSelectionEnabled = true, TextWrapping = TextWrapping.NoWrap, Width = 800 };
-            Paragraph para1 = new Paragraph();
+            ObservableCollection<RichTextBlock> collection1 = new ObservableCollection<RichTextBlock>();
 
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 3; i++)
             {
-                Run run = new Run() { Text = "提升大約6.8%左右的效能，即使在AMD AM4平台時脈表現還是能在3000上下穩定           " };
+                RichTextBlock tb = new RichTextBlock();
 
-                para1.Inlines.Add(run);
-                para1.Inlines.Add(new LineBreak());
+                Paragraph para = new Paragraph();
+
+                para.Inlines.Add(new Run() { Text = "Hello world" });
+                para.Inlines.Add(new LineBreak());
+                tb.Blocks.Add(para);
+
+
+                collection1.Add(tb);
             }
-            tb1.Blocks.Add(para1);
-            stackpanel.Children.Add(tb1);
+
+            ObservableCollection<HyperlinkButton> collection2 = new ObservableCollection<HyperlinkButton>();
+
+            for (int i = 0; i < 3; i++)
+            {
+                HyperlinkButton hyper = new HyperlinkButton();
+
+                hyper.Content = "hello world";
+                hyper.NavigateUri = new Uri("https://www.google.com.tw/");
+                collection2.Add(hyper);
+            }
 
 
+            ViewSource.View.Add(collection1);
+            ViewSource.View.Add(collection2);
         }
-
-
-        private async void AddImage(object sender, RoutedEventArgs e)
-        {
-            HyperlinkButton button = new HyperlinkButton() { HorizontalAlignment = HorizontalAlignment.Center };
-
-            
-            Image img = await GetImage("http://i.imgur.com/kbEKrBm.jpg", 400, 400);
-            button.Content = img;
-            button.NavigateUri = new Uri("http://i.imgur.com/kbEKrBm.jpg");
-            stackpanel.Children.Add(button);
-        }
-
-        private async void AddYoutube(object sender, RoutedEventArgs e)
-        {
-            List<object> list = new List<object>();
-
-            Uri uri2 = new Uri("http://youtu.be/P0bmkDJBnZU");
-            HyperlinkButton hyper = new HyperlinkButton() { Content = uri2.OriginalString, NavigateUri = uri2, FontSize=28, HorizontalAlignment= HorizontalAlignment.Stretch };
-            list.Add(hyper);
-            
-
-
-            WebView myWebView = GetYoutubeView("P0bmkDJBnZU", 888);
-            list.Add(myWebView);
-            myWebView.DefaultBackgroundColor = Windows.UI.Colors.Black;
-            myWebView.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
-
-
-
-            MyControl.ItemsSource = list;
-
-            
-            
-        }
-
-
     }
 }

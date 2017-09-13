@@ -13,13 +13,16 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Net;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Windows.UI;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml;
-using System.Runtime.CompilerServices;
+
+
+//https://stackoverflow.com/questions/5473001/itemscontrol-with-multiple-datatemplates-for-a-viewmodel
 
 namespace LiPTT
 {
@@ -92,7 +95,7 @@ namespace LiPTT
         public Uri Url { get; set; } //網頁版連結
         public bool LoadCompleted { get; set; }
         public List<Block[]> RawLines { get; set; } //文章生肉串
-        public List<object> Content { get; set; } //本文內容
+        public ObservableCollection<object> Content { get; set; } //本文內容
         public EchoCollection Echoes { get; set; } //推文集
         public List<Task<Tuple<int, object>>>  SomeTasks { get; set; }
 
@@ -134,14 +137,14 @@ namespace LiPTT
             if (PropertyChanged != null)
             {
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            }         
+            }
         }
 
         public void DefaultState()
         {
             LoadCompleted = false;
             RawLines = new List<Block[]>();
-            Content = new List<object>();
+            Content = new ObservableCollection<object>();
             ParsedLine = 0;
             PageDownPercent = 0;
             ParsedContent = false;
@@ -152,7 +155,7 @@ namespace LiPTT
         public Article()
         {
             RawLines = new List<Block[]>();
-            Content = new List<object>();
+            Content = new ObservableCollection<object>();
             ParsedLine = 0;
             PageDownPercent = 0;
             ParsedContent = false;
@@ -163,7 +166,7 @@ namespace LiPTT
                 paragraph = new Paragraph();
             });
             /////////////////////////////////////////
-            Echoes = new EchoCollection() { };           
+            Echoes = new EchoCollection() { };
         }
 
         public void AppendLine(Block[] blocks)
@@ -953,40 +956,8 @@ namespace LiPTT
 
                 //ReadType
                 char c = (char)screen[i][8].Content;
-                switch (c)
-                {
-                    case '+':
-                        article.ReadType = ReadType.None;
-                        break;
-                    case 'M':
-                        article.ReadType = ReadType.被標記;
-                        break;
-                    case 'S':
-                        article.ReadType = ReadType.待處理;
-                        break;
-                    case 'm':
-                        article.ReadType = ReadType.已讀 | ReadType.被標記;
-                        break;
-                    case 's':
-                        article.ReadType = ReadType.已讀 | ReadType.待處理;
-                        break;
-                    case '!':
-                        article.ReadType = ReadType.被鎖定;
-                        break;
-                    case '~':
-                        article.ReadType = ReadType.有推文;
-                        break;
-                    case '=':
-                        article.ReadType = ReadType.有推文 | ReadType.被標記;
-                        break;
-                    case ' ':
-                        article.ReadType = ReadType.已讀;
-                        break;
-                    default:
-                        article.ReadType = ReadType.Undefined;
-                        break;
-                }
-
+                article.ReadType = LiPTT.GetReadType(c);
+                
                 //日期
                 str = screen.ToString(i, 11, 5);
                 try
@@ -1083,6 +1054,29 @@ namespace LiPTT
             StarCount = 0;
             locker = new SemaphoreSlim(1, 1);
             BoardInfo = new BoardInfo();
+
+            this.CollectionChanged += ArticleCollection_CollectionChanged;
+        }
+
+        private void ArticleCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+                foreach (Article item in e.NewItems)
+                    item.PropertyChanged += MyType_PropertyChanged;
+
+            if (e.OldItems != null)
+                foreach (Article item in e.OldItems)
+                    item.PropertyChanged -= MyType_PropertyChanged;
+        }
+
+        private void MyType_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            NotifyCollectionChangedEventArgs args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, sender, sender, IndexOf((Article)sender));
+
+            var t = LiPTT.RunInUIThread(() =>
+            {
+                OnCollectionChanged(args);
+            });
         }
 
         private bool more;

@@ -89,7 +89,9 @@ namespace LiPTT
             switch (e.State)
             {
                 case PttState.Article:
-                    var task = LoadArticle(e.Screen);
+                    {
+                        LoadArticle(e.Screen);
+                    }
                     break;
             }
         }
@@ -113,7 +115,28 @@ namespace LiPTT
             LoadingIndicator.IsActive = false;
         }
 
-        private async Task LoadArticle(ScreenBuffer screen)
+        private async Task UpdatePicture()
+        {
+            int k = 0;
+            foreach (var t in await Task.WhenAll(article.SomeTasks))
+            {
+                if (t.Item1 < article.Content.Count)
+                {
+                    article.Content.Insert(t.Item1 + k, t.Item2);
+                    k++;
+                }
+                else
+                {
+                    article.Content.Add(t.Item2);
+                }
+            }
+            var temp = ParagraphControl.ItemTemplate;
+            ParagraphControl.ItemTemplate = null;
+            ParagraphControl.ItemTemplate = temp;
+            ParagraphControl.ItemsSource = article.Content;
+        }
+
+        private void LoadArticle(ScreenBuffer screen)
         {
             //var x = screen.ToStringArray();
 
@@ -229,6 +252,9 @@ namespace LiPTT
 
                     var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                     {
+                        UpdateUI();
+
+                        /***
                         int k = 0;
                         foreach (var t in await Task.WhenAll(article.SomeTasks))
                         {
@@ -242,12 +268,14 @@ namespace LiPTT
                                 article.Content.Add(t.Item2);
                             }
                         }
-
+                        /***/
                         article.Echoes.Percent = bound.Percent;
 
                         article.LoadCompleted = true;
-                        UpdateUI();
+                        
                         article.Echoes.HasMoreItems = true;
+
+                        await UpdatePicture();
                     });
                 }
                 else
@@ -261,25 +289,15 @@ namespace LiPTT
 
                 var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
-                    int k = 0;
-                    foreach (var t in await Task.WhenAll(article.SomeTasks))
-                    {
-                        if (t.Item1 < article.Content.Count)
-                        {
-                            article.Content.Insert(t.Item1 + k, t.Item2);
-                            k++;
-                        }
-                        else
-                        {
-                            article.Content.Add(t.Item2);
-                        }
-                    }
+                    UpdateUI();
 
                     article.Echoes.Percent = bound.Percent;
 
                     article.LoadCompleted = true;
-                    UpdateUI();
+                    
                     article.Echoes.HasMoreItems = false;
+
+                    await UpdatePicture();
                 }); 
             }
         }
@@ -360,7 +378,7 @@ namespace LiPTT
 
         private void ReLoadArticleTag(ScreenBuffer screen)
         {
-            string str = screen.ToStringCurrent();
+            
 
             if (LiPTT.CurrentArticle.ID != int.MaxValue)
             {
@@ -368,7 +386,8 @@ namespace LiPTT
 
                 if (article != null)
                 {
-                    article.ReadType = article.ReadType & ReadType.已讀;
+                    char readtype = (char)screen.CurrentBlocks[8].Content;
+                    article.ReadType = LiPTT.GetReadType(readtype);
                 }
             }
             else //置底文
@@ -377,7 +396,8 @@ namespace LiPTT
 
                 if (article != null)
                 {
-                    article.ReadType = article.ReadType & ReadType.已讀;
+                    char readtype = (char)screen.CurrentBlocks[8].Content;
+                    article.ReadType = LiPTT.GetReadType(readtype);
                 }
             }
         }

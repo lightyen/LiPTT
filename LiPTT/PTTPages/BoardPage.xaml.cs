@@ -35,12 +35,10 @@ namespace LiPTT
             {
                 Debug.WriteLine(">>載入新看板");
                 Initialize(LiPTT.Current.Screen);
-                UpdateUI();
             }
             else
             {
                 Debug.WriteLine(">>看板已存在");
-                UpdateUI();
             }
 
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
@@ -86,7 +84,7 @@ namespace LiPTT
         {
             var act = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                ArticleList.ItemsSource = LiPTT.ArticleCollection;
+                //ArticleList.ItemsSource = LiPTT.ArticleCollection;
             });
         }
 
@@ -98,7 +96,8 @@ namespace LiPTT
             star = 0;
             uint id = 0;
 
-            LiPTT.ArticleCollection = this.DataContext as ArticleCollection;
+            LiPTT.ArticleCollection = ArticleListView.ItemsSource as ArticleCollection;
+            ArticleCollection ArticleCollection = LiPTT.ArticleCollection;
 
             var x = screen.ToStringArray();
 
@@ -115,7 +114,7 @@ namespace LiPTT
                 board_name = str.Substring(match.Index + 3, match.Length - 4);
             }
 
-            if (board_name == LiPTT.ArticleCollection?.BoardInfo.Name) return;
+            if (board_name == ArticleCollection?.BoardInfo.Name) return;
 
             Board = new BoardInfo
             {
@@ -171,8 +170,8 @@ namespace LiPTT
             /////////////////////////////
             ///置底文 and 其他文章
             ///
-            LiPTT.ArticleCollection.Clear();
-            LiPTT.ArticleCollection.BoardInfo = Board;
+            ArticleCollection.Clear();
+            ArticleCollection.BoardInfo = Board;
 
             for (int i = 22; i >= 3; i--)
             {
@@ -191,7 +190,7 @@ namespace LiPTT
                 {
                     article.ID = uint.MaxValue;
                     article.Star = star++;
-                    LiPTT.ArticleCollection.StarCount = article.Star;
+                    ArticleCollection.StarCount = article.Star;
                 }
                 else
                 {
@@ -227,39 +226,7 @@ namespace LiPTT
 
                 //ReadType
                 char c = (char)screen[i][8].Content;
-                switch (c)
-                {
-                    case '+':
-                        article.ReadType = ReadType.None;
-                        break;
-                    case 'M':
-                        article.ReadType = ReadType.被標記;
-                        break;
-                    case 'S':
-                        article.ReadType = ReadType.待處理;
-                        break;
-                    case 'm':
-                        article.ReadType = ReadType.已讀 | ReadType.被標記;
-                        break;
-                    case 's':
-                        article.ReadType = ReadType.已讀 | ReadType.待處理;
-                        break;
-                    case '!':
-                        article.ReadType = ReadType.被鎖定;
-                        break;
-                    case '~':
-                        article.ReadType = ReadType.有推文;
-                        break;
-                    case '=':
-                        article.ReadType = ReadType.有推文 | ReadType.被標記;
-                        break;
-                    case ' ':
-                        article.ReadType = ReadType.已讀;
-                        break;
-                    default:
-                        article.ReadType = ReadType.Undefined;
-                        break;
-                }
+                article.ReadType = LiPTT.GetReadType(c);
 
                 //日期
                 str = screen.ToString(i, 11, 5);
@@ -335,14 +302,14 @@ namespace LiPTT
 
                 action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    LiPTT.ArticleCollection.Add(article);
+                    ArticleCollection.Add(article);
                 });
             }
 
             if (id > 1)
             {
-                LiPTT.ArticleCollection.CurrentIndex = id - 1;
-                LiPTT.ArticleCollection.HasMoreItems = true;
+                ArticleCollection.CurrentIndex = id - 1;
+                ArticleCollection.HasMoreItems = true;
             }
         }
 

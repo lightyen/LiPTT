@@ -140,15 +140,13 @@ namespace LiPTT
         {
             Current.ScreenLocker.Wait();
 
-            //var x = Current.Screen.ToStringArray();
-
             if (Current.MatchPattern(@"瀏覽", 23))
             {
-                Debug.WriteLine("文章");
+                Debug.WriteLine("瀏覽文章");
                 State = PttState.Article;
                 OnPttEventEchoed(State, pTTProvider.Screen);
             }
-            else if (Current.MatchPattern("您確定要離開", 22))
+            else if (Current.MatchPattern(@"您確定要離開", 22))
             {
                 if (State != PttState.Exit)
                 {
@@ -156,7 +154,7 @@ namespace LiPTT
                     OnPttEventEchoed(State, pTTProvider.Screen);
                 }
             }
-            else if (Current.MatchPattern("主功能表", 0))
+            else if (Current.MatchPattern(@"主功能表", 0))
             {
                 if (State != PttState.MainPage)
                 {
@@ -165,15 +163,15 @@ namespace LiPTT
                     OnPttEventEchoed(State, pTTProvider.Screen);
                 }
             }
-            else if (Current.MatchPattern("相關資訊一覽表", 2))
+            else if (Current.MatchPattern(@"相關資訊一覽表", 2))
             {
-                Debug.WriteLine("相關資訊一覽表");
+                Debug.WriteLine("搜尋相關看板");
                 State = PttState.RelatedBoard;
                 OnPttEventEchoed(State, pTTProvider.Screen);
             }
-            else if (Current.MatchPattern("選擇看板", 0))
+            else if (Current.MatchPattern(@"選擇看板", 0))
             {
-                Debug.WriteLine("選擇看板");
+                Debug.WriteLine("搜尋看板");
                 State = PttState.SearchBoard;
                 OnPttEventEchoed(State, pTTProvider.Screen);
             }
@@ -183,7 +181,7 @@ namespace LiPTT
                 State = PttState.Board;
                 OnPttEventEchoed(State, pTTProvider.Screen);
             }
-            else if (Current.MatchPattern("您想刪除其他重複登入的連線嗎", 22))
+            else if (Current.MatchPattern(@"您想刪除其他重複登入的連線嗎", 22))
             {
                 if (State != PttState.AlreadyLogin)
                 {
@@ -192,7 +190,7 @@ namespace LiPTT
                 }
             }
 
-            else if (Current.MatchPattern("密碼不對或無此帳號", 21))
+            else if (Current.MatchPattern(@"密碼不對或無此帳號", 21))
             {
                 if (State != PttState.WrongPassword)
                 {
@@ -201,7 +199,7 @@ namespace LiPTT
                 }
 
             }
-            else if (Current.MatchPattern("系統過載", 13))
+            else if (Current.MatchPattern(@"系統過載", 13))
             {
                 if (State == PttState.OverLoading)
                 {
@@ -210,7 +208,7 @@ namespace LiPTT
                     OnPttEventEchoed(State, pTTProvider.Screen);
                 }
             }
-            else if (Current.MatchPattern("密碼正確", 21))
+            else if (Current.MatchPattern(@"密碼正確", 21))
             {
                 if (State != PttState.Accept)
                 {
@@ -219,7 +217,7 @@ namespace LiPTT
                     OnPttEventEchoed(State, pTTProvider.Screen);
                 }
             }
-            else if (Current.MatchPattern("登入中", 22))
+            else if (Current.MatchPattern(@"登入中", 22))
             {
                 if (State != PttState.Loginning)
                 {
@@ -228,7 +226,7 @@ namespace LiPTT
                     OnPttEventEchoed(State, pTTProvider.Screen);
                 }
             }
-            else if (Current.MatchPattern("任意鍵繼續", 23))
+            else if (Current.MatchPattern(@"任意鍵繼續", 23))
             {
                 if (State != PttState.PressAny)
                 {
@@ -237,7 +235,7 @@ namespace LiPTT
                     OnPttEventEchoed(State, pTTProvider.Screen);
                 }
             }
-            else if (Current.MatchPattern("登入太頻繁", 23))
+            else if (Current.MatchPattern(@"登入太頻繁", 23))
             {
                 if (State != PttState.LoginSoMany)
                 {
@@ -246,7 +244,7 @@ namespace LiPTT
                     OnPttEventEchoed(State, pTTProvider.Screen);
                 }
             }
-            else if (Current.MatchPattern("更新與同步", 22))
+            else if (Current.MatchPattern(@"更新與同步", 22))
             {
                 if (State != PttState.Synchronizing)
                 {
@@ -255,7 +253,7 @@ namespace LiPTT
                     OnPttEventEchoed(State, pTTProvider.Screen);
                 }
             }
-            else if (Current.MatchPattern("請輸入您的密碼", 21))
+            else if (Current.MatchPattern(@"請輸入您的密碼", 21))
             {
                 if (State != PttState.Password)
                 {
@@ -264,7 +262,7 @@ namespace LiPTT
                     OnPttEventEchoed(State, pTTProvider.Screen);
                 }
             }
-            else if (Current.MatchPattern("您要刪除以上錯誤嘗試的記錄嗎", 23))
+            else if (Current.MatchPattern(@"您要刪除以上錯誤嘗試的記錄嗎", 23))
             {
                 if (State != PttState.WrongLog)
                 {
@@ -273,7 +271,7 @@ namespace LiPTT
                     OnPttEventEchoed(State, pTTProvider.Screen);
                 }
             }
-            else if (Current.MatchPattern("請輸入代號", 20))
+            else if (Current.MatchPattern(@"請輸入代號", 20))
             {
                 Debug.WriteLine("請輸入代號");
                 if (State != PttState.Login)
@@ -284,7 +282,13 @@ namespace LiPTT
             }
             else
             {
-                Debug.WriteLine("這裡是哪裡? 小天使廣告不要鬧");
+                Debug.WriteLine("這裡是哪裡? 小天使不要鬧");
+
+                foreach (string s in Current.Screen.ToStringArray())
+                {
+                    Debug.WriteLine(s);
+                }
+
                 State = PttState.Angel;
             }
 

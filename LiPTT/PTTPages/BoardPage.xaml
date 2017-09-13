@@ -27,7 +27,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="1" x:Name="SearchIDTextBox" BorderThickness="0" LostFocus="SearchIDTextBox_LostFocus" KeyDown="SearchIDTextBox_KeyDown" VerticalAlignment="Center"/>
+            <TextBox Grid.Column="1" x:Name="SearchIDTextBox" BorderThickness="0" LostFocus="SearchIDTextBox_LostFocus" KeyDown="SearchIDTextBox_KeyDown" VerticalAlignment="Center" FontSize="21"/>
         </Grid>
         <Grid Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Grid x:Name="ArticleListGrid" Grid.Column="1" HorizontalAlignment="Stretch">

@@ -95,7 +95,7 @@ namespace LiPTT
         public Uri Url { get; set; } //網頁版連結
         public bool LoadCompleted { get; set; }
         public List<Block[]> RawLines { get; set; } //文章生肉串
-        public ObservableCollection<object> Content { get; set; } //本文內容
+        public List<object> Content { get; set; } //本文內容
         public EchoCollection Echoes { get; set; } //推文集
         public List<Task<Tuple<int, object>>>  SomeTasks { get; set; }
 
@@ -144,29 +144,28 @@ namespace LiPTT
         {
             LoadCompleted = false;
             RawLines = new List<Block[]>();
-            Content = new ObservableCollection<object>();
             ParsedLine = 0;
             PageDownPercent = 0;
             ParsedContent = false;
             SomeTasks = new List<Task<Tuple<int, object>>>();
             Echoes = new EchoCollection() { };
+
+            //508171 #1PkEzljp
+            var action = LiPTT.RunInUIThread(() =>
+            {
+                Content = new List<object>();
+            });
         }
 
         public Article()
         {
-            RawLines = new List<Block[]>();
-            Content = new ObservableCollection<object>();
-            ParsedLine = 0;
-            PageDownPercent = 0;
-            ParsedContent = false;
-            SomeTasks = new List<Task<Tuple<int, object>>>();
+            DefaultState();
+
             var action = LiPTT.RunInUIThread(() =>
             {
                 ArticleFontFamily = new FontFamily("Noto Sans Mono CJK TC");
                 paragraph = new Paragraph();
             });
-            /////////////////////////////////////////
-            Echoes = new EchoCollection() { };
         }
 
         public void AppendLine(Block[] blocks)
@@ -215,12 +214,41 @@ namespace LiPTT
                             paragraph = new Paragraph();
                         }
 
-                        if ((match = new Regex(http_exp).Match(str)).Success)
+
+                        match = new Regex(http_exp).Match(str);
+
+                        if (match.Success)
                         {
-                            Uri uri = new Uri(str.Substring(match.Index, match.Length));
+                            StackPanel sp = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
 
-                            Debug.WriteLine(uri.AbsoluteUri);
+                            TextBlock tb = new TextBlock()
+                            {
+                                Text = str.Substring(0, match.Index),
+                                Padding = new Thickness(0, 0, 8, 0),
+                                Foreground = new SolidColorBrush(Colors.Green),
+                                FontSize = ArticleFontSize - 8,
+                                FontFamily = ArticleFontFamily,
+                                VerticalAlignment = VerticalAlignment.Center,
+                            };
+                            sp.Children.Add(tb);
 
+                            HyperlinkButton button = new HyperlinkButton()
+                            {
+                                NavigateUri = new Uri(str.Substring(match.Index, match.Length)),
+                                Content = new TextBlock()
+                                {
+                                    Text = str.Substring(match.Index, match.Length),
+                                    Foreground = new SolidColorBrush(Colors.Green),
+                                    FontSize = ArticleFontSize - 8,
+                                    FontFamily = ArticleFontFamily,
+                                    VerticalAlignment = VerticalAlignment.Center,
+                                }
+                            };
+                            sp.Children.Add(button);
+                            Content.Add(sp);
+                        }
+                        else
+                        {
                             TextBlock tb = new TextBlock()
                             {
                                 Text = str,
@@ -228,7 +256,6 @@ namespace LiPTT
                                 FontSize = ArticleFontSize - 8,
                                 FontFamily = ArticleFontFamily
                             };
-
                             Content.Add(tb);
                         }
 
@@ -248,9 +275,7 @@ namespace LiPTT
 
                         string url = str.Substring(match.Index, match.Length);
 
-                        //把下載任務收集一下
-                        var task = CreateUriView(Content.Count, url);
-                        SomeTasks.Add(task);
+                        CreateUriView(url);
                     }
                     //內文(非網址)
                     else
@@ -646,68 +671,25 @@ namespace LiPTT
             }
         }
 
-        private async Task<Tuple<int, object>> CreateUriView(int insert_index, string url)
+        private void CreateUriView(string url)
         {
             Uri uri = new Uri(url);
 
+            Debug.WriteLine("request: " + uri.OriginalString);
+            //http://www.cnblogs.com/jesse2013/p/async-and-await.html
             //***
             if (IsShortCut(uri.Host))
             {
                 WebRequest webRequest = WebRequest.Create(url);
-                WebResponse webResponse = await webRequest.GetResponseAsync();
+                WebResponse webResponse = webRequest.GetResponseAsync().Result;
                 uri = webResponse.ResponseUri;
             }
             /***/
 
-            Debug.WriteLine("request: " + uri.OriginalString);
-
             if (IsPictureUri(uri))
             {
-                Task<BitmapImage> task = LiPTT.ImageCache.GetFromCacheAsync(uri);
-
-                BitmapImage bmp = await task;
-
-                Image img = new Image() { Source = bmp, HorizontalAlignment = HorizontalAlignment.Stretch };
-
-                double ratio = (double)bmp.PixelWidth / bmp.PixelHeight;
-
-                ColumnDefinition c1, c2, c3;
-
-                double space = 0.2; //也就是佔總寬的80%
-
-                if (ratio >= 1.0)
-                {
-                    c1 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
-                    c2 = new ColumnDefinition { Width = new GridLength((1 - space), GridUnitType.Star) };
-                    c3 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
-                }
-                else
-                {
-                    double x = ratio * (1- space) / 2.0;
-                    c1 = new ColumnDefinition { Width = new GridLength(space / 2.0 + x, GridUnitType.Star) };
-                    c2 = new ColumnDefinition { Width = new GridLength((1 - space) * ratio, GridUnitType.Star) };
-                    c3 = new ColumnDefinition { Width = new GridLength(space / 2.0 + x, GridUnitType.Star) };
-                }
-                
-
-                Grid ImgGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
-
-                ImgGrid.ColumnDefinitions.Add(c1);
-                ImgGrid.ColumnDefinitions.Add(c2);
-                ImgGrid.ColumnDefinitions.Add(c3);
-
-                HyperlinkButton button = new HyperlinkButton()
-                {
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    Content = img,
-                    NavigateUri = uri,
-                };
-
-                ImgGrid.Children.Add(button);
-
-                button.SetValue(Grid.ColumnProperty, 1);
-
-                return Tuple.Create(insert_index, (object)ImgGrid);
+                var t = CreateImageView(Content.Count, uri);
+                SomeTasks.Add(t);
             }
             else if (IsYoutubeUri(uri))
             {
@@ -722,8 +704,7 @@ namespace LiPTT
                     }
                 }
                 WebView webview = GetYoutubeView(youtubeID);
-
-                return Tuple.Create(insert_index, (object)webview);
+                Content.Add(webview);
             }
             else
             {
@@ -734,8 +715,58 @@ namespace LiPTT
                     FontSize = ArticleFontSize,
                     FontFamily = ArticleFontFamily,  
                 };
-                return Tuple.Create(insert_index, (object)hyper);
+
+                Content.Add(hyper);
             }
+        }
+
+        private async Task<Tuple<int, object>> CreateImageView(int insert_index, Uri uri)
+        {
+            Task<BitmapImage> task = LiPTT.ImageCache.GetFromCacheAsync(uri);
+
+            BitmapImage bmp = await task;
+
+            Image img = new Image() { Source = bmp, HorizontalAlignment = HorizontalAlignment.Stretch };
+
+            double ratio = (double)bmp.PixelWidth / bmp.PixelHeight;
+
+            ColumnDefinition c1, c2, c3;
+
+            double space = 0.2; //也就是佔總寬的80%
+
+            if (ratio >= 1.0)
+            {
+                c1 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
+                c2 = new ColumnDefinition { Width = new GridLength((1 - space), GridUnitType.Star) };
+                c3 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
+            }
+            else
+            {
+                double x = ratio * (1 - space) / 2.0;
+                c1 = new ColumnDefinition { Width = new GridLength(space / 2.0 + x, GridUnitType.Star) };
+                c2 = new ColumnDefinition { Width = new GridLength((1 - space) * ratio, GridUnitType.Star) };
+                c3 = new ColumnDefinition { Width = new GridLength(space / 2.0 + x, GridUnitType.Star) };
+            }
+
+
+            Grid ImgGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
+
+            ImgGrid.ColumnDefinitions.Add(c1);
+            ImgGrid.ColumnDefinitions.Add(c2);
+            ImgGrid.ColumnDefinitions.Add(c3);
+
+            HyperlinkButton button = new HyperlinkButton()
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Content = img,
+                NavigateUri = uri,
+            };
+
+            ImgGrid.Children.Add(button);
+
+            button.SetValue(Grid.ColumnProperty, 1);
+
+            return Tuple.Create(insert_index, (object)button);
         }
 
         private bool IsPictureUri(Uri uri)

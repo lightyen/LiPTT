@@ -151,10 +151,7 @@ namespace LiPTT
             Echoes = new EchoCollection() { };
 
             //508171 #1PkEzljp
-            var action = LiPTT.RunInUIThread(() =>
-            {
-                Content = new List<object>();
-            });
+            Content = new List<object>();
         }
 
         public Article()
@@ -688,8 +685,7 @@ namespace LiPTT
 
             if (IsPictureUri(uri))
             {
-                var t = CreateImageView(Content.Count, uri);
-                SomeTasks.Add(t);
+                SomeTasks.Add(CreateImageView(Content.Count, uri));
             }
             else if (IsYoutubeUri(uri))
             {
@@ -720,7 +716,7 @@ namespace LiPTT
             }
         }
 
-        private async Task<Tuple<int, object>> CreateImageView(int insert_index, Uri uri)
+        private async Task<Tuple<int, object>> CreateImageView(int insert, Uri uri)
         {
             Task<BitmapImage> task = LiPTT.ImageCache.GetFromCacheAsync(uri);
 
@@ -766,7 +762,7 @@ namespace LiPTT
 
             button.SetValue(Grid.ColumnProperty, 1);
 
-            return Tuple.Create(insert_index, (object)button);
+            return Tuple.Create(insert, (object)ImgGrid);
         }
 
         private bool IsPictureUri(Uri uri)

@@ -44,6 +44,7 @@ namespace LiPTT
             article = LiPTT.CurrentArticle;
 
             ArticleHeaderListBox.Items.Clear();
+
             ParagraphControl.ItemsSource = null;
             EchoView.ItemsSource = null;
 
@@ -100,10 +101,6 @@ namespace LiPTT
         {
             ArticleHeaderListBox.Items.Add(article);
 
-            ParagraphControl.ItemsSource = article.Content;
-
-            EchoView.ItemsSource = article.Echoes;
-
             foreach (var x in article.Content)
             {
                 if (x is WebView webview)
@@ -112,11 +109,17 @@ namespace LiPTT
                 }
             }
 
-            //LoadingIndicator.IsActive = false;
+            EchoView.ItemsSource = article.Echoes;
+
+            ParagraphControl.ItemsSource = article.Content;
         }
 
         private async Task UpdatePicture()
         {
+            LoadingIndicator.IsActive = true;
+
+            ParagraphControl.ItemsSource = null;
+
             int k = 0;
             foreach (var t in await Task.WhenAll(article.SomeTasks))
             {
@@ -130,6 +133,10 @@ namespace LiPTT
                     article.Content.Add(t.Item2);
                 }
             }
+
+            ParagraphControl.ItemsSource = article.Content;
+
+            LoadingIndicator.IsActive = false;
         }
 
         private void LoadArticle(ScreenBuffer screen)
@@ -248,19 +255,16 @@ namespace LiPTT
 
                     var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                     {
-                        UpdateUI();
-
                         article.Echoes.Percent = bound.Percent;
 
                         article.LoadCompleted = true;
                         
                         article.Echoes.HasMoreItems = true;
 
+                        UpdateUI();
+
                         await UpdatePicture();
-
-                        ParagraphControl.ItemsSource = article.Content;
-
-                        LoadingIndicator.IsActive = false;
+                        
                     });
                 }
                 else
@@ -274,19 +278,15 @@ namespace LiPTT
 
                 var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
-                    UpdateUI();
-
                     article.Echoes.Percent = bound.Percent;
 
                     article.LoadCompleted = true;
                     
                     article.Echoes.HasMoreItems = false;
 
+                    UpdateUI();
+
                     await UpdatePicture();
-
-                    ParagraphControl.ItemsSource = article.Content;
-
-                    LoadingIndicator.IsActive = false;
                 }); 
             }
         }

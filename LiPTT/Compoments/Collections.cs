@@ -1713,4 +1713,75 @@ namespace LiPTT
             throw new NotImplementedException();
         }
     }
+
+    public class EchoContentConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is string str)
+            {
+                Match match;
+                string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w ./?%&=]*)?";
+
+                if ((match = new Regex(http_exp).Match(str)).Success)
+                {
+                    StackPanel sp = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
+
+                    if (match.Index > 0)
+                    {
+                        sp.Children.Add(new TextBlock()
+                        {
+                            HorizontalAlignment = HorizontalAlignment.Left,
+                            FontSize = 22,
+                            Foreground = new SolidColorBrush(Colors.Gold),
+                            Text = str.Substring(0, match.Index),
+                        });
+                    }
+
+                    string url = str.Substring(match.Index, match.Length);
+                    sp.Children.Add(new HyperlinkButton()
+                    {
+                        NavigateUri = new Uri(url),
+                        FontSize = 22,
+                        Content = new TextBlock() { Text = url },
+                    });
+
+                    if (match.Index + match.Length < str.Length)
+                    {
+                        sp.Children.Add(new TextBlock()
+                        {
+                            HorizontalAlignment = HorizontalAlignment.Left,
+                            FontSize = 22,
+                            Foreground = new SolidColorBrush(Colors.Gold),
+                            Text = str.Substring(match.Index + match.Length, str.Length - (match.Index + match.Length)),
+                        });
+                    }
+
+                    return sp;
+                }
+                else
+                {
+                    return new TextBlock()
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                        FontSize = 22,
+                        Foreground = new SolidColorBrush(Colors.Gold),
+                        Text = str,
+                    };
+                }
+
+
+
+
+            }
+            else return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

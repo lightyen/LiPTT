@@ -79,7 +79,7 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="30"/>
-                                            <ColumnDefinition Width="1.7*"/>
+                                            <ColumnDefinition Width="200"/>
                                             <ColumnDefinition Width="8*"/>
                                             <ColumnDefinition Width="1.5*"/>
                                         </Grid.ColumnDefinitions>
@@ -87,10 +87,12 @@
                                             <TextBlock HorizontalAlignment="Left" Text="{x:Bind Evaluation, Converter={StaticResource MyEchoEvaluationStringFormatConverter}}" FontSize="22" Foreground="{x:Bind Evaluation, Converter={StaticResource MyEchoEvaluationColorConverter}}"/>
                                         </Grid>
                                         <Grid Grid.Column="1">
-                                            <TextBlock HorizontalAlignment="Right" Text="{x:Bind Author}" FontSize="22" Foreground="Green" />
+                                            <TextBlock HorizontalAlignment="Center" Text="{x:Bind Author}" FontSize="22" Foreground="LightSalmon" />
                                         </Grid>
                                         <Grid Grid.Column="2">
-                                            <TextBlock HorizontalAlignment="Left" Text="{x:Bind Content}" FontSize="22" Foreground="Gold" />
+                                            <ContentControl Content="{x:Bind Content, Converter={StaticResource MyEchoContentConverter}}">
+
+                                            </ContentControl>
                                         </Grid>
                                         <Grid Grid.Column="3">
                                             <TextBlock HorizontalAlignment="Right" Text="{x:Bind Date, Converter={StaticResource MyEchoDateStringFormatConverter}}" FontSize="22" Foreground="Wheat" />

@@ -196,6 +196,7 @@ namespace LiPTT
                         TextBlock tb = new TextBlock()
                         {
                             Text = str,
+                            IsTextSelectionEnabled = true,
                             Foreground = new SolidColorBrush(Colors.Green),
                             FontSize = ArticleFontSize - 8,
                             FontFamily = ArticleFontFamily
@@ -221,6 +222,7 @@ namespace LiPTT
                             TextBlock tb = new TextBlock()
                             {
                                 Text = str.Substring(0, match.Index),
+                                IsTextSelectionEnabled = true,
                                 Padding = new Thickness(0, 0, 8, 0),
                                 Foreground = new SolidColorBrush(Colors.Green),
                                 FontSize = ArticleFontSize - 8,
@@ -235,6 +237,7 @@ namespace LiPTT
                                 Content = new TextBlock()
                                 {
                                     Text = str.Substring(match.Index, match.Length),
+                                    IsTextSelectionEnabled = true,
                                     Foreground = new SolidColorBrush(Colors.Green),
                                     FontSize = ArticleFontSize - 8,
                                     FontFamily = ArticleFontFamily,
@@ -578,36 +581,36 @@ namespace LiPTT
             {
                 case 30:
                     return b.Mode.HasFlag(AttributeMode.Bold) ?
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x80, 0x80)):
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0)):
                         new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00));
                 case 31:
                     return b.Mode.HasFlag(AttributeMode.Bold) ?
                         new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0x00, 0x00)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x00, 0x00));
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0x00, 0x00));
                 case 32:
                     return b.Mode.HasFlag(AttributeMode.Bold) ?
                         new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xFF, 0x00)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x80, 0x00));
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xC0, 0x00));
                 case 33:
                     return b.Mode.HasFlag(AttributeMode.Bold) ?
                         new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0x00)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x80, 0x00));
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0x00));
                 case 34:
                     return b.Mode.HasFlag(AttributeMode.Bold) ?
                         new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0xFF)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x80));
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0xC0));
                 case 35:
                     return b.Mode.HasFlag(AttributeMode.Bold) ?
                         new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0x00, 0xFF)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x00, 0x80));
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0x00, 0xC0));
                 case 36:
                     return b.Mode.HasFlag(AttributeMode.Bold) ?
                         new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xFF, 0xFF)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x80, 0x80));
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xC0, 0xC0));
                 case 37:
                     return b.Mode.HasFlag(AttributeMode.Bold) ?
                         new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0));
+                        new SolidColorBrush(Color.FromArgb(0xFF, 0xD0, 0xD0, 0xD0));
                 default:
                     return new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0));
             }
@@ -1667,7 +1670,7 @@ namespace LiPTT
                 }
                 else
                 {
-                    color = Colors.DarkGoldenrod;
+                    color = Colors.Goldenrod;
                 }
             }
 

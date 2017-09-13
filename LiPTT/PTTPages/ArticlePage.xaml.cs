@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
+using Windows.System;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -57,6 +58,38 @@ namespace LiPTT
 
             LiPTT.PttEventEchoed += ReadAIDandExtra;
             LiPTT.Right();
+
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+        }
+
+        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        {
+            switch (args.VirtualKey)
+            {
+                case VirtualKey.PageDown:
+                case VirtualKey.Down:
+                    ContentScrollViewer.ChangeView(0, ContentScrollViewer.VerticalOffset + ContentScrollViewer.ViewportHeight - 50.0, null);
+                    break;
+                case VirtualKey.PageUp:
+                case VirtualKey.Up:
+                    ContentScrollViewer.ChangeView(0, ContentScrollViewer.VerticalOffset - ContentScrollViewer.ViewportHeight + 50.0, null);
+                    break;
+                case VirtualKey.Home:
+                    ContentScrollViewer.ChangeView(0, 0, null);
+                    break;
+                case VirtualKey.End:
+                    ContentScrollViewer.ChangeView(0, ContentScrollViewer.ScrollableHeight, null);
+                    break;
+                case VirtualKey.Left:
+                    var t = StopVideo();
+                    GoBack();
+                    break;
+            }
         }
 
         private bool LoadingExtraData;
@@ -93,6 +126,10 @@ namespace LiPTT
                     {
                         LoadArticle(e.Screen);
                     }
+                    break;
+                case PttState.PressAny:
+                    LiPTT.PttEventEchoed -= BrowseArticle;
+                    GoBack();
                     break;
             }
         }
@@ -320,6 +357,12 @@ namespace LiPTT
 
         private async void GoBack_Click(object sender, RoutedEventArgs e)
         {
+            await StopVideo();
+            GoBack();
+        }
+
+        private async Task StopVideo()
+        {
             foreach (var o in LiPTT.CurrentArticle.Content)
             {
                 if (o is WebView youtu)
@@ -337,8 +380,6 @@ namespace LiPTT
                     }
                 }
             }
-
-            GoBack();
         }
 
         private void GoBack()
@@ -415,14 +456,6 @@ namespace LiPTT
             }
 
             return bound;
-        }
-
-        private void Page_KeyDown(object sender, KeyRoutedEventArgs e)
-        {
-           if (e.Key == Windows.System.VirtualKey.Left)
-            {
-                GoBack();
-            }
         }
     }
 }

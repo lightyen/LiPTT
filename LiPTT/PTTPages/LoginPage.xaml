@@ -20,10 +20,11 @@
                     <TextBlock Text="密碼：" FontSize="20"/>
                     <PasswordBox x:Name="PasswordText" FontSize="30" KeyDown="PasswordText_KeyDown"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <CheckBox Content="記住帳號密碼" x:Name ="MemoAcount" KeyDown="MemoAcount_KeyDown"/>
-                </StackPanel>
-                
+                <Grid>
+                    <CheckBox Content="記住帳號密碼" x:Name ="MemoAcount" Padding="20,5" KeyDown="MemoAcount_KeyDown" HorizontalAlignment="Left" Checked="MemoAcount_Checked" Unchecked="MemoAcount_Unchecked"/>
+                    <CheckBox Content="啟動時自動登入" x:Name ="AutoLogin" Padding="20,5" KeyDown="MemoAcount_KeyDown" HorizontalAlignment="Right" />
+                </Grid>
+
                 <TextBlock x:Name="State" FontSize="26" Height="60" Text="{Binding State, Source={StaticResource ViewModel}}" />
                 <!--
                 <RelativePanel>

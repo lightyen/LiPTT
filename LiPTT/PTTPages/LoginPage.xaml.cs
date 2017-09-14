@@ -25,11 +25,12 @@ namespace LiPTT
         public LoginPage()
         {
             this.InitializeComponent();
-
-            App.Current.Suspending += (a, b) => { SaveUserAccount(UserText.Text, PasswordText.Password); };
+            App.Current.Suspending += (a, b) => { SaveUserAccount(LiPTT.UserName, LiPTT.Password); };
         }
 
         private const string AccountTableKey = "AccountTable";
+
+        private bool start = true;
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -38,9 +39,22 @@ namespace LiPTT
                 DefaultUserAccount();
             }
 
-            UserText.IsEnabled = true;
-            PasswordText.IsEnabled = true;
-            MemoAcount.IsEnabled = true;
+            if (start && AutoLogin.IsChecked == true)
+            {
+                start = false;
+                Enter();
+                UserText.IsEnabled = false;
+                PasswordText.IsEnabled = false;
+                MemoAcount.IsEnabled = false;
+                AutoLogin.IsEnabled = false;
+            }
+            else
+            {
+                UserText.IsEnabled = true;
+                PasswordText.IsEnabled = true;
+                MemoAcount.IsEnabled = true;
+                if (MemoAcount.IsChecked == true) AutoLogin.IsEnabled = true;
+            }
         }
 
         private void PasswordText_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -48,10 +62,9 @@ namespace LiPTT
             if (e.Key == VirtualKey.Enter && UserText.Text.Length >= 0)
             {
                 e.Handled = true;
-                //按兩下TAB
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Next);
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Next);
-
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Next);
                 Enter();
             }
         }
@@ -90,10 +103,8 @@ namespace LiPTT
                         {
                             LiPTT.UserName = UserText.Text;
                             LiPTT.TestConnectionTimer.Start();
+                            LiPTT.EnterUserName();
                         });
-
-                        action.AsTask().Wait();
-                        LiPTT.EnterUserName();
                     }
                     break;
                 case PttState.Password:
@@ -103,10 +114,8 @@ namespace LiPTT
                         var action = LiPTT.RunInUIThread(() =>
                         {
                             LiPTT.Password = PasswordText.Password;
-                        });
-
-                        action.AsTask().Wait();
-                        LiPTT.EnterPassword();                    
+                            LiPTT.EnterPassword();
+                        });            
                     }
                     
                     break;
@@ -133,6 +142,7 @@ namespace LiPTT
                             UserText.IsEnabled = false;
                             PasswordText.IsEnabled = false;
                             MemoAcount.IsEnabled = false;
+                            AutoLogin.IsEnabled = false;
                         });
                     }
                     break;
@@ -149,6 +159,7 @@ namespace LiPTT
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
+                            AutoLogin.IsEnabled = true;
                         });
 
                         LiPTT.TryDisconnect();
@@ -201,12 +212,14 @@ namespace LiPTT
                     }
                     
                     container.Values["remember"] = true;
+                    container.Values["autoLogin"] = AutoLogin.IsChecked;
                 }
                 else
                 {
                     container.Values["username"] = "";
                     container.Values["password"] = "";
                     container.Values["remember"] = false;
+                    container.Values["autoLogin"] = false;
                 }
             }
         }
@@ -235,9 +248,11 @@ namespace LiPTT
                         {
                             PasswordText.Password = LiPTT.Password;
                         }
-                        
-                        
+
+                        bool auto = (bool)container["autoLogin"];
+                        AutoLogin.IsChecked = auto;
                     }
+                    
 
                     return true;
                 }
@@ -259,6 +274,7 @@ namespace LiPTT
                 container.Values["username"] = "";
                 container.Values["password"] = "";
                 container.Values["remember"] = false;
+                container.Values["autoLogin"] = false;
             }
         }
 
@@ -267,10 +283,21 @@ namespace LiPTT
             if (e.Key == VirtualKey.Enter)
             {
                 e.Handled = true;
-                //按一下TAB
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Next);
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Next);
                 Enter();
             }
+        }
+
+        private void MemoAcount_Checked(object sender, RoutedEventArgs e)
+        {
+            AutoLogin.IsEnabled = true;
+        }
+
+        private void MemoAcount_Unchecked(object sender, RoutedEventArgs e)
+        {
+            AutoLogin.IsChecked = false;
+            AutoLogin.IsEnabled = false;
         }
     }
 }

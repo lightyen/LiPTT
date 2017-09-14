@@ -185,7 +185,7 @@ namespace LiPTT
 
                     Match match;
 
-                    if ((match = new Regex("(發信站:)").Match(str)).Success)
+                    if (str.StartsWith("※"))
                     {
                         if (paragraph.Inlines.Count > 0)
                         {
@@ -193,77 +193,75 @@ namespace LiPTT
                             paragraph = new Paragraph();
                         }
 
-                        TextBlock tb = new TextBlock()
+                        if ((match = new Regex("(發信站:)").Match(str)).Success)
                         {
-                            Text = str,
-                            IsTextSelectionEnabled = true,
-                            Foreground = new SolidColorBrush(Colors.Green),
-                            FontSize = ArticleFontSize - 8,
-                            FontFamily = ArticleFontFamily
-                        };
-                        Content.Add(tb);
-                        Debug.WriteLine(str);
-                    }
-                    else if ((match = new Regex("(文章網址:)").Match(str)).Success)
-                    {
-                        if (paragraph.Inlines.Count > 0)
-                        {
-                            Content.Add(CreateTextBlock(paragraph));
-                            paragraph = new Paragraph();
-                        }
 
-
-                        match = new Regex(http_exp).Match(str);
-
-                        if (match.Success)
-                        {
-                            StackPanel sp = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
-
-                            TextBlock tb = new TextBlock()
-                            {
-                                Text = str.Substring(0, match.Index),
-                                IsTextSelectionEnabled = true,
-                                Padding = new Thickness(0, 0, 8, 0),
-                                Foreground = new SolidColorBrush(Colors.Green),
-                                FontSize = ArticleFontSize - 8,
-                                FontFamily = ArticleFontFamily,
-                                VerticalAlignment = VerticalAlignment.Center,
-                            };
-                            sp.Children.Add(tb);
-
-                            HyperlinkButton button = new HyperlinkButton()
-                            {
-                                NavigateUri = new Uri(str.Substring(match.Index, match.Length)),
-                                Content = new TextBlock()
-                                {
-                                    Text = str.Substring(match.Index, match.Length),
-                                    IsTextSelectionEnabled = true,
-                                    Foreground = new SolidColorBrush(Colors.Green),
-                                    FontSize = ArticleFontSize - 8,
-                                    FontFamily = ArticleFontFamily,
-                                    VerticalAlignment = VerticalAlignment.Center,
-                                }
-                            };
-                            sp.Children.Add(button);
-                            Content.Add(sp);
-                        }
-                        else
-                        {
                             TextBlock tb = new TextBlock()
                             {
                                 Text = str,
+                                IsTextSelectionEnabled = true,
                                 Foreground = new SolidColorBrush(Colors.Green),
                                 FontSize = ArticleFontSize - 8,
                                 FontFamily = ArticleFontFamily
                             };
                             Content.Add(tb);
+                            Debug.WriteLine(str);
                         }
+                        else if ((match = new Regex("(文章網址:)").Match(str)).Success)
+                        {
 
-                        //本文過濾完畢
-                        ParsedContent = true;
-                        row++; ParsedLine++;
-                        break;
-                    }
+                            match = new Regex(http_exp).Match(str);
+
+                            if (match.Success)
+                            {
+                                StackPanel sp = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
+
+                                TextBlock tb = new TextBlock()
+                                {
+                                    Text = str.Substring(0, match.Index),
+                                    IsTextSelectionEnabled = true,
+                                    Padding = new Thickness(0, 0, 8, 0),
+                                    Foreground = new SolidColorBrush(Colors.Green),
+                                    FontSize = ArticleFontSize - 8,
+                                    FontFamily = ArticleFontFamily,
+                                    VerticalAlignment = VerticalAlignment.Center,
+                                };
+                                sp.Children.Add(tb);
+
+                                HyperlinkButton button = new HyperlinkButton()
+                                {
+                                    NavigateUri = new Uri(str.Substring(match.Index, match.Length)),
+                                    Content = new TextBlock()
+                                    {
+                                        Text = str.Substring(match.Index, match.Length),
+                                        IsTextSelectionEnabled = true,
+                                        Foreground = new SolidColorBrush(Colors.Green),
+                                        FontSize = ArticleFontSize - 8,
+                                        FontFamily = ArticleFontFamily,
+                                        VerticalAlignment = VerticalAlignment.Center,
+                                    }
+                                };
+                                sp.Children.Add(button);
+                                Content.Add(sp);
+                            }
+                            else
+                            {
+                                TextBlock tb = new TextBlock()
+                                {
+                                    Text = str,
+                                    Foreground = new SolidColorBrush(Colors.Green),
+                                    FontSize = ArticleFontSize - 8,
+                                    FontFamily = ArticleFontFamily
+                                };
+                                Content.Add(tb);
+                            }
+
+                            //本文過濾完畢
+                            ParsedContent = true;
+                            row++; ParsedLine++;
+                            break;
+                        }
+                    }                   
                     //網址
                     else if ((match = new Regex(http_exp).Match(str)).Success)
                     {
@@ -761,7 +759,13 @@ namespace LiPTT
 
             double space = 0.2; //也就是佔總寬的80%
 
-            if (ratio >= 1.0)
+            if (bmp.PixelWidth < ViewWidth * (1-space))
+            {
+                c1 = new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) };
+                c2 = new ColumnDefinition { Width = new GridLength(bmp.PixelWidth, GridUnitType.Pixel) };
+                c3 = new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) };
+            }
+            else if (ratio >= 1.0)
             {
                 c1 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
                 c2 = new ColumnDefinition { Width = new GridLength((1 - space), GridUnitType.Star) };

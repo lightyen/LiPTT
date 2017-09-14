@@ -102,7 +102,7 @@ namespace LiPTT
         /// <param name="sender">暫停之要求的來源。</param>
         /// <param name="e">有關暫停之要求的詳細資料。</param>
         private void OnSuspending(object sender, SuspendingEventArgs e)
-        { 
+        {
             LiPTT.ReleaseInstance();
            
             DirectXFactory.ReleaseIndependentResource();

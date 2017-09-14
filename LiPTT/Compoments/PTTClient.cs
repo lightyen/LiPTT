@@ -361,16 +361,8 @@ namespace LiPTT
                 }
                 catch (IOException)
                 {
-                    if (IsExit)
-                    {
-                        Debug.WriteLine("StartRecv():掰掰~");
-                        Disconnect();
-                    }
-                    else
-                    {
-                        Debug.WriteLine("StartRecv():被踢下線了或G?");
-                        Disconnect();
-                    }
+                    Debug.WriteLine("StartRecv():掰掰~");
+                    Disconnect();
                     break;
                 }
             }

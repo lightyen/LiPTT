@@ -40,7 +40,7 @@
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <TextBlock Text="{x:Bind Author}" FontSize="26" VerticalAlignment="Center" Padding="10,0,10,0" Foreground="Yellow" IsTextSelectionEnabled="True"/>
-                                        <TextBlock Text="{x:Bind AuthorNickname}" FontSize="17" VerticalAlignment="Bottom"  Padding="10,0,10,0" Foreground="DarkCyan" IsTextSelectionEnabled="True"/>
+                                        <TextBlock Text="{x:Bind AuthorNickname}" FontSize="17" VerticalAlignment="Center"  Padding="10,0,10,0" Foreground="DarkCyan" IsTextSelectionEnabled="True"/>
                                         <TextBlock Text="{x:Bind Date, Converter={StaticResource MyDateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:MM/dd HH:ss}'}" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="22" Padding="10,0,10,0" Foreground="Aquamarine" IsTextSelectionEnabled="True" />
                                     </StackPanel>
                                     <TextBlock FontSize="18" Padding="10,0,10,0" HorizontalAlignment="Center" IsTextSelectionEnabled="True">

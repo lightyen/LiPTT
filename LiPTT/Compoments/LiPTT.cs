@@ -282,7 +282,7 @@ namespace LiPTT
             }
             else
             {
-                Debug.WriteLine("這裡是哪裡? 小天使不要鬧");
+                Debug.WriteLine("這裡是哪裡?");
 
                 foreach (string s in Current.Screen.ToStringArray())
                 {

@@ -58,7 +58,7 @@ namespace LiPTT
             List<string> fontNames = SharpDX.DirectXFactory.GetInstalledFontNames();
             foreach (var s in fontNames) FontsComboBox.Items.Add(s);
  
-            //Window.Current.CoreWindow.KeyDown += PanelKeyDown;
+            Window.Current.CoreWindow.KeyDown += PanelKeyDown;
             
         }
 

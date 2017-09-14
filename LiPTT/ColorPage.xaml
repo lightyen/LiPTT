@@ -6,7 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d" NavigationCacheMode="Disabled" >
-
+    <!--https://docs.microsoft.com/en-us/windows/uwp/controls-and-patterns/color-picker-->
+    <!--等待軟軟Release再說-->
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" HorizontalAlignment ="Stretch" x:Name="ColorTable">
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"/>

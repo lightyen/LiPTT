@@ -312,7 +312,7 @@ namespace LiPTT
                     var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                     {
                         article.Echoes.Percent = bound.Percent;
-
+                        
                         article.LoadCompleted = true;
                         
                         article.Echoes.HasMoreItems = true;

@@ -328,6 +328,7 @@ namespace LiPTT
 
                             match = new Regex(http_exp).Match(str);
 
+                            /***
                             if (match.Success)
                             {
                                 StackPanel sp = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -337,7 +338,7 @@ namespace LiPTT
                                     Text = str.Substring(0, match.Index),
                                     IsTextSelectionEnabled = true,
                                     Padding = new Thickness(0, 0, 8, 0),
-                                    Foreground = new SolidColorBrush(Colors.Green),
+                                    Foreground = new SolidColorBrush(Colors.LightGreen),
                                     FontSize = ArticleFontSize - 8,
                                     FontFamily = ArticleFontFamily,
                                     VerticalAlignment = VerticalAlignment.Center,
@@ -348,31 +349,30 @@ namespace LiPTT
                                 {
                                     NavigateUri = new Uri(str.Substring(match.Index, match.Length)),
                                     Content = new TextBlock()
-                                    {
+                                    { 
                                         Text = str.Substring(match.Index, match.Length),
                                         IsTextSelectionEnabled = true,
-                                        Foreground = new SolidColorBrush(Colors.Green),
+                                        Foreground = new SolidColorBrush(Colors.LightGreen),
                                         FontSize = ArticleFontSize - 8,
                                         FontFamily = ArticleFontFamily,
-                                        VerticalAlignment = VerticalAlignment.Center,
+                                        VerticalAlignment = VerticalAlignment.Stretch,
                                     }
                                 };
                                 sp.Children.Add(button);
                                 Content.Add(sp);
                             }
-                            else
+                            /***/
+
+                            TextBlock tb = new TextBlock()
                             {
-                                TextBlock tb = new TextBlock()
-                                {
-                                    Text = str,
-                                    IsTextSelectionEnabled = true,
-                                    Foreground = new SolidColorBrush(Colors.Green),
-                                    FontSize = ArticleFontSize - 8,
-                                    FontFamily = ArticleFontFamily
-                                };
-                                Content.Add(tb);
-                                Debug.WriteLine(str);
-                            }
+                                Text = str,
+                                IsTextSelectionEnabled = true,
+                                Foreground = new SolidColorBrush(Colors.Green),
+                                FontSize = ArticleFontSize - 8,
+                                FontFamily = ArticleFontFamily
+                            };
+                            Content.Add(tb);
+                            Debug.WriteLine(str);
                         }
                         else
                         {
@@ -1416,7 +1416,7 @@ namespace LiPTT
     //只能用這個了...
     //https://stackoverflow.com/questions/40052378/isupportincrementalloading-gridview-within-a-scrollviewer-fires-loadmoreitemsasy
     //https://msdn.microsoft.com/en-us/windows/uwp/debug-test-perf/optimize-gridview-and-listview#ui-virtualization
-    public class EchoCollection : ObservableCollection<Echo>, ISupportIncrementalLoading
+    public class EchoCollection : ObservableCollection<object>, ISupportIncrementalLoading
     {
         private SemaphoreSlim locker;
 

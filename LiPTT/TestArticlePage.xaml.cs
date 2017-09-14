@@ -190,10 +190,11 @@ namespace LiPTT
 
             for (int i = 0; i < 3; i++)
             {
-                HyperlinkButton hyper = new HyperlinkButton();
-
-                hyper.Content = "hello world";
-                hyper.NavigateUri = new Uri("https://www.google.com.tw/");
+                HyperlinkButton hyper = new HyperlinkButton
+                {
+                    Content = "hello world",
+                    NavigateUri = new Uri("https://www.google.com.tw/")
+                };
                 collection2.Add(hyper);
             }
 

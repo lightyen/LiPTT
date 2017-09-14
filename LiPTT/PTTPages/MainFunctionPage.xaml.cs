@@ -15,19 +15,28 @@ using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 // 空白頁項目範本已記錄在 https://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace LiPTT
 {
-    /// <summary>
-    /// 可以在本身使用或巡覽至框架內的空白頁面。
-    /// </summary>
     public sealed partial class MainFunctionPage : Page
     {
         public MainFunctionPage()
         {
             this.InitializeComponent();
+
+            BoardGridView.Items.Add(new MyKeyValuePair("Windows", "Windows"));
+            BoardGridView.Items.Add(new MyKeyValuePair("笨蛋", "StupidClown"));
+            BoardGridView.Items.Add(new MyKeyValuePair("Soft Job", "Soft_Job"));
+            BoardGridView.Items.Add(new MyKeyValuePair("八卦", "Gossiping"));
+            BoardGridView.Items.Add(new MyKeyValuePair("LOL", "LoL"));
+            BoardGridView.Items.Add(new MyKeyValuePair("表特", "Beauty"));
+            BoardGridView.Items.Add(new MyKeyValuePair("電蝦", "PC_Shopping"));
+            BoardGridView.Items.Add(new MyKeyValuePair("少女前線", "GirlsFront"));
+            BoardGridView.Items.Add(new MyKeyValuePair("C# 程式設計", "C_Sharp"));
         }
 
         List<string> RelatedTable = new List<string>();
@@ -207,38 +216,10 @@ namespace LiPTT
 
         private void GridView_ItemClick(object sender, ItemClickEventArgs e)
         {
-            if (e.ClickedItem is string s)
+            if (e.ClickedItem is MyKeyValuePair kv)
             {
-                if (s == "八卦")
-                {
-                    LiPTT.PttEventEchoed += GoToBoard;
-                    LiPTT.SendMessage('s', "Gossiping", 0x0D);
-                }
-                else if (s == "表特")
-                {
-                    LiPTT.PttEventEchoed += GoToBoard;
-                    LiPTT.SendMessage('s', "Beauty", 0x0D);
-                }
-                else if (s == "LoL")
-                {
-                    LiPTT.PttEventEchoed += GoToBoard;
-                    LiPTT.SendMessage('s', "LoL", 0x0D);
-                }
-                else if (s == "電蝦")
-                {
-                    LiPTT.PttEventEchoed += GoToBoard;
-                    LiPTT.SendMessage('s', "PC_Shopping", 0x0D);
-                }
-                else if (s == "少女前線")
-                {
-                    LiPTT.PttEventEchoed += GoToBoard;
-                    LiPTT.SendMessage('s', "GirlsFront", 0x0D);
-                }
-                else if (s == "C# 程式設計")
-                {
-                    LiPTT.PttEventEchoed += GoToBoard;
-                    LiPTT.SendMessage('s', "C_Sharp", 0x0D);
-                }
+                LiPTT.PttEventEchoed += GoToBoard;
+                LiPTT.SendMessage('s', kv.Value, 0x0D);
             }
         }
 
@@ -255,6 +236,47 @@ namespace LiPTT
             LiPTT.CurrentWebView = null;
 
             LiPTT.Frame.Navigate(typeof(LoginPage));
+        }
+    }
+
+    public class MyKeyValuePair : INotifyPropertyChanged
+    {
+        public object Key
+        {
+            get { return k; }
+            set
+            {
+                k = value;
+                NotifyPropertyChanged("Key");
+            }
+        }
+        public object Value
+        {
+            get { return v; }
+            set
+            {
+                v = value;
+                NotifyPropertyChanged("Value");
+            }
+        }
+
+        private object k;
+        private object v;
+
+        public MyKeyValuePair(object k, object v)
+        {
+            this.k = k;
+            this.v = v;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
     }
 }

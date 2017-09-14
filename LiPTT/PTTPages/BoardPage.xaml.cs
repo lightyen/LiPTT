@@ -31,15 +31,8 @@ namespace LiPTT
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if (true)
-            {
-                Debug.WriteLine(">>載入新看板");
-                Initialize(LiPTT.Current.Screen);
-            }
-            else
-            {
-                Debug.WriteLine(">>看板已存在");
-            }
+            Debug.WriteLine(">>載入新看板");
+            Initialize(LiPTT.Current.Screen);
 
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         }

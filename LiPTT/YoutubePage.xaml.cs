@@ -117,7 +117,7 @@ namespace LiPTT
             return sb.ToString();
         }
 
-        private async void WebView_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
+        private void WebView_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
         {
             //***
             //D6tC1pyrsTM&t=4287s

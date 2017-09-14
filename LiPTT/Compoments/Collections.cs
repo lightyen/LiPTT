@@ -103,10 +103,12 @@ namespace LiPTT
 
         public bool ParsedContent { get; private set; }
         public int PageDownPercent { get; set; }
-        public int ParsedLine { get; set; }
+        private int ParsedLine { get; set; }
         private Paragraph paragraph;
         private static double ArticleFontSize = 24.0;
         private FontFamily ArticleFontFamily;
+
+        private const string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w-./?%&=]*)?";
 
         private ReadType readtype;
         public ReadType ReadType
@@ -168,6 +170,264 @@ namespace LiPTT
         public void AppendLine(Block[] blocks)
         {
             RawLines.Add(LiPTT.Copy(blocks));
+        }
+
+        public void ParseBeta()
+        {
+            for (int row = ParsedLine; row < RawLines.Count; row++, ParsedLine++)
+            {
+                string str = LiPTT.GetString(RawLines[row]);
+                Match match;
+
+                if (!ParsedContent)
+                {
+                    if (str.StartsWith("※"))
+                    {
+                        if (paragraph.Inlines.Count > 0)
+                        {
+                            Content.Add(CreateTextBlock(paragraph));
+                            paragraph = new Paragraph();
+                        }
+
+                        if ((match = new Regex("(文章網址:)").Match(str)).Success)
+                        {
+                            //當作過濾完畢
+                            ParsedContent = true;
+                        }
+                        else if ((match = new Regex("(發信站:)").Match(str)).Success)
+                        {
+                            //當作過濾完畢
+                            ParsedContent = true;
+                        }
+                        else if ((match = new Regex("(編輯:)").Match(str)).Success)
+                        {
+                            //當作過濾完畢
+                            ParsedContent = true;
+                        }
+
+                        TextBlock tb = new TextBlock()
+                        {
+                            Text = str,
+                            IsTextSelectionEnabled = true,
+                            Foreground = new SolidColorBrush(Colors.Green),
+                            FontSize = ArticleFontSize - 8,
+                            FontFamily = ArticleFontFamily,
+                            VerticalAlignment = VerticalAlignment.Center,
+                        };
+                        Content.Add(tb);
+                    }
+                    else if ((match = new Regex(http_exp).Match(str)).Success)
+                    {
+                        if (paragraph.Inlines.Count > 0)
+                        {
+                            Content.Add(CreateTextBlock(paragraph));
+                            paragraph = new Paragraph();
+                        }
+
+                        string url = str.Substring(match.Index, match.Length);
+
+                        CreateUriView(url);
+                    }
+                    else //內文
+                    {
+                        int color = RawLines[row][0].ForegroundColor;
+                        int index = 0;
+                        for (int i = 0; i < RawLines[row].Length; i++)
+                        {
+                            Block b = RawLines[row][i];
+                            if (color != b.ForegroundColor)
+                            {
+                                string text = LiPTT.GetString(RawLines[row], index, i - index);
+
+                                /****
+                                InlineUIContainer container = new InlineUIContainer
+                                {
+                                    Child = new Border()
+                                    {
+                                        Background = GetBackgroundBrush(RawLines[row][index]),
+                                        Child = new TextBlock()
+                                        {
+                                            IsTextSelectionEnabled = true,
+                                            Text = text.Replace('\0', ' '),
+                                            FontSize = ArticleFontSize,
+                                            FontFamily = ArticleFontFamily,
+                                            Foreground = GetForegroundBrush(RawLines[row][index]),
+                                        }
+                                    }
+                                };
+                                /***/
+                                Run container = new Run()
+                                {
+                                    Text = text.Replace('\0', ' '),
+                                    FontSize = ArticleFontSize,
+                                    FontFamily = ArticleFontFamily,
+                                    Foreground = GetForegroundBrush(RawLines[row][index]),
+                                };
+
+                                paragraph.Inlines.Add(container);
+
+
+
+                                index = i;
+                                color = b.ForegroundColor;
+                            }
+                        }
+
+                        if (index + 1 < RawLines[row].Length)
+                        {
+                            string text = LiPTT.GetString(RawLines[row], index, RawLines[row].Length - index);
+
+                            /***
+                            InlineUIContainer container = new InlineUIContainer
+                            {
+                                Child = new Border()
+                                {
+                                    Background = GetBackgroundBrush(RawLines[row][index]),
+                                    Child = new TextBlock()
+                                    {
+                                        IsTextSelectionEnabled = true,
+                                        Text = text.Replace('\0', ' '),
+                                        FontSize = ArticleFontSize,
+                                        FontFamily = ArticleFontFamily,
+                                        Foreground = GetForegroundBrush(RawLines[row][index]),
+                                    }
+                                }
+                            };
+                            /***/
+                            //***
+                            Run container = new Run()
+                            {
+                                Text = text.Replace('\0', ' '),
+                                FontSize = ArticleFontSize,
+                                FontFamily = ArticleFontFamily,
+                                Foreground = GetForegroundBrush(RawLines[row][index]),
+                            };
+                            /***/
+                            paragraph.Inlines.Add(container);
+                        }
+
+                        paragraph.Inlines.Add(new LineBreak());
+                    }
+
+                    if (PageDownPercent == 100 && row == RawLines.Count)
+                    {
+                        if (paragraph.Inlines.Count > 0)
+                        {
+                            Content.Add(CreateTextBlock(paragraph));
+                            paragraph = new Paragraph();
+                        }
+                        ParsedContent = true;
+                    }
+                }
+                else
+                {
+                    if (str.StartsWith("※"))
+                    {
+                        if ((match = new Regex("(文章網址:)").Match(str)).Success)
+                        {
+
+                            match = new Regex(http_exp).Match(str);
+
+                            if (match.Success)
+                            {
+                                StackPanel sp = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
+
+                                TextBlock tb = new TextBlock()
+                                {
+                                    Text = str.Substring(0, match.Index),
+                                    IsTextSelectionEnabled = true,
+                                    Padding = new Thickness(0, 0, 8, 0),
+                                    Foreground = new SolidColorBrush(Colors.Green),
+                                    FontSize = ArticleFontSize - 8,
+                                    FontFamily = ArticleFontFamily,
+                                    VerticalAlignment = VerticalAlignment.Center,
+                                };
+                                sp.Children.Add(tb);
+
+                                HyperlinkButton button = new HyperlinkButton()
+                                {
+                                    NavigateUri = new Uri(str.Substring(match.Index, match.Length)),
+                                    Content = new TextBlock()
+                                    {
+                                        Text = str.Substring(match.Index, match.Length),
+                                        IsTextSelectionEnabled = true,
+                                        Foreground = new SolidColorBrush(Colors.Green),
+                                        FontSize = ArticleFontSize - 8,
+                                        FontFamily = ArticleFontFamily,
+                                        VerticalAlignment = VerticalAlignment.Center,
+                                    }
+                                };
+                                sp.Children.Add(button);
+                                Content.Add(sp);
+                            }
+                            else
+                            {
+                                TextBlock tb = new TextBlock()
+                                {
+                                    Text = str,
+                                    IsTextSelectionEnabled = true,
+                                    Foreground = new SolidColorBrush(Colors.Green),
+                                    FontSize = ArticleFontSize - 8,
+                                    FontFamily = ArticleFontFamily
+                                };
+                                Content.Add(tb);
+                                Debug.WriteLine(str);
+                            }
+                        }
+                        else
+                        {
+                            TextBlock tb = new TextBlock()
+                            {
+                                Text = str,
+                                IsTextSelectionEnabled = true,
+                                Foreground = new SolidColorBrush(Colors.Green),
+                                FontSize = ArticleFontSize - 8,
+                                FontFamily = ArticleFontFamily,
+                                VerticalAlignment = VerticalAlignment.Center,
+                            };
+                            Content.Add(tb);
+                        }
+                    }
+                    else if (str.StartsWith("推") || str.StartsWith("噓") || str.StartsWith("→"))
+                    {
+                        Echo echo = new Echo();
+
+                        str = LiPTT.GetString(RawLines[row], 0, RawLines[row].Length - 13);
+
+                        int index = 2;
+                        int end = index;
+                        while (str[end] != ':') end++;
+
+                        string auth = str.Substring(index, end - index);
+
+                        echo.Author = auth.Trim();
+
+                        echo.Content = str.Substring(end + 1);
+
+                        string time = LiPTT.GetString(RawLines[row], 67, 11);
+                        //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
+                        try
+                        {
+                            System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
+                            echo.Date = DateTimeOffset.ParseExact(time, "MM/dd HH:mm", provider);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex.ToString());
+                        }
+
+                        if (str.StartsWith("推")) echo.Evaluation = Evaluation.推;
+                        else if (str.StartsWith("噓")) echo.Evaluation = Evaluation.噓;
+                        else echo.Evaluation = Evaluation.箭頭;
+
+                        Echoes.Add(echo);
+                    }
+                    else //其他類型推文
+                    {
+                        Debug.WriteLine(str);
+                    }
+                }
+            }
         }
 
         public void Parse()
@@ -261,7 +521,7 @@ namespace LiPTT
                             row++; ParsedLine++;
                             break;
                         }
-                    }                   
+                    }
                     //網址
                     else if ((match = new Regex(http_exp).Match(str)).Success)
                     {
@@ -278,7 +538,6 @@ namespace LiPTT
                     //內文(非網址)
                     else
                     {
-                        //***
                         int color = RawLines[row][0].ForegroundColor;
                         int index = 0;
                         for (int i = 0; i < RawLines[row].Length; i++)

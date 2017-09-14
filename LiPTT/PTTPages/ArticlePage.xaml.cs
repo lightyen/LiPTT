@@ -155,8 +155,6 @@ namespace LiPTT
         {
             LoadingIndicator.IsActive = true;
 
-            ParagraphControl.ItemsSource = null;
-
             int k = 0;
             foreach (var t in await Task.WhenAll(article.SomeTasks))
             {
@@ -171,10 +169,14 @@ namespace LiPTT
                 }
             }
 
+            ParagraphControl.ItemsSource = null;
             ParagraphControl.ItemsSource = article.Content;
 
             LoadingIndicator.IsActive = false;
         }
+
+        //尚未讀取的起始行
+        private int line;
 
         private void LoadArticle(ScreenBuffer screen)
         {
@@ -189,8 +191,6 @@ namespace LiPTT
             Regex regex;
             Match match;
             string tmps;
-
-            bool header = false;
 
             if (bound.Begin == 1)
             {
@@ -216,14 +216,16 @@ namespace LiPTT
                             break;
                         }
                     }
-
-                    header = true;
                 }
                 else
                 {
-                    Debug.WriteLine("作者?" + tmps);
+                    line = 0;
+                    Debug.WriteLine("沒有文章標頭? " + tmps);
                     goto READ_CONTENT;
                 }
+
+                //標題
+                //已讀過 所以不再Parse
 
                 //時間
                 //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
@@ -241,23 +243,40 @@ namespace LiPTT
                     goto READ_CONTENT;
                 }
 
+                line = 3;
+
                 READ_CONTENT:;
+
                 //////////////////////////////////////////////////////////////////////////////////////////
                 //第一頁文章內容
-                for (int i = header ? 4 : 0; i <= bound.End - (header ? 0 : 1); i++)
+                for (int i = line > 0 ? line + 1 : 0; i < bound.End; i++, line++)
                 {
-                    article.AppendLine(screen[i]);                   
+                    article.AppendLine(screen[i]);
                 }
 
                 action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    article.Parse();
+                    article.ParseBeta();
                 });
 
             }
+            else
+            {
+                for (int i = line - bound.Begin + 1; i <= bound.End - bound.Begin; i++, line++)
+                {
+                    article.AppendLine(screen[i]);
+                }
+
+                action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    article.ParseBeta();
+                });
+            }
+            /***
             else if (bound.Percent < 100)
             {
-                for (int i = 1; i < 23; i++)
+                
+                for (int i = line - bound.Begin - 1; i <= bound.End - bound.Begin; i++, line++)
                 {
                     article.AppendLine(screen[i]);
                 }
@@ -280,7 +299,7 @@ namespace LiPTT
                     article.Parse();
                 });
             }
-
+            /***/
             article.PageDownPercent = bound.Percent;
 
             //捲到下一頁

@@ -666,7 +666,7 @@ namespace LiPTT
 #endif
                             screenBuffer.DownLines(1);
                             screenBuffer.DefaultAttribute();
-                            screenBuffer.DefaultColor();
+                            //screenBuffer.DefaultColor();
                             break;
                         case 0x0B: //VT  - vertical tab
 #if DEBUG
@@ -843,7 +843,7 @@ namespace LiPTT
                 }
             }
 #if DEBUG
-            //Debug.WriteLine(RAW_Message.ToString());
+            Debug.WriteLine(RAW_Message.ToString());
 #endif
         }
 

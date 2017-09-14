@@ -24,7 +24,7 @@ namespace LiPTT
 
         public ImageCache()
         {
-            MaxMemoryCacheCount = 500;
+            MaxMemoryCacheCount = 1000;
             CacheDuration = TimeSpan.FromHours(12);
             cache_filename = new Queue<string>();
         }

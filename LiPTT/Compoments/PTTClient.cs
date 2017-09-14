@@ -843,7 +843,7 @@ namespace LiPTT
                 }
             }
 #if DEBUG
-            Debug.WriteLine(RAW_Message.ToString());
+            //Debug.WriteLine(RAW_Message.ToString());
 #endif
         }
 

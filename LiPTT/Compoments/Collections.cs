@@ -108,7 +108,9 @@ namespace LiPTT
         private static double ArticleFontSize = 24.0;
         private FontFamily ArticleFontFamily;
 
-        private const string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w-./?%&=]*)?";
+
+        private const string http_exp = @"((http|https)://([A-Za-z0-9_]+:{0,1}[A-Za-z0-9_]*@)?([A-Za-z0-9_#!:.?+=&%@!-/$^,;|*~'()]+)(:[0-9]+)?(/|/([A-Za-z0-9_#!:.?+=&%@!-/]))?)|(pid://(\d{1,10}))";
+        //private const string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w-./?%&=]*)?";
 
         private ReadType readtype;
         public ReadType ReadType
@@ -223,6 +225,36 @@ namespace LiPTT
                             Content.Add(CreateTextBlock(paragraph));
                             paragraph = new Paragraph();
                         }
+
+                        if (match.Index > 0)
+                        {
+                            TextBlock tb = new TextBlock()
+                            {
+                                Text = str.Substring(0, match.Index),
+                                IsTextSelectionEnabled = true,
+                                Foreground = new SolidColorBrush(Colors.White),
+                                FontSize = ArticleFontSize,
+                                FontFamily = ArticleFontFamily,
+                                VerticalAlignment = VerticalAlignment.Center,
+                            };
+                            Content.Add(tb);
+                        }
+
+                        if (match.Index + match.Length < str.Length)
+                        {
+                            TextBlock tb = new TextBlock()
+                            {
+                                Text = str.Substring(match.Index + match.Length, str.Length - (match.Index + match.Length)),
+                                IsTextSelectionEnabled = true,
+                                Foreground = new SolidColorBrush(Colors.White),
+                                FontSize = ArticleFontSize,
+                                FontFamily = ArticleFontFamily,
+                                VerticalAlignment = VerticalAlignment.Center,
+                            };
+                            Content.Add(tb);
+
+                        }
+
 
                         string url = str.Substring(match.Index, match.Length);
 

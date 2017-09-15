@@ -28,9 +28,7 @@ namespace LiPTT
     public sealed partial class ArticlePage : Page
     {
 
-        string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w ./?%&=]*)?";
-        //string k1 = @"(?<link>http(s)?://([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?)+";
-        //string k2 = "<a href=\"${link}\">${link}</a>";
+        private bool UILoadCompleted;
 
         public ArticlePage()
         {
@@ -42,11 +40,14 @@ namespace LiPTT
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             LoadingIndicator.IsActive = true;
+            
+            UILoadCompleted = false;
             article = LiPTT.CurrentArticle;
-
+            article.LoadCompleted = false;
             ArticleHeaderListBox.Items.Clear();
 
             ParagraphControl.ItemsSource = null;
+
             EchoView.ItemsSource = null;
 
             article.DefaultState();
@@ -92,6 +93,54 @@ namespace LiPTT
             }
         }
 
+        private void UpdateUI()
+        {
+            LoadingIndicator.IsActive = true;
+
+            ArticleHeaderListBox.Items.Add(article);
+
+            EchoView.ItemsSource = article.Echoes;
+
+            ParagraphControl.ItemsSource = null;
+            ParagraphControl.ItemsSource = article.Content;
+
+            LoadingIndicator.IsActive = false;
+        }
+
+        private async Task UpdateDownloadTaskView()
+        {
+            if (article.DownloadTasks.Count == 0)
+            {
+                UILoadCompleted = true;
+            }
+            else
+            {
+                /***
+                foreach (var t in await Task.WhenAll(article.SomeTasks))
+                {
+                    article.Content[t.Item1] = t.Item2;
+                    ParagraphControl.ItemsSource = null;
+                    ParagraphControl.ItemsSource = article.Content;
+                }
+                /***/
+
+                while (article.DownloadTasks.Count > 0)
+                {
+                    var firstFinishedTask = await Task.WhenAny(article.DownloadTasks);
+
+                    article.Content[firstFinishedTask.Result.Index] = firstFinishedTask.Result.Item;
+                    ParagraphControl.ItemsSource = null;
+                    ParagraphControl.ItemsSource = article.Content;
+
+                    article.DownloadTasks.Remove(firstFinishedTask);
+                }
+
+                UILoadCompleted = true;
+            }
+
+            
+        }
+
         private bool LoadingExtraData;
         private bool pressAny;
 
@@ -134,46 +183,6 @@ namespace LiPTT
             }
         }
 
-        private void UpdateUI()
-        {
-            ArticleHeaderListBox.Items.Add(article);
-
-            foreach (var x in article.Content)
-            {
-                if (x is WebView webview)
-                {
-                    webview.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
-                }
-            }
-
-            EchoView.ItemsSource = article.Echoes;
-
-            ParagraphControl.ItemsSource = article.Content;
-        }
-
-        private async Task UpdatePicture()
-        {
-            LoadingIndicator.IsActive = true;
-
-            int k = 0;
-            foreach (var t in await Task.WhenAll(article.SomeTasks))
-            {
-                if (t.Item1 < article.Content.Count)
-                {
-                    article.Content.Insert(t.Item1 + k, t.Item2);
-                    k++;
-                }
-                else
-                {
-                    article.Content.Add(t.Item2);
-                }
-            }
-
-            ParagraphControl.ItemsSource = null;
-            ParagraphControl.ItemsSource = article.Content;
-
-            LoadingIndicator.IsActive = false;
-        }
 
         //尚未讀取的起始行
         private int line;
@@ -319,7 +328,7 @@ namespace LiPTT
 
                         UpdateUI();
 
-                        await UpdatePicture();
+                        await UpdateDownloadTaskView();
                         
                     });
                 }
@@ -342,7 +351,7 @@ namespace LiPTT
 
                     UpdateUI();
 
-                    await UpdatePicture();
+                    await UpdateDownloadTaskView();
                 }); 
             }
         }
@@ -354,7 +363,7 @@ namespace LiPTT
             Debug.WriteLine("文章代碼: " + article.AID);
             //網頁版網址
             string str = screen.ToString(20);
-            Regex regex = new Regex(http_exp);
+            Regex regex = new Regex(LiPTT.http_regex);
             Match match = regex.Match(str);
             if (match.Success)
             {
@@ -376,6 +385,7 @@ namespace LiPTT
 
         private async void GoBack_Click(object sender, RoutedEventArgs e)
         {
+            if (!UILoadCompleted) return;
             await StopVideo();
             GoBack();
         }
@@ -404,8 +414,7 @@ namespace LiPTT
         private void GoBack()
         {
             if (LiPTT.State == PttState.Article && article.LoadCompleted)
-            {
-                
+            {              
                 LiPTT.PttEventEchoed += PttEventEchoed_UpdateArticleTag;
                 LiPTT.Left();
             }

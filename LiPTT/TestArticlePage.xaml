@@ -25,12 +25,44 @@
                         <InlineUIContainer>
                             <Border Background="Red">
                                 <TextBlock Text="Hello world">
-                                    
+
                                 </TextBlock>
                             </Border>
                         </InlineUIContainer>
                     </Paragraph>
                 </RichTextBlock>
+                <ListView x:Name="TestView" IsItemClickEnabled="True" >
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListViewItem">
+                                        <ListViewItemPresenter
+                                                              SelectionCheckMarkVisualEnabled="True"
+                                                              CheckBrush="{ThemeResource SystemControlForegroundBaseMediumHighBrush}"
+                                                              CheckBoxBrush="{ThemeResource SystemControlForegroundBaseMediumHighBrush}"
+                                                              DragBackground="{ThemeResource ListViewItemDragBackgroundThemeBrush}"
+                                                              DragForeground="{ThemeResource ListViewItemDragForegroundThemeBrush}"
+                                                              FocusBorderBrush="{ThemeResource SystemControlForegroundAltHighBrush}"
+                                                              FocusSecondaryBorderBrush="{ThemeResource SystemControlForegroundBaseHighBrush}"
+                                                              PlaceholderBackground="{ThemeResource ListViewItemPlaceholderBackgroundThemeBrush}"
+                                                              SelectedBackground="{ThemeResource SystemControlHighlightListAccentLowBrush}"
+                                                              SelectedPointerOverBackground="{ThemeResource SystemControlHighlightListAccentMediumBrush}"
+                                                              PressedBackground="{ThemeResource SystemControlHighlightListMediumBrush}"
+                                                              SelectedPressedBackground="{ThemeResource ListViewItemPlaceholderBackgroundThemeBrush}"
+                                                              DisabledOpacity="{ThemeResource ListViewItemDisabledThemeOpacity}"
+                                                              DragOpacity="{ThemeResource ListViewItemDragThemeOpacity}"
+                                                              ReorderHintOffset="{ThemeResource ListViewItemReorderHintThemeOffset}"
+                                                    />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                </ListView>
             </Grid>
         </Grid>
         

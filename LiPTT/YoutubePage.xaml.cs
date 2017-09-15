@@ -11,6 +11,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using System.Diagnostics;
 using Windows.UI.Xaml.Navigation;
 
 using Windows.UI.ViewManagement;
@@ -154,32 +155,75 @@ namespace LiPTT
             //string html = "https://forum.gamer.com.tw/A.php?bsn=60030";
             //myWebView.NavigateToString(GGG());
 
-            YoutubeWebView.DOMContentLoaded += async (a, b) =>
+            MyPanel.Children.Clear();
+
+            WebView wwvv = new WebView() { Width = 800, Height = 800 * 0.5625, DefaultBackgroundColor = Windows.UI.Colors.Gray };
+
+
+            Grid grid = new Grid() { Width = 800, Height = 800 * 0.5625 };
+            ProgressRing ring = new ProgressRing() { IsActive = true };
+
+            wwvv.NavigationStarting += (a, b) =>
             {
-                string script = GetYoutubeScript("oXp2oE0xQcE", YoutubeWebView.ActualWidth, YoutubeWebView.ActualHeight);
+                Debug.WriteLine("NavigationStarting");
+                
+            };
+
+            wwvv.ContentLoading += (a, b) =>
+            {
+                Debug.WriteLine("ContentLoading");
+                wwvv.Visibility = Visibility.Collapsed;
+            };
+
+            wwvv.FrameDOMContentLoaded += (a, b) =>
+            {
+                Debug.WriteLine("FrameDOMContentLoaded");
+                ring.IsActive = false;
+                wwvv.Visibility = Visibility.Visible;
+            };
+
+            wwvv.FrameNavigationCompleted += (a, b) =>
+            {
+                Debug.WriteLine("FrameNavigationCompleted");
+                
+            };
+
+            wwvv.DOMContentLoaded += async (a, b) =>
+            {
+                Debug.WriteLine("DOMContentLoaded");
+                
+                string script = GetYoutubeScript("oXp2oE0xQcE", wwvv.ActualWidth, wwvv.ActualHeight);
                 try
                 {
-                    string returnStr = await YoutubeWebView.InvokeScriptAsync("eval", new string[] { script });
-
+                    Debug.WriteLine("Inject script");
+                    string returnStr = await wwvv.InvokeScriptAsync("eval", new string[] { script });
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine("Script Running Error" + ex.ToString() + script);
-                }
-
-
-                // YoutubeWebView.Visibility = Visibility.Visible;
+                    Debug.WriteLine("Script Error" + ex.ToString() + script);
+                }               
             };
 
-            YoutubeWebView.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
+            
+
+            grid.Children.Add(wwvv);
+            grid.Children.Add(ring);
+
+            MyPanel.Children.Add(grid);
+
+            wwvv.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
+
+            
         }
 
-        private async void StopVideo(object sender, RoutedEventArgs e)
+        
+
+        private void StopVideo(object sender, RoutedEventArgs e)
         {
             string script = @"player.stopVideo();";
             try
             {
-                string returnStr = await YoutubeWebView.InvokeScriptAsync("eval", new string[] { script });
+                //string returnStr = await webview.InvokeScriptAsync("eval", new string[] { script });
 
             }
             catch (Exception ex)

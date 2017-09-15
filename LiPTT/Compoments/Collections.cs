@@ -69,6 +69,12 @@ namespace LiPTT
         public DateTimeOffset Date { get; set; }
     }
 
+    public class DownloadResult
+    {
+        public int Index { get; set; }
+        public object Item { get; set; }
+    }
+
     public class BoardInfo
     {
         public string Name { get; set; }
@@ -98,6 +104,7 @@ namespace LiPTT
         public List<object> Content { get; set; } //本文內容
         public EchoCollection Echoes { get; set; } //推文集
         public List<Task<Tuple<int, object>>>  SomeTasks { get; set; }
+        public List<Task<DownloadResult>> DownloadTasks { get; set; }
 
         public double ViewWidth { get; set; }
 
@@ -108,10 +115,7 @@ namespace LiPTT
         private static double ArticleFontSize = 24.0;
         private FontFamily ArticleFontFamily;
 
-        //https://www.regexpal.com
-        private const string http_exp = @"((http|https)://([A-Za-z0-9_]+:{0,1}[A-Za-z0-9_]*@)?([A-Za-z0-9_#!:.?+=&%@!-/$^,;|*~'()]+)(:[0-9]+)?(/|/([A-Za-z0-9_#!:.?+=&%@!-/]))?)|(pid://(\d{1,10}))";
-        //private const string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w-./?%&=]*)?";
-
+        
         private ReadType readtype;
         public ReadType ReadType
         {
@@ -147,20 +151,26 @@ namespace LiPTT
         public void DefaultState()
         {
             LoadCompleted = false;
-            RawLines = new List<Block[]>();
+            
             ParsedLine = 0;
             PageDownPercent = 0;
             ParsedContent = false;
-            SomeTasks = new List<Task<Tuple<int, object>>>();
-            Echoes = new EchoCollection() { };
+            RawLines.Clear();
+            SomeTasks.Clear(); ;
+            DownloadTasks.Clear();
+            Echoes.Clear(); ;
 
-            //508171 #1PkEzljp
-            Content = new List<object>();
+            //508171 #1PkEzljp #1PXU-fck
+            Content.Clear();
         }
 
         public Article()
         {
-            DefaultState();
+            RawLines = new List<Block[]>();
+            SomeTasks = new List<Task<Tuple<int, object>>>();
+            DownloadTasks = new List<Task<DownloadResult>>();
+            Echoes = new EchoCollection() { };
+            Content = new List<object>();
 
             var action = LiPTT.RunInUIThread(() =>
             {
@@ -206,7 +216,7 @@ namespace LiPTT
                             //當作過濾完畢
                             ParsedContent = true;
                         }
-
+                        
                         TextBlock tb = new TextBlock()
                         {
                             Text = str,
@@ -218,7 +228,7 @@ namespace LiPTT
                         };
                         Content.Add(tb);
                     }
-                    else if ((match = new Regex(http_exp).Match(str)).Success)
+                    else if ((match = new Regex(LiPTT.http_regex).Match(str)).Success)
                     {
                         if (paragraph.Inlines.Count > 0)
                         {
@@ -358,7 +368,7 @@ namespace LiPTT
                         if ((match = new Regex("(文章網址:)").Match(str)).Success)
                         {
 
-                            match = new Regex(http_exp).Match(str);
+                            match = new Regex(LiPTT.http_regex).Match(str);
 
                             /***
                             if (match.Success)
@@ -1005,7 +1015,13 @@ namespace LiPTT
 
             if (IsPictureUri(uri))
             {
-                SomeTasks.Add(CreateImageView(Content.Count, uri));
+                ProgressRing ring = new ProgressRing() { IsActive = true, Width = 55, Height = 55 };
+                Grid grid = new Grid() { Width = ViewWidth, Height = 0.5625 * ViewWidth, Background = new SolidColorBrush(Color.FromArgb(0x20, 0xA0, 0xA0, 0xA0)) };
+                grid.Children.Add(ring);
+                Content.Add(grid);
+
+                //SomeTasks.Add(CreateImageView(Content.Count - 1, uri));
+                DownloadTasks.Add(CreateImageView(Content.Count - 1, uri));
             }
             else if (IsYoutubeUri(uri))
             {
@@ -1019,8 +1035,8 @@ namespace LiPTT
                         break;
                     }
                 }
-                WebView webview = GetYoutubeView(youtubeID);
-                Content.Add(webview);
+
+                AddYoutubeView(youtubeID);
             }
             else
             {
@@ -1036,7 +1052,7 @@ namespace LiPTT
             }
         }
 
-        private async Task<Tuple<int, object>> CreateImageView(int insert, Uri uri)
+        private async Task<DownloadResult> CreateImageView(int index, Uri uri)
         {
             Task<BitmapImage> task = LiPTT.ImageCache.GetFromCacheAsync(uri);
 
@@ -1084,11 +1100,50 @@ namespace LiPTT
                 NavigateUri = uri,
             };
 
+            button.SetValue(Grid.ColumnProperty, 1);
             ImgGrid.Children.Add(button);
 
-            button.SetValue(Grid.ColumnProperty, 1);
+            return new DownloadResult() { Index = index, Item = ImgGrid };
+        }
 
-            return Tuple.Create(insert, (object)ImgGrid);
+        private void AddYoutubeView(string youtubeID, double width = 0, double height = 0)
+        {
+            double w = width == 0 ? ViewWidth : width;
+            double h = height == 0 ? w * 0.5625 : height;
+     
+            WebView wv = new WebView() { Width = w, Height = h, DefaultBackgroundColor = Colors.Black };
+            
+            Grid grid = new Grid() { Width = w, Height = h, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+            ProgressRing progress = new ProgressRing() { IsActive = true, Width = 50, Height = 50, HorizontalAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.Red) };
+            string script = GetYoutubeScript(youtubeID, w, h);
+
+            wv.ContentLoading += (a, b) =>
+            {                
+                wv.Visibility = Visibility.Collapsed;
+            };
+
+            wv.FrameDOMContentLoaded += (a, b) =>
+            {
+                progress.IsActive = false;
+                wv.Visibility = Visibility.Visible;
+            };
+
+            wv.DOMContentLoaded += async (a, b) =>
+            {               
+                try
+                {
+                    string returnStr = await wv.InvokeScriptAsync("eval", new string[] { script });
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Script Error" + ex.ToString() + script);
+                }
+            };
+
+            grid.Children.Add(wv);
+            grid.Children.Add(progress);
+            Content.Add(grid);
+            wv.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
         }
 
         private bool IsPictureUri(Uri uri)
@@ -1194,6 +1249,15 @@ namespace LiPTT
                 else return 0;
             }
         }
+    }
+
+    public class ArticleContentCollection : ObservableCollection<object>
+    {
+        public ArticleContentCollection()
+        {
+            
+        }
+
     }
 
     ///關於UWP ObservableCollection Sorting and Grouping

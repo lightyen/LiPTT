@@ -18,7 +18,7 @@ namespace LiPTT
         Disconnecting, //斷線中
         Kicked, //被踢惹
         OverLoading, //PTT爆炸惹
-        Login, // PTT歡迎畫面(User required)
+        Login, // PTT歡迎畫面(輸入帳號名稱：)
         Password, //輸入密碼
         WrongPassword, //密碼錯誤
         Accept, //密碼正確
@@ -51,6 +51,12 @@ namespace LiPTT
         public static DispatcherTimer TestConnectionTimer { get; set; }
 
         public static Frame Frame { get; set; }
+
+        //https://www.regexpal.com
+        // '\w'會match到中文字，用[A-Za-z0-9_]替代
+        public const string http_regex = @"(http|https)://(A-Za-z0-9_+:??A-Za-z0-9_*@)?([A-Za-z0-9_#!:.?+=&%@!-/$^,;|*~'()]+)(/|/([A-Za-z0-9_#!:.?+=&%@!-/]))?";
+        //private const string http_exp = @"((http|https)://([A-Za-z0-9_]+:{0,1}[A-Za-z0-9_]*@)?([A-Za-z0-9_#!:.?+=&%@!-/$^,;|*~'()]+)(:[0-9]+)?(/|/([A-Za-z0-9_#!:.?+=&%@!-/]))?)|(pid://(\d{1,10}))";
+        //private const string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w-./?%&=]*)?";
 
         /// <summary>
         /// 當前連線物件
@@ -310,6 +316,22 @@ namespace LiPTT
             Current.Disconnect();
         }
 
+        public static void PressUpdateEcho()
+        {
+            //意同：左 右 PageEnd
+            Current.Send(new byte[] { 0x71, 0x72, 0x24 }); //qr$
+        }
+
+        public static void PressBackspace()
+        {
+            Current.Send(0x08);
+        }
+
+        public static void PressEnter()
+        {
+            Current.Send(0x0D); // Carriage return
+        }
+
         public static void EnterUserName()
         {
             Current.Send(UserName, 0x0D);
@@ -330,44 +352,34 @@ namespace LiPTT
             Current.Send('n', 0x0D);
         }
 
-        public static void PressBackspace()
-        {
-            Current.Send(0x08);
-        }
-
-        public static void PressEnter()
-        {
-            Current.Send(0x0D);
-        }
-
         public static void PressSpace()
         {
-            Current.Send(0x20);
+            Current.Send(0x20); // ' '
         }
 
         public static void PressAnyKey()
         {
-            Current.Send(0x20);
+            PressSpace();
         }
 
         public static void Up()
         {
-            Current.Send(new byte[] { 0x1B, 0x5B, 0x41 });
+            Current.Send(new byte[] { 0x1B, 0x5B, 0x41 }); //ESC[A
         }
 
         public static void Down()
         {
-            Current.Send(new byte[] { 0x1B, 0x5B, 0x42 });
+            Current.Send(new byte[] { 0x1B, 0x5B, 0x42 }); //ESC[B
         }
 
         public static void Right()
         {
-            Current.Send(new byte[] { 0x1B, 0x5B, 0x43 });
+            Current.Send(new byte[] { 0x1B, 0x5B, 0x43 }); //ESC[C
         }
 
         public static void Left()
         {
-            Current.Send(new byte[] { 0x1B, 0x5B, 0x44 });
+            Current.Send(new byte[] { 0x1B, 0x5B, 0x44 }); //ESC[D
         }
 
         public static void PageDown()
@@ -382,7 +394,7 @@ namespace LiPTT
 
         public static void PageHome()
         {
-            Current.Send(new byte[] { (byte)'0', (byte)'\r' });
+            Current.Send(new byte[] { 0x30, 0x72 }); //0r
         }
 
         public static void PageEnd()
@@ -507,11 +519,6 @@ namespace LiPTT
 
         private static void OnPttEventEchoed(PttState state, ScreenBuffer screen)
         {
-            //轉換到UI Thread再工作
-            //await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-            //{   
-            //});
-
             PttEventEchoed?.Invoke(pTTProvider, new LiPttEventArgs(state, screen));
         }
 

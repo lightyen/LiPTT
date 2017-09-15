@@ -67,6 +67,7 @@
                         <ItemsControl x:Name="ParagraphControl">
                         <!--內文將會插在這裡-->
                         </ItemsControl>
+
                         <ListView x:Name="EchoView" Padding="10,0,10,0" HorizontalContentAlignment="Stretch" Height="398" HorizontalAlignment="Stretch">
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem">

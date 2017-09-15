@@ -38,8 +38,9 @@
                     <RowDefinition Height="2*"/>
                     <RowDefinition Height="10*"/>
                 </Grid.RowDefinitions>
-                <WebView Grid.Row="0" x:Name="YoutubeWebView" Width="800" NavigationCompleted="WebView_NavigationCompleted" ContainsFullScreenElementChanged="WebView_ContainsFullScreenElementChanged"/>
+                <StackPanel x:Name="MyPanel">
 
+                </StackPanel>
                 <RichTextBlock Grid.Row="1">
                     <Paragraph>
                         <Run Text="Hsdfsdfsd sdfeo sdfwesd sdfwe sdfe sdfe"></Run>

@@ -13,7 +13,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Navigation;
-
+using Windows.UI.Xaml.Media;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -170,37 +170,31 @@ namespace LiPTT
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            ObservableCollection<RichTextBlock> collection1 = new ObservableCollection<RichTextBlock>();
+            ListViewItem item1 = new ListViewItem() { IsHitTestVisible = false, Content = new Windows.UI.Xaml.Shapes.Rectangle() { Width = 1000, Height = 20, Fill = new SolidColorBrush(Windows.UI.Colors.Red) } };
+            TestView.Items.Add(item1);
 
-            for (int i = 0; i < 3; i++)
+            RichTextBlock rb = new RichTextBlock();
+            Paragraph pa = new Paragraph();
+            Run run = new Run() { Text = "helloheooo", FontSize = 30 };
+            Run run2 = new Run() { Text = "helloheooo", FontSize = 22 };
+            Run run3 = new Run() { Text = "helloheooo", FontSize = 18 };
+            pa.Inlines.Add(run);
+            pa.Inlines.Add(new LineBreak());
+            pa.Inlines.Add(run2);
+            pa.Inlines.Add(new LineBreak());
+            pa.Inlines.Add(run3);
+            pa.Inlines.Add(new LineBreak());
+            rb.Blocks.Add(pa);
+
+            ListViewItem item2 = new ListViewItem()
             {
-                RichTextBlock tb = new RichTextBlock();
+                IsHitTestVisible = true,
+                Content = rb,
+            };
+            TestView.Items.Add(item2);
 
-                Paragraph para = new Paragraph();
+            TestView.Items.Add(new ListViewItem() { IsHitTestVisible = true, Content = new Windows.UI.Xaml.Shapes.Rectangle() { Width = 1000, Height = 20, Fill = new SolidColorBrush(Windows.UI.Colors.Gray) } });
 
-                para.Inlines.Add(new Run() { Text = "Hello world" });
-                para.Inlines.Add(new LineBreak());
-                tb.Blocks.Add(para);
-
-
-                collection1.Add(tb);
-            }
-
-            ObservableCollection<HyperlinkButton> collection2 = new ObservableCollection<HyperlinkButton>();
-
-            for (int i = 0; i < 3; i++)
-            {
-                HyperlinkButton hyper = new HyperlinkButton
-                {
-                    Content = "hello world",
-                    NavigateUri = new Uri("https://www.google.com.tw/")
-                };
-                collection2.Add(hyper);
-            }
-
-
-            ViewSource.View.Add(collection1);
-            ViewSource.View.Add(collection2);
         }
     }
 }

@@ -7,7 +7,7 @@
     <Application.Resources>
         <local:ArticleIDStringFormatConverter x:Key="MyArticleIDStringFormatConverter" />
         <local:LikeStringFormatConverter x:Key="MyLikeStringFormatConverter"/>
-        <local:ReadTypeColorConverter x:Key="MyReadTypeColorConverter"/>
+        <local:TitleColorConverter x:Key="MyTitleColorConverter"/>
         <local:ReadTypeStringFormatConverter x:Key="MyReadTypeStringFormatConverter" />
         <local:LikeColorStringFormatConverter x:Key="MyLikeColorStringFormatConverter" />
         <local:DateTimeOffsetStringFormatConverter x:Key="MyDateTimeOffsetStringFormatConverter" />

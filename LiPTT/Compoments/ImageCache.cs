@@ -20,13 +20,16 @@ namespace LiPTT
 
         public int MaxMemoryCacheCount { get; set; }
 
-        private Queue<string> cache_filename;
+        private List<string> cache_filename;
+
+        private SemaphoreSlim semaphoreSlim;
 
         public ImageCache()
         {
             MaxMemoryCacheCount = 1000;
             CacheDuration = TimeSpan.FromHours(12);
-            cache_filename = new Queue<string>();
+            cache_filename = new List<string>();
+            semaphoreSlim = new SemaphoreSlim(1, 1);
         }
 
         public async Task ClearAllCache()
@@ -47,8 +50,8 @@ namespace LiPTT
             {
                 for (int i = 0; i < num; i++)
                 {
-                    string name = cache_filename.Dequeue();
-
+                    string name = cache_filename.First();
+                    cache_filename.Remove(name);
                     try
                     {
                         StorageFile file = await ApplicationData.Current.LocalCacheFolder.GetFileAsync(name);
@@ -81,7 +84,18 @@ namespace LiPTT
             {
                 string name = arr.Last();
 
-                cache_filename.Enqueue(name);
+                await semaphoreSlim.WaitAsync();
+
+                if (cache_filename.IndexOf(name) != -1)
+                {
+                    semaphoreSlim.Release();
+                    await Task.Delay(300);
+                }
+                else
+                {
+                    cache_filename.Add(name);
+                    semaphoreSlim.Release();
+                }
 
                 var file = await GetFileFromLocalCache(name);
 

@@ -2013,7 +2013,7 @@ namespace LiPTT
         }
     }
 
-    public class ReadTypeColorConverter : IValueConverter
+    public class TitleColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -2021,11 +2021,27 @@ namespace LiPTT
 
             Color color = Colors.Black;
 
-            if (value is ReadType t)
+            if (value is Article article)
             {
-                if (t.HasFlag(ReadType.已讀))
+                if (article.ID == uint.MaxValue)
+                {
+                    color = Colors.LightSkyBlue;
+                }
+                else if (article.Subtitle == "公告")
+                {
+                    color = Colors.CadetBlue;
+                }
+                else if (article.Deleted)
+                {
+                    color = Colors.IndianRed;
+                }
+                else if (article.ReadType.HasFlag(ReadType.已讀))
                 {
                     color = Colors.Gray;
+                }
+                else if (Math.Abs(article.Like) > 25)
+                {
+                    color = Colors.Gold;
                 }
                 else
                 {

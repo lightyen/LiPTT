@@ -37,6 +37,7 @@ namespace LiPTT
         RelatedBoard, //相關資訊一覽表
         SearchBoard, //搜尋看板
         Board, //文章列表
+        BoardInfomation, //看板資訊
         Article, //閱覽文章
         Angel, //小天使廣告
     }
@@ -180,6 +181,15 @@ namespace LiPTT
                 Debug.WriteLine("搜尋看板");
                 State = PttState.SearchBoard;
                 OnPttEventEchoed(State, pTTProvider.Screen);
+            }
+            else if (Current.MatchPattern(@"看板設定", 3))
+            {
+                if (State != PttState.BoardInfomation)
+                {
+                    Debug.WriteLine("看板資訊");
+                    State = PttState.BoardInfomation;
+                    OnPttEventEchoed(State, pTTProvider.Screen);
+                }  
             }
             else if (Current.MatchPattern(@"【板主", 0))
             {
@@ -360,6 +370,11 @@ namespace LiPTT
         public static void PressAnyKey()
         {
             PressSpace();
+        }
+
+        public static void PressI()
+        {
+            Current.Send(0x69);
         }
 
         public static void Up()

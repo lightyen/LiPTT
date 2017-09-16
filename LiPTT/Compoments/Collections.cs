@@ -20,7 +20,8 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml;
-
+using Windows.UI.Core;
+using Windows.ApplicationModel.Core;
 
 //https://stackoverflow.com/questions/5473001/itemscontrol-with-multiple-datatemplates-for-a-viewmodel
 
@@ -75,13 +76,76 @@ namespace LiPTT
         public object Item { get; set; }
     }
 
-    public class BoardInfo
+    public class BoardInfo : INotifyPropertyChanged
     {
-        public string Name { get; set; }
-        public string NickName { get; set; }
-        public string Title { get; set; }
-        public int Popularity { get; set; }
-        public string[] Leaders { get; set; }
+        private string name;
+        private int popularity;
+        private string nick;
+        private string description;
+        private string[] leaders;
+        private string category;
+        private int limit_login;
+        private int limit_reject;
+
+        public string Name
+        {
+            get { return name; }
+            set { name = value; NotifyPropertyChanged("Name"); }
+        }
+
+        public string Category
+        {
+            get { return category; }
+            set { category = value; NotifyPropertyChanged("Category"); }
+        }
+
+        public string NickName
+        {
+            get { return nick; }
+            set { nick = value; NotifyPropertyChanged("NickName"); }
+        }
+
+        public string Description
+        {
+            get { return description; }
+            set { description = value; NotifyPropertyChanged("Description"); }
+        }
+
+        public int Popularity
+        {
+            get { return popularity; }
+            set { popularity = value; NotifyPropertyChanged("Popularity"); }
+        }
+
+        public string[] Leaders
+        {
+            get { return leaders; }
+            set { leaders = value; NotifyPropertyChanged("Leaders"); }
+        }
+
+        public int LimitLogin
+        {
+            get { return limit_login; }
+            set { limit_login = value; NotifyPropertyChanged("LimitLogin"); }
+        }
+        public int LimitReject
+        {
+            get { return limit_reject; }
+            set { limit_reject = value; NotifyPropertyChanged("LimitReject"); }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
+        {
+            if (PropertyChanged != null)
+            {
+                var a = LiPTT.RunInUIThread(() => {
+                    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                });
+                
+            }
+        }
     }
 
     public class Article : IComparable<Article>, INotifyPropertyChanged
@@ -1303,7 +1367,17 @@ namespace LiPTT
 
     public class ArticleCollection : ObservableCollection<Article>, ISupportIncrementalLoading
     {
-        public BoardInfo BoardInfo { get; set; }
+        private BoardInfo boardInfo;
+
+        public BoardInfo BoardInfo
+        {
+            get { return boardInfo; }
+            set
+            {
+                boardInfo = value;
+                var a = LiPTT.RunInUIThread(() => { OnPropertyChanged(new PropertyChangedEventArgs("BoardInfo")); });
+            }
+        }
 
         public SemaphoreSlim locker;
 
@@ -1316,14 +1390,16 @@ namespace LiPTT
 
         private async Task<LoadMoreItemsResult> InnerLoadMoreItemsAsync(uint count)
         {
+            
+
             if (CurrentIndex == 0)
             {
                 HasMoreItems = false;
             }
             else if(!reading)
             {
-                await locker.WaitAsync();
                 reading = true;
+                await locker.WaitAsync();
                 LiPTT.PttEventEchoed += ReadBoard_EventEchoed;
                 LiPTT.SendMessage(CurrentIndex.ToString(), 0x0D);
             }
@@ -1358,15 +1434,8 @@ namespace LiPTT
 
                 //ID流水號
                 str = screen.ToString(i, 0, 8);
-                regex = new Regex(@"(\d+)");
-                match = regex.Match(str);
 
-                if (match.Success)
-                {
-                    id = Convert.ToUInt32(str.Substring(match.Index, match.Length));
-                    article.ID = id;
-                }
-                else if (str.IndexOf('★') != -1)
+                if (str.IndexOf('★') != -1)
                 {
                     article.ID = uint.MaxValue;
                     article.Star = star++;
@@ -1374,10 +1443,17 @@ namespace LiPTT
                 }
                 else
                 {
-                    continue;
-                }
+                    match = new Regex(@"\d+").Match(str);
+                    if (match.Success)
+                    {
+                        id = Convert.ToUInt32(str.Substring(match.Index, match.Length));
+                        article.ID = id;
 
-                if (this.Any(x => x.ID == article.ID)) continue;
+                        if (id > CurrentIndex) continue;
+                        //
+                        //if (this.Any(x => x.ID == article.ID)) continue;
+                    }
+                }
 
                 //推文數
                 str = screen.ToString(i, 9, 2);
@@ -1508,6 +1584,15 @@ namespace LiPTT
             BoardInfo = new BoardInfo();
 
             this.CollectionChanged += ArticleCollection_CollectionChanged;
+            //用了他就變超級卡...
+            //this.PropertyChanged += ArticleCollection_PropertyChanged;
+        }
+
+        private void ArticleCollection_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            var a = CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                OnPropertyChanged(new PropertyChangedEventArgs(e.PropertyName));
+            });
         }
 
         private void ArticleCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -2149,6 +2234,34 @@ namespace LiPTT
                     color = Colors.DarkGoldenrod;
             }
 
+            return new SolidColorBrush(color);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class PopularityColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            Color color = Colors.Black;
+
+            if (value is int popu)
+            {
+                if (popu >= 100000) color = Colors.Purple;
+                else if (popu >= 60000) color = Colors.Yellow;
+                else if (popu >= 30000) color = Colors.Green;
+                else if (popu >= 10000) color = Colors.Cyan;
+                else if (popu >= 5000) color = Colors.Blue;
+                else if (popu >= 2000) color = Colors.Red;
+                else if (popu >= 1000) color = Colors.White;
+                else color = Colors.Gray;
+            }
             return new SolidColorBrush(color);
         }
 

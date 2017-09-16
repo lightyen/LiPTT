@@ -17,5 +17,6 @@
         <local:EchoDateStringFormatConverter x:Key="MyEchoDateStringFormatConverter" />
         <local:EchoEvaluationColorConverter x:Key="MyEchoEvaluationColorConverter" />
         <local:EchoContentConverter x:Key="MyEchoContentConverter"/>
+        <local:PopularityColorConverter x:Key="MyPopularityColorConverter" />
     </Application.Resources>
 </Application>

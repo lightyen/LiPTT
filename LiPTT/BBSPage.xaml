@@ -29,7 +29,7 @@
                     </VariableSizedWrapGrid>
                 </Grid>
                 <Grid Grid.Row="0" Grid.Column="1">
-                    <Button Content="重新連線" IsTabStop="False" VariableSizedWrapGrid.ColumnSpan="0" Click="Reconnect_Click" />
+                    <Button Content="重新連線" IsTabStop="False" VariableSizedWrapGrid.ColumnSpan="0" Click="Reconnect_Click" IsEnabled="False" />
                 </Grid>
                 <Grid Grid.Row="0" Grid.Column="2">
                     <!--<Button Content="離開PTT" IsTabStop="False" VariableSizedWrapGrid.ColumnSpan="1" Click="AutoExit_Click"/>-->

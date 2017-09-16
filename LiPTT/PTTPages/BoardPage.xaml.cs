@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -14,32 +16,52 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
-
-// 空白頁項目範本已記錄在 https://go.microsoft.com/fwlink/?LinkId=234238
+using Windows.ApplicationModel.DataTransfer;
 
 namespace LiPTT
 {
     //https://docs.microsoft.com/en-us/windows/uwp/debug-test-perf/listview-and-gridview-data-optimization
     public sealed partial class BoardPage : Page
     {
-        BoardInfo Board;
 
         public BoardPage()
         {
             this.InitializeComponent();
+
         }
+
+        private bool hasBoardInfo = false;
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             Debug.WriteLine(">>載入新看板");
-            Initialize(LiPTT.Current.Screen);
+
+            LiPTT.ArticleCollection = ArticleListView.ItemsSource as ArticleCollection;
+
+            if (!hasBoardInfo) ReadBoardInfomation();
+
+            //追蹤剪貼簿
+            //Clipboard.ContentChanged += Clipboard_ContentChanged;
 
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         }
 
+        private async void Clipboard_ContentChanged(object sender, object e)
+        {
+            DataPackageView dataPackageView = Clipboard.GetContent();
+            if (dataPackageView.Contains(StandardDataFormats.Text))
+            {
+                string text = await dataPackageView.GetTextAsync();
+                // To output the text from this example, you need a TextBlock control
+                Debug.WriteLine( "Clipboard now contains: " + text);
+            }
+        }
+
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
+            //Clipboard.ContentChanged -= Clipboard_ContentChanged;
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            
         }
 
         int star;
@@ -81,6 +103,70 @@ namespace LiPTT
             });
         }
 
+        private void ReadBoardInfomation()
+        {
+            LiPTT.PttEventEchoed += ReadBoardInfo;
+            LiPTT.PressI();
+        }
+
+        private void ReadBoardInfo(PTTProvider sender, LiPttEventArgs e)
+        {
+            if (e.State == PttState.BoardInfomation)
+            {
+                var Board = new BoardInfo();
+
+                //看板名稱
+                string str = e.Screen.ToString(3);
+                Match match = new Regex(@"(《[\w\S]+》)").Match(str);
+                if (match.Success)
+                {
+                    Board.Name = str.Substring(match.Index + 1, match.Length - 2);
+                }
+
+                //看板分類 中文敘述
+                Board.Category = e.Screen.ToString(5, 15, 4);
+                Board.Description = e.Screen.ToString(5, 22, e.Screen.Width - 22).Replace('\0', ' ').Trim();
+
+                //版主名單
+                str = e.Screen.ToString(6, 15, e.Screen.Width - 15).Replace('\0', ' ').Trim();
+                Board.Leaders = str.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+                //發文限制 - 登入次數
+                str = e.Screen.ToString(12);
+                match = new Regex(@"\d+").Match(str);
+                if (match.Success)
+                {
+                    try
+                    {
+                        Board.LimitLogin = Convert.ToInt32(str.Substring(match.Index, match.Length));
+                    }
+                    catch { Debug.WriteLine(str.Substring(match.Index, match.Length)); }
+                }
+
+                //發文限制 - 退文篇數
+                str = e.Screen.ToString(13);
+                match = new Regex(@"\d+").Match(str);
+                if (match.Success)
+                {
+                    try
+                    {
+                        Board.LimitReject = Convert.ToInt32(str.Substring(match.Index, match.Length));
+                    }
+                    catch { Debug.WriteLine(str.Substring(match.Index, match.Length)); }
+                }
+
+                LiPTT.ArticleCollection.BoardInfo = Board;
+                hasBoardInfo = true;
+
+                LiPTT.PressAnyKey();
+            }
+            else if (e.State == PttState.Board)
+            {
+                LiPTT.PttEventEchoed -= ReadBoardInfo;
+                Initialize(LiPTT.Current.Screen);
+            }
+        }
+
         private void Initialize(ScreenBuffer screen)
         {
             Regex regex;
@@ -89,82 +175,33 @@ namespace LiPTT
             star = 0;
             uint id = 0;
 
-            LiPTT.ArticleCollection = ArticleListView.ItemsSource as ArticleCollection;
             ArticleCollection ArticleCollection = LiPTT.ArticleCollection;
 
             var x = screen.ToStringArray();
 
             IAsyncAction action;
 
-            str = screen.ToString(0);
-
-            //本版名稱
-            string board_name = "";
-            regex = new Regex(@"(看板《[\w\S]+》)");
-            match = regex.Match(str);
-            if (match.Success)
-            {
-                board_name = str.Substring(match.Index + 3, match.Length - 4);
-            }
-
-            if (board_name == ArticleCollection?.BoardInfo.Name) return;
-
-            Board = new BoardInfo
-            {
-                Name = board_name
-            };
-
-            //版主群
-
-            regex = new Regex(@"(【板主:[\w\S]+】)");
-            match = regex.Match(str);
-
-            if (match.Success)
-            {
-                Board.Leaders = str.Substring(match.Index + 4, match.Length - 5).Split('/');
-            }
-
-            //本版俗稱
-            regex = new Regex(@"(\[[\w\S]+\])");
-            match = regex.Match(str);
-            if (match.Success)
-            {
-                Board.NickName = str.Substring(match.Index + 1, match.Length - 2);
-            }
-
-            int a = match.Index + match.Length + 1;
-
-            //本版標題
-            int b = match.Index - a;
-            if (b > 0)
-            {
-                str = str.Substring(a, b);
-                int i = 0;
-                int j = str.Length - 1;
-
-                while (str[i] == ' ') i++;
-                while (str[j] == ' ') j--;
-                if (i <= j) Board.Title = str.Substring(i, j - i + 1);
-            }
-
             //人氣
             str = screen.ToString(2);
-            regex = new Regex(@"人氣:");
+            regex = new Regex(@"\d+");
             match = regex.Match(str);
 
             if (match.Success)
             {
-                int i = match.Index + 3;
-                int j = i;
-                for (; j < screen.Width && char.IsDigit(str[j]); j++) ;
-                Board.Popularity = Convert.ToInt32(str.Substring(i, j - i));
+                int popu = Convert.ToInt32(str.Substring(match.Index, match.Length));
+                ArticleCollection.BoardInfo.Popularity = popu;
             }
 
             /////////////////////////////
             ///置底文 and 其他文章
             ///
-            ArticleCollection.Clear();
-            ArticleCollection.BoardInfo = Board;
+
+            action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => 
+            {
+                ArticleCollection.Clear();
+            });
+            
+
 
             for (int i = 22; i >= 3; i--)
             {
@@ -342,13 +379,48 @@ namespace LiPTT
 
         private void GoLeft(object sender, RoutedEventArgs e)
         {
+            hasBoardInfo = false;
             LiPTT.Left();
             LiPTT.Frame.Navigate(typeof(MainFunctionPage));
         }
 
-        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
         {
             int key = (int)args.VirtualKey;
+
+            bool Control_Down = (Window.Current.CoreWindow.GetKeyState(VirtualKey.Control) & CoreVirtualKeyStates.Down) != 0;
+
+            if (Control_Down)
+            {
+                
+                if (args.VirtualKey == VirtualKey.V && SearchIDTextBox != FocusManager.GetFocusedElement())
+                {
+                    DataPackageView dataPackageView = Clipboard.GetContent();
+                    if (dataPackageView.Contains(StandardDataFormats.Text))
+                    {
+                        string ClipboardText = await dataPackageView.GetTextAsync();
+                        Debug.WriteLine("Clipboard now contains: " + ClipboardText);
+
+                        if (ClipboardText.StartsWith("#"))
+                        {
+                            LiPTT.SendMessage(ClipboardText, 0x0D);
+                            LiPTT.PttEventEchoed += SearchIDEnter;
+                        }
+                        else
+                        {
+                            try
+                            {
+                                uint id = Convert.ToUInt32(ClipboardText);
+                                LiPTT.SendMessage(id.ToString(), 0x0D);
+                                LiPTT.PttEventEchoed += SearchIDEnter;
+                            }
+                            catch { }
+                        }
+
+                    }
+                    return;
+                }
+            }
 
             if ((key >= 0x30 && key <= 0x39))
             {
@@ -533,13 +605,13 @@ namespace LiPTT
 
         private void SearchIDTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
-            if (e.Key == Windows.System.VirtualKey.Escape)
+            if (e.Key == VirtualKey.Escape)
             {
                 SearchIDTextBox.Text = "";
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
             }
-            else if (e.Key == Windows.System.VirtualKey.Enter)
+            else if (e.Key == VirtualKey.Enter)
             {
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);

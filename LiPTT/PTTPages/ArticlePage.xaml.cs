@@ -98,7 +98,7 @@ namespace LiPTT
             LoadingIndicator.IsActive = true;
 
             ArticleHeaderListBox.Items.Add(article);
-
+            
             EchoView.ItemsSource = article.Echoes;
 
             ParagraphControl.ItemsSource = null;

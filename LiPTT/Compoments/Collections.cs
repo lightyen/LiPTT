@@ -1016,12 +1016,49 @@ namespace LiPTT
             if (IsPictureUri(uri))
             {
                 ProgressRing ring = new ProgressRing() { IsActive = true, Width = 55, Height = 55 };
-                Grid grid = new Grid() { Width = ViewWidth, Height = 0.5625 * ViewWidth, Background = new SolidColorBrush(Color.FromArgb(0x20, 0xA0, 0xA0, 0xA0)) };
+                Grid grid = new Grid() { Width = ViewWidth * 0.8, Height = 0.5625 * ViewWidth * 0.8, Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
                 grid.Children.Add(ring);
                 Content.Add(grid);
 
                 //SomeTasks.Add(CreateImageView(Content.Count - 1, uri));
                 DownloadTasks.Add(CreateImageView(Content.Count - 1, uri));
+            }
+            else if (uri.Host == "imgur.com")
+            {
+                string str = uri.OriginalString;
+                
+                if (str.IndexOf("imgur.com/a") != -1)
+                {
+                    HyperlinkButton hyper = new HyperlinkButton()
+                    {
+                        Content = new TextBlock() { Text = uri.OriginalString },
+                        NavigateUri = uri,
+                        FontSize = ArticleFontSize,
+                        FontFamily = ArticleFontFamily,
+                    };
+
+                    Content.Add(hyper);
+                }
+                else
+                {
+                    Match match = new Regex("imgur.com").Match(str);
+
+                    if (match.Success)
+                    {
+                        str = str.Insert(match.Index, "i.");
+                        str += ".png";
+                        Uri new_uri = new Uri(str);
+
+                        ProgressRing ring = new ProgressRing() { IsActive = true, Width = 55, Height = 55 };
+                        Grid grid = new Grid() { Width = ViewWidth * 0.8, Height = 0.5625 * ViewWidth * 0.8, Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
+                        grid.Children.Add(ring);
+                        Content.Add(grid);
+
+                        DownloadTasks.Add(CreateImageView(Content.Count - 1, new_uri));
+                    }
+                }
+
+                
             }
             else if (IsYoutubeUri(uri))
             {
@@ -1288,9 +1325,7 @@ namespace LiPTT
                 await locker.WaitAsync();
                 reading = true;
                 LiPTT.PttEventEchoed += ReadBoard_EventEchoed;
-                //向上滾 爬舊文
                 LiPTT.SendMessage(CurrentIndex.ToString(), 0x0D);
-                //LiPTT.PageUp();
             }
 
             return new LoadMoreItemsResult { Count = CurrentIndex };
@@ -2156,9 +2191,8 @@ namespace LiPTT
             if (value is string str)
             {
                 Match match;
-                string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w-./?%&=]*)?";
 
-                if ((match = new Regex(http_exp).Match(str)).Success)
+                if ((match = new Regex(LiPTT.http_regex).Match(str)).Success)
                 {
                     StackPanel sp = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
 

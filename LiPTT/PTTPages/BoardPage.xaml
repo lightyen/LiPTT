@@ -41,7 +41,7 @@
                                 <TextBlock Text="{x:Bind Author}" TextAlignment="Center" FontSize="25" Padding="5,0,5,0" Width="250" Foreground="Wheat" />
                                 <TextBlock Text="{x:Bind ReadType, Converter={StaticResource MyReadTypeStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" TextAlignment="Center" Width="40" Foreground="Green" />
                                 <TextBlock Text="{x:Bind Reply, Converter={StaticResource MyReplyStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" Foreground="Red" TextAlignment="Center" Width="40" />
-                                <TextBlock Text="{x:Bind Subtitle}" FontSize="22" Padding="2,0,2,0" Foreground="DarkSalmon" TextAlignment="Center" Width="50" />
+                                <TextBlock Text="{x:Bind Subtitle}" FontSize="22" Padding="2,0,8,0" Foreground="DarkSalmon" TextAlignment="Center" />
                                 <TextBlock Text="{x:Bind Title}" FontSize="22" Padding="5,0,5,0" Foreground="{Binding Converter={StaticResource MyTitleColorConverter}}"/>
                             </StackPanel>
                         </DataTemplate>

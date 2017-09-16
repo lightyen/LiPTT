@@ -17,6 +17,7 @@
         <Grid Grid.Row="0">
             <Button Content="Load" Click="Button_Click" Width="200" VerticalAlignment="Stretch"/>
             <Button Content="StopVideo" Click="StopVideo" Margin="305,0,0,0" Height="135" Width="153" ></Button>
+            <Button Width="300" Content="Add Imgur" VerticalAlignment="Stretch" Margin="1005,0,0,0" Height="135" Click="AddImgur_Click"/>
             <Rectangle x:Name="RectHello" VerticalAlignment="Stretch" HorizontalAlignment="Left" Margin="600,0,0,0" Width="300">
                 <Rectangle.Fill>
                     <SolidColorBrush Color="Red"/>
@@ -35,7 +36,7 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <Grid Height="2000" x:Name="ArticleGrid">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="5*"/>
                     <RowDefinition Height="10*"/>
                 </Grid.RowDefinitions>
                 <StackPanel x:Name="MyPanel">

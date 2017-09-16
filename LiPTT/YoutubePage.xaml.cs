@@ -231,6 +231,21 @@ namespace LiPTT
                 System.Diagnostics.Debug.WriteLine("Script Running Error" + ex.ToString() + script);
             }
         }
+
+        private void AddImgur_Click(object sender, RoutedEventArgs e)
+        {
+            MyPanel.Children.Clear();
+
+            WebView wwvv = new WebView() { Width = 800, Height = 800, DefaultBackgroundColor = Windows.UI.Colors.Gray };
+
+            Grid grid = new Grid() { Width = 800, Height = 800 };
+
+            grid.Children.Add(wwvv);
+
+            MyPanel.Children.Add(grid);
+
+            wwvv.Navigate(new Uri("ms-appx-web:///Templates/imgur/imgur.html"));
+        }
     }
 
     public struct YoutubeBorderInfo

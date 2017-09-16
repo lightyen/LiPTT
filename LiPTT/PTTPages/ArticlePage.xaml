@@ -11,7 +11,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="0.5*"/>
-                <RowDefinition Height="2*"/>
+                <RowDefinition Height="1.2*"/>
                 <RowDefinition Height="7*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
@@ -22,11 +22,13 @@
             <Grid Grid.Row="0" Grid.Column="0">
                 <Button Content="Back" Click="GoBack_Click" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
             </Grid>
-            <Grid Grid.Row="1" Grid.Column="1">
+            <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
                 <ListBox x:Name="ArticleHeaderListBox" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Background="Black">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="IsSelected" Value="False" />
+
                         </Style>
                     </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
@@ -84,10 +86,10 @@
                                             <ColumnDefinition Width="1.5*"/>
                                         </Grid.ColumnDefinitions>
                                         <Grid Grid.Column="0">
-                                            <TextBlock HorizontalAlignment="Left" Text="{x:Bind Evaluation, Converter={StaticResource MyEchoEvaluationStringFormatConverter}}" FontSize="22" Foreground="{x:Bind Evaluation, Converter={StaticResource MyEchoEvaluationColorConverter}}"/>
+                                            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" Text="{x:Bind Evaluation, Converter={StaticResource MyEchoEvaluationStringFormatConverter}}" FontSize="22" Foreground="{x:Bind Evaluation, Converter={StaticResource MyEchoEvaluationColorConverter}}"/>
                                         </Grid>
                                         <Grid Grid.Column="1">
-                                            <TextBlock HorizontalAlignment="Center" Text="{x:Bind Author}" FontSize="22" Foreground="LightSalmon" />
+                                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{x:Bind Author}" FontSize="22" Foreground="LightSalmon" />
                                         </Grid>
                                         <Grid Grid.Column="2">
                                             <ContentControl Content="{x:Bind Content, Converter={StaticResource MyEchoContentConverter}}">
@@ -95,7 +97,7 @@
                                             </ContentControl>
                                         </Grid>
                                         <Grid Grid.Column="3">
-                                            <TextBlock HorizontalAlignment="Right" Text="{x:Bind Date, Converter={StaticResource MyEchoDateStringFormatConverter}}" FontSize="22" Foreground="Wheat" />
+                                            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Text="{x:Bind Date, Converter={StaticResource MyEchoDateStringFormatConverter}}" FontSize="22" Foreground="Wheat" />
                                         </Grid>
                                     </Grid>
                                 </DataTemplate>

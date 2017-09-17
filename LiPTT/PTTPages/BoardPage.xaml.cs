@@ -376,12 +376,16 @@ namespace LiPTT
             LiPTT.Frame.Navigate(typeof(ArticlePage));
         }
 
-
-        private void GoLeft(object sender, RoutedEventArgs e)
+        private void GoBack()
         {
             hasBoardInfo = false;
             LiPTT.Left();
             LiPTT.Frame.Navigate(typeof(MainFunctionPage));
+        }
+
+        private void GoLeft(object sender, RoutedEventArgs e)
+        {
+            GoBack();
         }
 
         private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
@@ -391,8 +395,7 @@ namespace LiPTT
             bool Control_Down = (Window.Current.CoreWindow.GetKeyState(VirtualKey.Control) & CoreVirtualKeyStates.Down) != 0;
 
             if (Control_Down)
-            {
-                
+            {               
                 if (args.VirtualKey == VirtualKey.V && SearchIDTextBox != FocusManager.GetFocusedElement())
                 {
                     DataPackageView dataPackageView = Clipboard.GetContent();
@@ -420,6 +423,12 @@ namespace LiPTT
                     }
                     return;
                 }
+            }
+
+            if (args.VirtualKey == VirtualKey.Escape)
+            {
+                GoBack();
+                return;
             }
 
             if ((key >= 0x30 && key <= 0x39))

@@ -20,7 +20,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid Grid.Row="0" Grid.Column="0">
-                <Button Content="Back" Click="GoBack_Click" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                <!--<Button Content="Back" Click="GoBack_Click" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>-->
             </Grid>
             <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
                 <ListBox x:Name="ArticleHeaderListBox" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Background="Black">

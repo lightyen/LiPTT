@@ -222,7 +222,7 @@ namespace LiPTT
             RawLines.Clear();
             SomeTasks.Clear(); ;
             DownloadTasks.Clear();
-            Echoes.Clear(); ;
+            Echoes.Clear();
 
             //508171 #1PkEzljp #1PXU-fck
             Content.Clear();
@@ -1212,9 +1212,9 @@ namespace LiPTT
             double w = width == 0 ? ViewWidth : width;
             double h = height == 0 ? w * 0.5625 : height;
      
-            WebView wv = new WebView() { Width = w, Height = h, DefaultBackgroundColor = Colors.Black };
+            WebView wv = new WebView() { Tag = "YoutubeWebView", Width = w, Height = h, DefaultBackgroundColor = Colors.Black };
             
-            Grid grid = new Grid() { Width = w, Height = h, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+            Grid grid = new Grid() { Width = w, Height = h, Tag = "Youtube", HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
             ProgressRing progress = new ProgressRing() { IsActive = true, Width = 50, Height = 50, HorizontalAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.Red) };
             string script = GetYoutubeScript(youtubeID, w, h);
 

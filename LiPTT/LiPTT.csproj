@@ -107,6 +107,7 @@
     <Compile Include="ColorPage.xaml.cs">
       <DependentUpon>ColorPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Compoments\Article.cs" />
     <Compile Include="Compoments\Collections.cs" />
     <Compile Include="Compoments\ImageCache.cs" />
     <Compile Include="Compoments\LiPTT.cs" />

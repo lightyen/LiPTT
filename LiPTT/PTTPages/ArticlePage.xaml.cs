@@ -68,7 +68,7 @@ namespace LiPTT
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         }
 
-        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        private async void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
             switch (args.VirtualKey)
             {
@@ -87,7 +87,9 @@ namespace LiPTT
                     ContentScrollViewer.ChangeView(0, ContentScrollViewer.ScrollableHeight, null);
                     break;
                 case VirtualKey.Left:
-                    var t = StopVideo();
+                case VirtualKey.Escape:
+                    if (!UILoadCompleted) return;
+                    await StopVideo();
                     GoBack();
                     break;
             }
@@ -383,30 +385,34 @@ namespace LiPTT
             }
         }
 
-        private async void GoBack_Click(object sender, RoutedEventArgs e)
-        {
-            if (!UILoadCompleted) return;
-            await StopVideo();
-            GoBack();
-        }
-
         private async Task StopVideo()
         {
             foreach (var o in LiPTT.CurrentArticle.Content)
             {
-                if (o is WebView youtu)
+                if (o is Grid grid)
                 {
-                    string script = @"document.getElementById('player').stopVideo();";
+                    if ((string)(grid.Tag) == "Youtube")
+                    {
+                        foreach (object e in grid.Children)
+                        {
+                            if (e.GetType() == typeof(WebView))
+                            {
+                                WebView youtu = (WebView)e;
+                                string script = @"document.getElementById('player').stopVideo();";
 
-                    try
-                    {
-                        await youtu.InvokeScriptAsync("eval", new string[] { script });
+                                try
+                                {
+                                    await youtu.InvokeScriptAsync("eval", new string[] { script });
+                                }
+                                catch (Exception ex)
+                                {
+                                    youtu.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
+                                    Debug.WriteLine(ex.ToString());
+                                }
+                            }
+                        } 
                     }
-                    catch (Exception ex)
-                    {
-                        youtu.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
-                        Debug.WriteLine(ex.ToString());
-                    }
+                    
                 }
             }
         }

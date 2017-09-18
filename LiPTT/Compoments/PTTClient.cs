@@ -1408,6 +1408,9 @@ namespace LiPTT
             if (Y == 0) // Scroll Up
             {
                 int r = n;
+
+                ScrollLines = r;
+
                 if (r < Height)
                 {
                     for (int i = Height - 1; i >= r; i--) Screen[i] = Screen[i - r];
@@ -1421,6 +1424,7 @@ namespace LiPTT
             }
             else
             {
+                ScrollLines = 0;
                 Y--;
             }
         }

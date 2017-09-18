@@ -26,21 +26,11 @@ using System.Windows.Input;
 
 namespace LiPTT
 {
-    //https://www.codeproject.com/Tips/813345/Basic-MVVM-and-ICommand-Usage-Example
-    //練習MVVM
-
-
-    public class ViewModel_ArticleMetaData : ObservableCollection<object>
+    public class Input
     {
-        //public ICommand 
-
-
-    }
-
-    public class ArticleMetaData
-    {
-
-
+        private void ff()
+        {
+        }
 
     }
 }

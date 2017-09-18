@@ -390,9 +390,8 @@ namespace LiPTT
 
         private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
         {
-            int key = (int)args.VirtualKey;
-
             bool Control_Down = (Window.Current.CoreWindow.GetKeyState(VirtualKey.Control) & CoreVirtualKeyStates.Down) != 0;
+            bool Shift_Down = (Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift) & CoreVirtualKeyStates.Down) != 0;
 
             if (Control_Down)
             {               
@@ -424,19 +423,29 @@ namespace LiPTT
                     return;
                 }
             }
-
-            if (args.VirtualKey == VirtualKey.Escape)
+            else if (args.VirtualKey == VirtualKey.Escape || args.VirtualKey == VirtualKey.Left)
             {
                 GoBack();
-                return;
             }
-
-            if ((key >= 0x30 && key <= 0x39))
+            else if (args.VirtualKey >= VirtualKey.Number0 && args.VirtualKey <= VirtualKey.Number9)
             {
-                Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-                SearchIDTextBox.Text = ((char)key).ToString();
-                SearchIDTextBox.SelectionStart = 1;
-                SearchIDTextBox.Focus(FocusState.Programmatic);
+                if (Shift_Down)
+                {
+                    if (args.VirtualKey == VirtualKey.Number3)
+                    {
+                        Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+                        SearchIDTextBox.Text = '#'.ToString();
+                        SearchIDTextBox.SelectionStart = 1;
+                        SearchIDTextBox.Focus(FocusState.Programmatic);
+                    } 
+                }
+                else
+                {
+                    Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+                    SearchIDTextBox.Text = ((char)args.VirtualKey).ToString();
+                    SearchIDTextBox.SelectionStart = 1;
+                    SearchIDTextBox.Focus(FocusState.Programmatic);
+                }
             }
         }
 

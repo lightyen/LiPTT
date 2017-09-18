@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Windows.System;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -37,6 +38,25 @@ namespace LiPTT
             BoardGridView.Items.Add(new MyKeyValuePair("電蝦", "PC_Shopping"));
             BoardGridView.Items.Add(new MyKeyValuePair("少女前線", "GirlsFront"));
             BoardGridView.Items.Add(new MyKeyValuePair("C# 程式設計", "C_Sharp"));
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            LiPTT.Current.IsExit = false;
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+        }
+
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+        }
+
+        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        {
+            if (args.VirtualKey == VirtualKey.Escape || args.VirtualKey == VirtualKey.Left)
+            {
+                Exit();
+            }
         }
 
         List<string> RelatedTable = new List<string>();
@@ -223,19 +243,29 @@ namespace LiPTT
             }
         }
 
-
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
-            LiPTT.TestConnectionTimer.Stop();
-            LiPTT.Current.IsExit = true;
-            LiPTT.SendMessage('g', 0x0D, 'y', 0x0D, 0x20);
-            LiPTT.PressAnyKey();
+            
+        }
 
-            LiPTT.ArticleCollection = null;
-            LiPTT.CurrentArticle = null;
-            LiPTT.CurrentWebView = null;
+        private void Exit()
+        {
+            if (LiPTT.Current.IsExit == false)
+            {
+                LiPTT.Current.IsExit = true;
+                LiPTT.TestConnectionTimer.Stop();
 
-            LiPTT.Frame.Navigate(typeof(LoginPage));
+                LiPTT.SendMessage('g', 0x0D, 'y', 0x0D, 0x20);
+
+                //隨便再送一個byte觸發Disconnect
+                LiPTT.PressAnyKey();
+
+                LiPTT.ArticleCollection = null;
+                LiPTT.CurrentArticle = null;
+                LiPTT.CurrentWebView = null;
+
+                LiPTT.Frame.Navigate(typeof(LoginPage));
+            }
         }
     }
 

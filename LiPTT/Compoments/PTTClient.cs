@@ -1371,11 +1371,16 @@ namespace LiPTT
             Y = temp_y;
         }
 
+        public int ScrollLines { get; private set; }
+
         public void DownLines(int n)
         {
             if (Y + n >= Height) //Scroll Down
             {
                 int r = Y + n - Height + 1;
+
+                ScrollLines = r;
+
                 if (r < Height)
                 {
                     for (int i = 0; i < (Height - r); i++) Screen[i] = Screen[i + r];
@@ -1386,13 +1391,14 @@ namespace LiPTT
                         for (int j = 0; j < Width + delta; j++) Screen[k][j] = new Block();
                     }
                 }
-                else
+                else //clear all
                 {
                     ClearScreen(2);
                 }
             }
             else
             {
+                ScrollLines = 0;
                 Y++;
             }
         }

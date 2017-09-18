@@ -420,30 +420,38 @@ namespace LiPTT
         private void GoBack()
         {
             if (LiPTT.State == PttState.Article && article.LoadCompleted)
-            {              
+            {
+                isReadArticleTag = true;
                 LiPTT.PttEventEchoed += PttEventEchoed_UpdateArticleTag;
                 LiPTT.Left();
             }
         }
 
+        private bool isReadArticleTag;
+
         private void PttEventEchoed_UpdateArticleTag(PTTProvider sender, LiPttEventArgs e)
         {
             if (e.State == PttState.Board)
             {
-                LiPTT.PttEventEchoed -= PttEventEchoed_UpdateArticleTag;
-                ReLoadArticleTag(e.Screen);
-
-                var action = LiPTT.RunInUIThread(() =>
+                if (isReadArticleTag)
                 {
-                    LiPTT.Frame.Navigate(typeof(BoardPage));
-                });
+                    isReadArticleTag = false;
+                    ReLoadArticleTag(e.Screen);
+                    LiPTT.SendMessage(LiPTT.ArticleCollection.CurrentIndex.ToString(), 0x0D);
+                }
+                else
+                {
+                    LiPTT.PttEventEchoed -= PttEventEchoed_UpdateArticleTag;
+                    var action = LiPTT.RunInUIThread(() =>
+                    {
+                        LiPTT.Frame.Navigate(typeof(BoardPage));
+                    });
+                }
             }
         }
 
         private void ReLoadArticleTag(ScreenBuffer screen)
         {
-            
-
             if (LiPTT.CurrentArticle.ID != int.MaxValue)
             {
                 Article article = LiPTT.ArticleCollection.FirstOrDefault(i => i.ID == LiPTT.CurrentArticle.ID);

@@ -109,6 +109,7 @@
     </Compile>
     <Compile Include="Compoments\Article.cs" />
     <Compile Include="Compoments\Collections.cs" />
+    <Compile Include="Compoments\Converter.cs" />
     <Compile Include="Compoments\ImageCache.cs" />
     <Compile Include="Compoments\LiPTT.cs" />
     <Compile Include="Compoments\ColorHelper.cs" />

@@ -1428,6 +1428,8 @@ namespace LiPTT
             ///
             uint id = uint.MaxValue;
 
+            var x = screen.ToStringArray();
+
             for (int i = 22; i >= 3; i--)
             {
                 Article article = new Article();
@@ -1450,6 +1452,13 @@ namespace LiPTT
                         article.ID = id;
 
                         if (id > CurrentIndex) continue;
+
+                        else if (id == CurrentIndex) CurrentIndex = article.ID - 1;
+                        else //id 被遮住
+                        {
+                            article.ID = CurrentIndex;
+                            CurrentIndex = article.ID - 1;
+                        }
                         //
                         //if (this.Any(x => x.ID == article.ID)) continue;
                     }
@@ -1503,7 +1512,7 @@ namespace LiPTT
                 match = regex.Match(str);
                 if (match.Success) article.Author = str.Substring(match.Index, match.Length);
 
-                //標題
+                //文章類型
                 str = screen.ToString(i, 30, screen.Width - 30).Replace('\0', ' ');
                 regex = new Regex(@"R:");
                 match = regex.Match(str);
@@ -1540,11 +1549,11 @@ namespace LiPTT
                 else
                 {
                     //標題, 分類
-                    regex = new Regex(@"\[\S+\]");
+                    regex = new Regex(@"\[[\w\s]+\]");
                     match = regex.Match(str);
                     if (match.Success)
                     {
-                        article.Subtitle = str.Substring(match.Index + 1, match.Length - 2);
+                        article.Subtitle = str.Substring(match.Index + 1, match.Length - 2).Trim();
                         str = str.Substring(match.Index + match.Length);
                         int k = 0;
                         while (k < str.Length && str[k] == ' ') k++;
@@ -1563,8 +1572,6 @@ namespace LiPTT
                     this.Add(article);
                 });
             }
-
-            CurrentIndex = id - 1;
 
             LiPTT.PttEventEchoed -= ReadBoard_EventEchoed;
             reading = false;

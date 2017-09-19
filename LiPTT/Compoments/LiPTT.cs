@@ -377,6 +377,11 @@ namespace LiPTT
             Current.Send(0x69);
         }
 
+        public static void PressKeepAlive()
+        {
+            Current.Send(0x0C); //^L
+        }
+
         public static void Up()
         {
             Current.Send(new byte[] { 0x1B, 0x5B, 0x41 }); //ESC[A

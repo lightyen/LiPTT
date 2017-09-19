@@ -228,6 +228,10 @@ namespace LiPTT
                 {
                     color = Colors.IndianRed;
                 }
+                else if (article.ReadType.HasFlag(ReadType.有推文))
+                {
+                    color = Colors.AliceBlue;
+                }
                 else if (article.ReadType.HasFlag(ReadType.已讀))
                 {
                     color = Colors.Gray;

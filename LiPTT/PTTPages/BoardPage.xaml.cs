@@ -17,17 +17,20 @@ using Windows.UI.Xaml.Navigation;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Windows.ApplicationModel.DataTransfer;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace LiPTT
 {
     //https://docs.microsoft.com/en-us/windows/uwp/debug-test-perf/listview-and-gridview-data-optimization
-    public sealed partial class BoardPage : Page
+    public sealed partial class BoardPage : Page, INotifyPropertyChanged
     {
 
         public BoardPage()
         {
             this.InitializeComponent();
-
+            LiPTT.ArticleCollection = ArticleListView.ItemsSource as ArticleCollection;
+            this.DataContext = this;
         }
 
         private bool hasBoardInfo = false;
@@ -36,14 +39,12 @@ namespace LiPTT
         {
             Debug.WriteLine(">>載入新看板");
 
-            LiPTT.ArticleCollection = ArticleListView.ItemsSource as ArticleCollection;
-
             if (!hasBoardInfo) ReadBoardInfomation();
-
             //追蹤剪貼簿
             //Clipboard.ContentChanged += Clipboard_ContentChanged;
 
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+            Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
         }
 
         private async void Clipboard_ContentChanged(object sender, object e)
@@ -61,10 +62,29 @@ namespace LiPTT
         {
             //Clipboard.ContentChanged -= Clipboard_ContentChanged;
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-            
+            Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
         }
 
         int star;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private bool control_visible;
+
+        public bool ControlVisible
+        {
+            get { return control_visible; }
+            private set
+            {
+                control_visible = value;
+                NotifyPropertyChanged("ControlVisible");
+            }
+        }
 
         private bool CheckBoard()
         {
@@ -105,6 +125,7 @@ namespace LiPTT
 
         private void ReadBoardInfomation()
         {
+            ControlVisible = false;
             LiPTT.PttEventEchoed += ReadBoardInfo;
             LiPTT.PressI();
         }
@@ -160,7 +181,7 @@ namespace LiPTT
 
                 LiPTT.PressAnyKey();
             }
-            else if (e.State == PttState.Board)
+            else if (hasBoardInfo && e.State == PttState.Board)
             {
                 LiPTT.PttEventEchoed -= ReadBoardInfo;
                 Initialize(LiPTT.Current.Screen);
@@ -275,7 +296,7 @@ namespace LiPTT
                 match = regex.Match(str);
                 if (match.Success) article.Author = str.Substring(match.Index, match.Length);
 
-                //標題
+                //文章類型
                 str = screen.ToString(i, 30, screen.Width - 30).Replace('\0', ' ');
                 regex = new Regex(@"(R:)");
                 match = regex.Match(str);
@@ -312,11 +333,11 @@ namespace LiPTT
                 else
                 {
                     //標題, 分類
-                    regex = new Regex(@"\[\S+\]");
+                    regex = new Regex(@"\[[\w\s]+\]");
                     match = regex.Match(str);
                     if (match.Success)
                     {
-                        article.Subtitle = str.Substring(match.Index + 1, match.Length - 2);
+                        article.Subtitle = str.Substring(match.Index + 1, match.Length - 2).Trim();
                         str = str.Substring(match.Index + match.Length);
                         int k = 0;
                         while (k < str.Length && str[k] == ' ') k++;
@@ -330,7 +351,7 @@ namespace LiPTT
                     }
                 }
 
-                action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     ArticleCollection.Add(article);
                 });
@@ -341,6 +362,11 @@ namespace LiPTT
                 ArticleCollection.CurrentIndex = id - 1;
                 ArticleCollection.HasMoreItems = true;
             }
+
+            action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                ControlVisible = true;
+            });
         }
 
         //進入文章
@@ -447,6 +473,12 @@ namespace LiPTT
                     SearchIDTextBox.Focus(FocusState.Programmatic);
                 }
             }
+        }
+
+        private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
+        {
+            if (args.CurrentPoint.Properties.IsRightButtonPressed)
+                GoBack();
         }
 
         private void SearchIDTextBox_LostFocus(object sender, RoutedEventArgs e)

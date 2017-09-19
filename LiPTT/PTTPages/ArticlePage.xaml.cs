@@ -60,12 +60,14 @@ namespace LiPTT
             LiPTT.PttEventEchoed += ReadAIDandExtra;
             LiPTT.Right();
 
+            Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
         }
 
         private async void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
@@ -92,6 +94,17 @@ namespace LiPTT
                     await StopVideo();
                     GoBack();
                     break;
+            }
+        }
+
+
+        private async void CoreWindow_PointerPressed(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.PointerEventArgs args)
+        {
+            if (args.CurrentPoint.Properties.IsRightButtonPressed == true)
+            {
+                if (!UILoadCompleted) return;
+                await StopVideo();
+                GoBack();
             }
         }
 

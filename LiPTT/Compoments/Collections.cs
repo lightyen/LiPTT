@@ -39,13 +39,21 @@ namespace LiPTT
     [Flags]
     public enum ReadType
     {
-        None     = 0b0000_0000, //'+'
+        無       = 0b0000_0000, //'+' 未讀
         已讀     = 0b0000_0001,
         被標記   = 0b0000_0010,
         有推文   = 0b0000_0100,
         被鎖定   = 0b0000_1000,
         待處理   = 0b0001_0000,
-        Undefined = 0b1000_0000,
+        未定義   = 0b1000_0000,
+    }
+
+    public enum ArticleType
+    {
+        無,
+        一般,
+        回覆,
+        轉文,
     }
 
     public enum Evaluation
@@ -158,9 +166,9 @@ namespace LiPTT
         public DateTimeOffset Date { get; set; }
         public string Author { get; set; }
         public string AuthorNickname { get; set; }
-        public string Subtitle { get; set; }
+        public string Category { get; set; } //文章分類
         public string Title { get; set; }
-        public bool Reply { get; set; } //是否為回覆文
+        public ArticleType Type { get; set; } //文章類型
         public int PttCoin { get; set; } //值多少P幣
         public Uri Url { get; set; } //網頁版連結
         public bool LoadCompleted { get; set; }
@@ -1418,57 +1426,6 @@ namespace LiPTT
             }
         }
 
-        public override string ToString()
-        {
-            string like;
-
-            if (Like >= 100) like = "爆";
-            else if (Like < 0)
-            {
-                like = string.Format("X{0}", -Like / 10);
-            }
-            else if (Like == 0)
-            {
-                like = "  ";
-            }
-            else
-            {
-                like = string.Format("{0,2}", Like);
-            }
-
-            string type = " ";
-
-            if (ReadType.HasFlag(ReadType.被標記))
-            {
-                if (ReadType.HasFlag(ReadType.已讀)) type = "m";
-                else type = "m";
-            }
-            else if (ReadType.HasFlag(ReadType.待處理))
-            {
-                if (ReadType.HasFlag(ReadType.已讀)) type = "s";
-                else type = "S";
-            }
-            else if (ReadType.HasFlag(ReadType.被鎖定))
-            {
-                type = "!";
-            }
-            if (ReadType.HasFlag(ReadType.有推文))
-            {
-                if (ReadType.HasFlag(ReadType.被標記)) type = "=";
-                else type = "~";
-            }
-
-            StringBuilder sb = new StringBuilder();
-            if (Reply) sb.Append("R:");
-            else sb.Append("□");
-            sb.Append(' ');
-            sb.AppendFormat("[{0}]", Subtitle);
-            sb.Append(' ');
-            sb.Append(Title);
-
-            return String.Format(" {0,6} {1} {2}{3,5} {4,-12} {5}", ID, type, like, Date.ToString("M/dd"), Author, sb.ToString());
-        }
-
         public int CompareTo(Article other)
         {
             if (this.ID != uint.MaxValue && other.ID != uint.MaxValue)
@@ -1653,11 +1610,12 @@ namespace LiPTT
                 if (match.Success) article.Author = str.Substring(match.Index, match.Length);
 
                 //文章類型
+                str = screen.ToString(i, 30, 2).Replace('\0', ' ');
+                if (str.StartsWith("R:")) article.Type = ArticleType.回覆;
+                else if (str.StartsWith("□")) article.Type = ArticleType.一般;
+                else if (str.StartsWith("轉")) article.Type = ArticleType.轉文;
+                else article.Type = ArticleType.無;
                 str = screen.ToString(i, 30, screen.Width - 30).Replace('\0', ' ');
-                regex = new Regex(@"R:");
-                match = regex.Match(str);
-                if (match.Success) article.Reply = true;
-                else article.Reply = false;
 
                 //是否被刪除?
                 if (article.Author == "-") article.Deleted = true;
@@ -1693,7 +1651,7 @@ namespace LiPTT
                     match = regex.Match(str);
                     if (match.Success)
                     {
-                        article.Subtitle = str.Substring(match.Index + 1, match.Length - 2).Trim();
+                        article.Category = str.Substring(match.Index + 1, match.Length - 2).Trim();
                         str = str.Substring(match.Index + match.Length);
                         int k = 0;
                         while (k < str.Length && str[k] == ' ') k++;

@@ -664,7 +664,7 @@ namespace LiPTT
                             if (screenBuffer.CurrentY == screenBuffer.Height) RAW_Message.Append("[SCROll DOWN]");
 #endif
                             screenBuffer.DownLines(1);
-                            screenBuffer.DefaultAttribute();
+                            //screenBuffer.DefaultAttribute();
                             //screenBuffer.DefaultColor();
                             break;
                         case 0x0B: //VT  - vertical tab

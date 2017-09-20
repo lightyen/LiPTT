@@ -499,7 +499,7 @@ namespace LiPTT
             switch (readtype)
             {
                 case '+':
-                    return ReadType.None;
+                    return ReadType.無;
                 case 'M':
                     return ReadType.被標記;
                 case 'S':
@@ -517,7 +517,7 @@ namespace LiPTT
                 case ' ':
                     return ReadType.已讀;
                 default:
-                    return ReadType.Undefined;
+                    return ReadType.未定義;
             }
         }
 

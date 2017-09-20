@@ -297,11 +297,12 @@ namespace LiPTT
                 if (match.Success) article.Author = str.Substring(match.Index, match.Length);
 
                 //文章類型
+                str = screen.ToString(i, 30, 2).Replace('\0', ' ');
+                if (str.StartsWith("R:")) article.Type = ArticleType.回覆;
+                else if (str.StartsWith("□")) article.Type = ArticleType.一般;
+                else if (str.StartsWith("轉")) article.Type = ArticleType.轉文;
+                else article.Type = ArticleType.無;
                 str = screen.ToString(i, 30, screen.Width - 30).Replace('\0', ' ');
-                regex = new Regex(@"(R:)");
-                match = regex.Match(str);
-                if (match.Success) article.Reply = true;
-                else article.Reply = false;
 
                 //是否被刪除?
                 if (article.Author == "-") article.Deleted = true;
@@ -337,7 +338,7 @@ namespace LiPTT
                     match = regex.Match(str);
                     if (match.Success)
                     {
-                        article.Subtitle = str.Substring(match.Index + 1, match.Length - 2).Trim();
+                        article.Category = str.Substring(match.Index + 1, match.Length - 2).Trim();
                         str = str.Substring(match.Index + match.Length);
                         int k = 0;
                         while (k < str.Length && str[k] == ' ') k++;
@@ -547,7 +548,7 @@ namespace LiPTT
             switch (c)
             {
                 case '+':
-                    article.ReadType = ReadType.None;
+                    article.ReadType = ReadType.無;
                     break;
                 case 'M':
                     article.ReadType = ReadType.被標記;
@@ -574,7 +575,7 @@ namespace LiPTT
                     article.ReadType = ReadType.已讀;
                     break;
                 default:
-                    article.ReadType = ReadType.Undefined;
+                    article.ReadType = ReadType.未定義;
                     break;
             }
 
@@ -595,12 +596,13 @@ namespace LiPTT
             match = regex.Match(str);
             if (match.Success) article.Author = str.Substring(match.Index, match.Length);
 
-            //標題
-            str = LiPTT.GetString(b, 30, LiPTT.Current.Screen.Width - 30).Replace('\0', ' ');
-            regex = new Regex(@"(R:)");
-            match = regex.Match(str);
-            if (match.Success) article.Reply = true;
-            else article.Reply = false;
+            //文章類型
+            str = LiPTT.GetString(b, 30, 2).Replace('\0', ' ');
+            if (str.StartsWith("R:")) article.Type = ArticleType.回覆;
+            else if (str.StartsWith("□")) article.Type = ArticleType.一般;
+            else if (str.StartsWith("轉")) article.Type = ArticleType.轉文;
+            else article.Type = ArticleType.無;
+            str = LiPTT.GetString(b, 30, b.Length - 30).Replace('\0', ' ');
 
             //是否被刪除?
             if (article.Author == "-") article.Deleted = true;
@@ -636,7 +638,7 @@ namespace LiPTT
                 match = regex.Match(str);
                 if (match.Success)
                 {
-                    article.Subtitle = str.Substring(match.Index + 1, match.Length - 2);
+                    article.Category = str.Substring(match.Index + 1, match.Length - 2);
                     str = str.Substring(match.Index + match.Length);
                     int k = 0;
                     while (k < str.Length && str[k] == ' ') k++;

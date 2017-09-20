@@ -220,7 +220,7 @@ namespace LiPTT
                 {
                     color = Colors.LightSkyBlue;
                 }
-                else if (article.Subtitle == "公告")
+                else if (article.Category == "公告")
                 {
                     color = Colors.CadetBlue;
                 }
@@ -263,7 +263,7 @@ namespace LiPTT
 
             if (value is ReadType t)
             {
-                if (t == ReadType.None) return "+";
+                if (t == ReadType.無) return "+";
                 else if (t.HasFlag(ReadType.被鎖定)) return "!";
                 else if (t.HasFlag(ReadType.有推文))
                 {
@@ -293,7 +293,7 @@ namespace LiPTT
         }
     }
 
-    public class ReplyColorConverter : IValueConverter
+    public class ArticleTypeColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -301,14 +301,23 @@ namespace LiPTT
 
             Color color = Colors.Black;
 
-            if (value is bool reply)
+            if (value is ArticleType type)
             {
-                if (reply)
+                switch(type)
                 {
-                    color = Colors.Gray;
+                    case ArticleType.一般:
+                        color = Colors.DarkGoldenrod;
+                        break;
+                    case ArticleType.轉文:
+                        color = Colors.Gray;
+                        break;
+                    case ArticleType.回覆:
+                        color = Colors.Red;
+                        break;
+                    default:
+                        color = Colors.Black;
+                        break;
                 }
-                else
-                    color = Colors.DarkGoldenrod;
             }
 
             return new SolidColorBrush(color);
@@ -348,20 +357,25 @@ namespace LiPTT
         }
     }
 
-    public class ReplyStringFormatConverter : IValueConverter
+    public class ArticleTypeStringFormatConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             if (value == null) return null;
 
-            if (value is bool reply)
+            if (value is ArticleType type)
             {
-                if (reply)
+                switch(type)
                 {
-                    return "Re:";
+                    case ArticleType.回覆:
+                        return "Re:";
+                    case ArticleType.轉文:
+                        return "轉";
+                    case ArticleType.一般:
+                        return "●";
+                    default:
+                        return "";
                 }
-                else
-                    return "";
             }
             return null;
         }

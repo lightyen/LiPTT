@@ -156,8 +156,8 @@
                             <Grid HorizontalAlignment="Stretch">
                                 <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <TextBlock Text="{x:Bind Reply, Converter={StaticResource MyReplyStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" Foreground="Red" VerticalAlignment="Center" />
-                                        <TextBlock Text="{x:Bind Subtitle}" FontSize="24" VerticalAlignment="Center" Padding="2,0,2,0" Foreground="DarkSalmon" TextAlignment="Center" Width="50" />
+                                        <TextBlock Text="{x:Bind Type, Converter={StaticResource MyArticleTypeStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" Foreground="{x:Bind Type, Converter={StaticResource MyArticleTypeColorConverter}}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{x:Bind Category}" FontSize="24" VerticalAlignment="Center" Padding="2,0,2,0" Foreground="DarkSalmon" TextAlignment="Center" Width="50" />
                                         <TextBlock Text="{x:Bind Title}" FontSize="28" VerticalAlignment="Center" Padding="10,0,10,0" Foreground="GreenYellow"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

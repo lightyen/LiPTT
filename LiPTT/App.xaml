@@ -11,8 +11,8 @@
         <local:ReadTypeStringFormatConverter x:Key="MyReadTypeStringFormatConverter" />
         <local:LikeColorStringFormatConverter x:Key="MyLikeColorStringFormatConverter" />
         <local:DateTimeOffsetStringFormatConverter x:Key="MyDateTimeOffsetStringFormatConverter" />
-        <local:ReplyColorConverter x:Key="MyReplyColorConverter" />
-        <local:ReplyStringFormatConverter x:Key="MyReplyStringFormatConverter" />
+        <local:ArticleTypeColorConverter x:Key="MyArticleTypeColorConverter" />
+        <local:ArticleTypeStringFormatConverter x:Key="MyArticleTypeStringFormatConverter" />
         <local:EchoEvaluationStringFormatConverter x:Key="MyEchoEvaluationStringFormatConverter" />
         <local:EchoDateStringFormatConverter x:Key="MyEchoDateStringFormatConverter" />
         <local:EchoEvaluationColorConverter x:Key="MyEchoEvaluationColorConverter" />

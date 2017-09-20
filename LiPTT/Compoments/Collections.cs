@@ -474,7 +474,7 @@ namespace LiPTT
                             {
                                 string text = LiPTT.GetString(RawLines[row], index, i - index);
 
-                                /****
+                                /***
                                 InlineUIContainer container = new InlineUIContainer
                                 {
                                     Child = new Border()
@@ -491,6 +491,7 @@ namespace LiPTT
                                     }
                                 };
                                 /***/
+                                //***
                                 Run container = new Run()
                                 {
                                     Text = text.Replace('\0', ' '),
@@ -498,10 +499,9 @@ namespace LiPTT
                                     FontFamily = ArticleFontFamily,
                                     Foreground = GetForegroundBrush(RawLines[row][index]),
                                 };
+                                /***/
 
                                 paragraph.Inlines.Add(container);
-
-
 
                                 index = i;
                                 color = b.ForegroundColor;

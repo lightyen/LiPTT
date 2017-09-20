@@ -165,7 +165,7 @@ namespace LiPTT
         protected bool isConnected;
         public SemaphoreSlim ScreenLocker;
 
-        const int ConnectTimeout = 2 * 1000;
+        const int ConnectTimeout = 5 * 1000;
         const int AliveTimeout = 30 * 60 * 1000;
 
         public PTTClient()

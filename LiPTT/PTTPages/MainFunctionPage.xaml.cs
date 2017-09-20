@@ -244,11 +244,6 @@ namespace LiPTT
             }
         }
 
-        private void Exit_Click(object sender, RoutedEventArgs e)
-        {
-            
-        }
-
         private void Exit()
         {
             if (LiPTT.Current.IsExit == false)

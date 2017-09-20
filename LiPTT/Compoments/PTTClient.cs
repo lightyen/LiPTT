@@ -214,7 +214,6 @@ namespace LiPTT
 
         public void Connect()
         {
-            //開啟另一線程~
             Task.Run(() =>
             {
                 DefaultState();
@@ -1371,15 +1370,11 @@ namespace LiPTT
             Y = temp_y;
         }
 
-        public int ScrollLines { get; private set; }
-
         public void DownLines(int n)
         {
             if (Y + n >= Height) //Scroll Down
             {
                 int r = Y + n - Height + 1;
-
-                ScrollLines = r;
 
                 if (r < Height)
                 {
@@ -1398,7 +1393,6 @@ namespace LiPTT
             }
             else
             {
-                ScrollLines = 0;
                 Y++;
             }
         }
@@ -1408,8 +1402,6 @@ namespace LiPTT
             if (Y == 0) // Scroll Up
             {
                 int r = n;
-
-                ScrollLines = r;
 
                 if (r < Height)
                 {
@@ -1424,7 +1416,6 @@ namespace LiPTT
             }
             else
             {
-                ScrollLines = 0;
                 Y--;
             }
         }

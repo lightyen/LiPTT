@@ -53,7 +53,6 @@
                         <Border Background="Black" Width="400" Height="200" >
                             <TextBlock Text="{x:Bind Key}" TextAlignment="Center" FontSize="36" VerticalAlignment="Center" Foreground="FloralWhite"/>
                         </Border>
-                        
                     </DataTemplate>
                 </GridView.ItemTemplate>
             </GridView>

@@ -15,6 +15,8 @@ namespace LiPTT
     {
         None,
         Disconnected, //未連線
+        Connecting, //連線中...
+        ConnectFailed, //連線失敗
         Disconnecting, //斷線中
         Kicked, //被踢惹
         OverLoading, //PTT爆炸惹
@@ -75,7 +77,7 @@ namespace LiPTT
         /// </summary>
         public static bool IsConnected => Current.IsConnected;
 
-        public static PttState State;
+        public static PttState State { get; set; }
 
         /// <summary>
         /// 使用者名稱 (通常至少4個字元，不過元老級的帳號是例外)
@@ -86,7 +88,6 @@ namespace LiPTT
         /// 密碼 (通常至少4個字元，新建帳號new可以不需要)
         /// </summary>
         public static string Password { get; set; }
-
 
         /// <summary>
         /// WebView 暫存
@@ -116,14 +117,31 @@ namespace LiPTT
             get; set;
         }
 
+
+        /// <summary>
+        /// 在線人數
+        /// </summary>
+        public static int OnlineUsers { get; set; }
+
         /// <summary>
         /// 開始連PTT囉
         /// </summary>
         public static void TryConnect()
         {
+            pTTProvider.SSH = false;
             if (IsConnected) Current.Disconnect();
+            State = PttState.Connecting;
+            OnPttEventEchoed(State, pTTProvider.Screen);
+            Current.ConnectionFailed += HandleConnectionFailed;
             Current.Connected += AddEventHandler;
             Current.Connect();
+        }
+
+        private static void HandleConnectionFailed(object sender, EventArgs e)
+        {
+            Current.Connected -= AddEventHandler;
+            State = PttState.ConnectFailed;
+            OnPttEventEchoed(State, pTTProvider.Screen);
         }
 
         private static void AddEventHandler(object o, EventArgs e)
@@ -165,6 +183,15 @@ namespace LiPTT
             {
                 if (State != PttState.MainPage)
                 {
+                    string s = Current.Screen.ToString(23);
+                    Match match = new Regex(@"(線上[\d\s]+人)").Match(s);
+                    if (match.Success)
+                    {
+                        string st = s.Substring(match.Index + 2, match.Length - 3).Trim();
+                        try { OnlineUsers = Convert.ToInt32(st); }
+                        catch { }
+                    }
+
                     Debug.WriteLine("主功能表");
                     State = PttState.MainPage;
                     OnPttEventEchoed(State, pTTProvider.Screen);
@@ -460,6 +487,8 @@ namespace LiPTT
         public static void ReleaseInstance()
         {
             pTTProvider.IsExit = true;
+            State = PttState.Disconnected;
+            OnPttEventEchoed(State, pTTProvider.Screen);
             pTTProvider.Dispose();
             var task = Task.Run(async () => { await ImageCache.ClearAllCache(); });
             task.Wait();

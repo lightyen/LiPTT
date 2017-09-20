@@ -17,6 +17,17 @@
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
                 <Button Content="AddItem" Click="Button_Click"></Button>
+                <StackPanel>
+                    <RichTextBlock>
+                        <Paragraph>
+                            <Run Text="Hello"></Run>
+                            <Hyperlink NavigateUri="https://www.google.com.tw/" UnderlineStyle="None" Foreground="Gray">
+                                <Run Text="Google" />
+                            </Hyperlink>
+                            <Run Text="World"></Run>
+                        </Paragraph>
+                    </RichTextBlock>
+                </StackPanel>
             </Grid>
             
             <Grid Grid.Row="1">

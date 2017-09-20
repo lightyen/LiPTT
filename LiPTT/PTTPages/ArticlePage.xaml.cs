@@ -55,7 +55,7 @@ namespace LiPTT
             LoadingExtraData = false;
             pressAny = false;
             article.Echoes.Article = article;
-
+            article.ViewWidth = ContentScrollViewer.ViewportWidth;
 
             LiPTT.PttEventEchoed += ReadAIDandExtra;
             LiPTT.Right();
@@ -199,15 +199,16 @@ namespace LiPTT
         }
 
 
-        //尚未讀取的起始行
+        //已讀行數
         private int line;
+
+        //有無文章標頭
+        bool header = false;
 
         private void LoadArticle(ScreenBuffer screen)
         {
             //var x = screen.ToStringArray();
-
-            article.ViewWidth = ContentScrollViewer.ViewportWidth;
-
+            //#1PkNrDxZ
             IAsyncAction action = null;
 
             Bound bound = ReadLineBound(screen.ToString(23));
@@ -219,74 +220,72 @@ namespace LiPTT
             if (bound.Begin == 1)
             {
                 article.Content.Clear();
-                //作者、看板
-                tmps = screen.ToString(0);
-                regex = new Regex(@"作者  \S+ ");
-                match = regex.Match(tmps);
 
-                if (match.Success)
+                tmps = screen.ToString(3);
+
+                if (tmps.StartsWith("───────────────────────────────────────"))
+                {
+                    header = true;
+                }
+
+                if (header)
                 {
                     //作者
-                    article.Author = tmps.Substring(match.Index + 4, match.Length - 5);
+                    tmps = screen.ToString(0);
+                    regex = new Regex(@"作者  [A-Za-z0-9]+ ");
+                    match = regex.Match(tmps);
+                    if (match.Success)
+                    {                        
+                        article.Author = tmps.Substring(match.Index + 4, match.Length - 5);
+                    }
 
                     //匿稱
                     article.AuthorNickname = "";
-                    int a = match.Index + match.Length + 1;
-                    for (int j = a; j < tmps.Length; j++)
+                    regex = new Regex(@"\([\S\s^\(^\)]+\)");
+                    match = regex.Match(tmps);
+                    if (match.Success)
                     {
-                        if (tmps[j] == ')')
-                        {
-                            article.AuthorNickname = tmps.Substring(a, j - a);
-                            break;
-                        }
+                        article.AuthorNickname = tmps.Substring(match.Index + 1, match.Length - 2);
                     }
+
+                    //標題
+                    //已讀過 這裡不再Parse
+
+                    //時間
+                    //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
+                    System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
+                    tmps = LiPTT.Current.Screen.ToString(2, 7, 24);
+                    if (tmps[8] == ' ') tmps = tmps.Remove(8, 1);
+
+                    try
+                    {
+                        article.Date = DateTimeOffset.ParseExact(tmps, "ddd MMM d HH:mm:ss yyyy", provider);
+                    }
+                    catch (FormatException)
+                    {
+                        Debug.WriteLine("時間格式有誤? " + tmps);
+                    }
+
+                    line = 3;
                 }
                 else
                 {
                     line = 0;
                     Debug.WriteLine("沒有文章標頭? " + tmps);
-                    goto READ_CONTENT;
                 }
-
-                //標題
-                //已讀過 所以不再Parse
-
-                //時間
-                //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
-                System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
-                tmps = LiPTT.Current.Screen.ToString(2, 7, 24);
-                if (tmps[8] == ' ') tmps = tmps.Remove(8, 1);
-
-                try
-                {
-                    article.Date = DateTimeOffset.ParseExact(tmps, "ddd MMM d HH:mm:ss yyyy", provider);
-                }
-                catch (FormatException)
-                {
-                    Debug.WriteLine("時間?" + tmps);
-                    goto READ_CONTENT;
-                }
-
-                line = 3;
-
-                READ_CONTENT:;
 
                 //////////////////////////////////////////////////////////////////////////////////////////
                 //第一頁文章內容
-                for (int i = line > 0 ? line + 1 : 0; i < bound.End; i++, line++)
+                //////////////////////////////////////////////////////////////////////////////////////////
+
+                int o = bound.End - bound.Begin + 1;
+                if (o < 23)
                 {
-                    article.AppendLine(screen[i]);
+                    if (header) o = bound.End + 1;
+                    else o = bound.End;
                 }
 
-                action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    article.ParseBeta();
-                });
-
-            }
-            else
-            {
-                for (int i = line - bound.Begin + 1; i <= bound.End - bound.Begin; i++, line++)
+                for (int i = header ? 4 : 0; i < o; i++, line++)
                 {
                     article.AppendLine(screen[i]);
                 }
@@ -296,6 +295,21 @@ namespace LiPTT
                     article.ParseBeta();
                 });
             }
+            else
+            {
+                int o = header ? 1 : 0;
+
+                for (int i = line - bound.Begin + 1 + (bound.Begin < 5 ? o : 0); i < 23; i++, line++)
+                {
+                    article.AppendLine(screen[i]);
+                }
+
+                action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    article.ParseBeta();
+                });
+            }
+            
             /***
             else if (bound.Percent < 100)
             {

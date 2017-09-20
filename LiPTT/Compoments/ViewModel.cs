@@ -25,6 +25,12 @@ namespace LiPTT
                 case PttState.Disconnected:
                     if (!overloading) State = "未連線";
                     break;
+                case PttState.Connecting:
+                    State = "連線中...";
+                    break;
+                case PttState.ConnectFailed:
+                    State = "連線失敗";
+                    break;
                 case PttState.Board:
                     State = "看板";
                     break;

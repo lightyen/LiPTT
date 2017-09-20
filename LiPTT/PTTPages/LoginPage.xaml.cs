@@ -15,6 +15,8 @@ using Windows.UI.Xaml.Navigation;
 using Windows.System;
 using Windows.Storage;
 using Windows.ApplicationModel.Core;
+using Windows.UI.Core;
+
 namespace LiPTT
 {
     /// <summary>
@@ -55,12 +57,37 @@ namespace LiPTT
                 MemoAcount.IsEnabled = true;
                 if (MemoAcount.IsChecked == true) AutoLogin.IsEnabled = true;
             }
+
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+        }
+
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+        }
+
+        private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
+        {
+            if (args.VirtualKey == VirtualKey.Escape)
+            {
+                //微軟說不建議主動關閉應用程式......好ㄅ
+                //Application.Current.Exit();
+            }
         }
 
         private void PasswordText_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == VirtualKey.Enter && UserText.Text.Length >= 0)
             {
+                var action = LiPTT.RunInUIThread(() =>
+                {
+                    UserText.IsEnabled = false;
+                    PasswordText.IsEnabled = false;
+                    MemoAcount.IsEnabled = false;
+                    AutoLogin.IsEnabled = false;
+                });
+
+
                 e.Handled = true;
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Next);
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Next);
@@ -137,13 +164,7 @@ namespace LiPTT
                     break;
                 case PttState.Accept:
                     { 
-                        var action = LiPTT.RunInUIThread(() =>
-                        {
-                            UserText.IsEnabled = false;
-                            PasswordText.IsEnabled = false;
-                            MemoAcount.IsEnabled = false;
-                            AutoLogin.IsEnabled = false;
-                        });
+                        
                     }
                     break;
                 case PttState.Loginning:
@@ -164,6 +185,19 @@ namespace LiPTT
 
                         LiPTT.TryDisconnect();
 
+                        action.AsTask().Wait();
+                    }
+                    break;
+                case PttState.ConnectFailed:
+                    {
+                        var action = LiPTT.RunInUIThread(() => {
+
+                            LiPTT.TestConnectionTimer.Stop();
+                            UserText.IsEnabled = true;
+                            PasswordText.IsEnabled = true;
+                            MemoAcount.IsEnabled = true;
+                            AutoLogin.IsEnabled = true;
+                        });
                         action.AsTask().Wait();
                     }
                     break;

@@ -27,41 +27,49 @@ namespace LiPTT
     /// </summary>
     public sealed partial class ArticlePage : Page
     {
-
-        private bool UILoadCompleted;
-
         public ArticlePage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         private Article article;
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            var sv = (ScrollViewer)VisualTreeHelper.GetChild(VisualTreeHelper.GetChild(this.ListVW, 0), 0);
+            var scrollbars = sv.GetDescendantsOfType<ScrollBar>().ToList();
+            var verticalBar = scrollbars.FirstOrDefault(x => x.Orientation == Orientation.Vertical);
+            if (verticalBar != null)
+                verticalBar.Scroll += BarScroll;
+
             LoadingIndicator.IsActive = true;
-            
-            UILoadCompleted = false;
             article = LiPTT.CurrentArticle;
             article.LoadCompleted = false;
             ArticleHeaderListBox.Items.Clear();
 
-            ParagraphControl.ItemsSource = null;
+            //ParagraphControl.ItemsSource = null;
 
-            EchoView.ItemsSource = null;
+            //EchoView.ItemsSource = null;
 
             article.DefaultState();
 
             LoadingExtraData = false;
             pressAny = false;
-            article.Echoes.Article = article;
-            article.ViewWidth = ContentScrollViewer.ViewportWidth;
+            //article.Echoes.Article = article;
+            //article.ViewWidth = ContentScrollViewer.ViewportWidth;
 
             LiPTT.PttEventEchoed += ReadAIDandExtra;
             LiPTT.Right();
 
             Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+        }
+
+        private void BarScroll(object sender, ScrollEventArgs e)
+        {
+            if (e.ScrollEventType != ScrollEventType.EndScroll) return;
+
+            ContentCollection.ScrollEnd = true;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -76,38 +84,38 @@ namespace LiPTT
             {
                 case VirtualKey.PageDown:
                 case VirtualKey.Down:
-                    ContentScrollViewer.ChangeView(0, ContentScrollViewer.VerticalOffset + ContentScrollViewer.ViewportHeight - 50.0, null);
+                    //ContentScrollViewer.ChangeView(0, ContentScrollViewer.VerticalOffset + ContentScrollViewer.ViewportHeight - 50.0, null);
                     break;
                 case VirtualKey.PageUp:
                 case VirtualKey.Up:
-                    ContentScrollViewer.ChangeView(0, ContentScrollViewer.VerticalOffset - ContentScrollViewer.ViewportHeight + 50.0, null);
+                    //ContentScrollViewer.ChangeView(0, ContentScrollViewer.VerticalOffset - ContentScrollViewer.ViewportHeight + 50.0, null);
                     break;
                 case VirtualKey.Home:
-                    ContentScrollViewer.ChangeView(0, 0, null);
+                    //ContentScrollViewer.ChangeView(0, 0, null);
                     break;
                 case VirtualKey.End:
-                    ContentScrollViewer.ChangeView(0, ContentScrollViewer.ScrollableHeight, null);
+                    //ContentScrollViewer.ChangeView(0, ContentScrollViewer.ScrollableHeight, null);
                     break;
                 case VirtualKey.Left:
                 case VirtualKey.Escape:
-                    if (!UILoadCompleted) return;
+                    if (!article.LoadCompleted) return;
                     await StopVideo();
                     GoBack();
                     break;
             }
         }
 
-
         private async void CoreWindow_PointerPressed(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.PointerEventArgs args)
         {
             if (args.CurrentPoint.Properties.IsRightButtonPressed == true)
             {
-                if (!UILoadCompleted) return;
+                if (!article.LoadCompleted) return;
                 await StopVideo();
                 GoBack();
             }
         }
 
+        /***
         private void UpdateUI()
         {
             LoadingIndicator.IsActive = true;
@@ -121,7 +129,9 @@ namespace LiPTT
 
             LoadingIndicator.IsActive = false;
         }
+        /***/
 
+        /***
         private async Task UpdateDownloadTaskView()
         {
             if (article.DownloadTasks.Count == 0)
@@ -130,14 +140,14 @@ namespace LiPTT
             }
             else
             {
-                /***
+
                 foreach (var t in await Task.WhenAll(article.SomeTasks))
                 {
                     article.Content[t.Item1] = t.Item2;
                     ParagraphControl.ItemsSource = null;
                     ParagraphControl.ItemsSource = article.Content;
                 }
-                /***/
+
 
                 while (article.DownloadTasks.Count > 0)
                 {
@@ -155,6 +165,7 @@ namespace LiPTT
 
             
         }
+        /***/
 
         private bool LoadingExtraData;
         private bool pressAny;
@@ -182,20 +193,26 @@ namespace LiPTT
 
         private void BrowseArticle(PTTProvider sender, LiPttEventArgs e)
         {
-            if (article.LoadCompleted) return;
-
             switch (e.State)
             {
                 case PttState.Article:
-                    {
-                        LoadArticle(e.Screen);
-                    }
-                    break;
-                case PttState.PressAny:
                     LiPTT.PttEventEchoed -= BrowseArticle;
-                    GoBack();
+                    LoadArticle();                   
                     break;
             }
+        }
+
+        private void LoadArticle()
+        {
+
+            ContentCollection.BeginLoad(LiPTT.CurrentArticle);
+
+            var action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                ArticleHeaderListBox.Items.Add(LiPTT.CurrentArticle);
+                LoadingIndicator.IsActive = false;
+            });
+            
         }
 
 
@@ -205,6 +222,7 @@ namespace LiPTT
         //有無文章標頭
         bool header = false;
 
+        /***
         private void LoadArticle(ScreenBuffer screen)
         {
             //var x = screen.ToStringArray();
@@ -254,7 +272,7 @@ namespace LiPTT
                     //時間
                     //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
                     System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
-                    tmps = LiPTT.Current.Screen.ToString(2, 7, 24);
+                    tmps = LiPTT.Screen.ToString(2, 7, 24);
                     if (tmps[8] == ' ') tmps = tmps.Remove(8, 1);
 
                     try
@@ -309,35 +327,7 @@ namespace LiPTT
                     article.ParseBeta();
                 });
             }
-            
-            /***
-            else if (bound.Percent < 100)
-            {
-                
-                for (int i = line - bound.Begin - 1; i <= bound.End - bound.Begin; i++, line++)
-                {
-                    article.AppendLine(screen[i]);
-                }
 
-                action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    article.Parse();
-                });
-            }
-            else if (bound.Percent == 100)
-            {
-                //最後一頁
-                for (int i = article.RawLines.Count - bound.Begin + 4; i < 23; i++)
-                {
-                    article.AppendLine(screen[i]);
-                }
-
-                action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    article.Parse();
-                });
-            }
-            /***/
             article.PageDownPercent = bound.Percent;
 
             //捲到下一頁
@@ -384,6 +374,7 @@ namespace LiPTT
                 }); 
             }
         }
+        /***/
 
         private void ReadExtraData(ScreenBuffer screen)
         {

@@ -49,7 +49,7 @@ namespace LiPTT
         {
             this.InitializeComponent();
             Colorful = true;
-            LiPTT.Current.ScreenDrawn += Draw;
+            LiPTT.ScreenDrawn += Draw;
             Loaded += CustomSwapChainPanel_Loaded;            
             AdjustFontSize();
         }
@@ -369,7 +369,7 @@ namespace LiPTT
 
         public void DrawPTT()
         {
-            if (d2d1DC != null) DrawPTT(LiPTT.Current.Screen);
+            if (d2d1DC != null) DrawPTT(LiPTT.Screen);
         }
 
         private void AdjustFontSize()

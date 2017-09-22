@@ -173,7 +173,7 @@ namespace LiPTT
             host = "ptt.cc";
             port = 443;
             modeSSH = false;
-            isConnected = false;    
+            isConnected = false;
             DefaultState();
         }
 

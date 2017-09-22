@@ -64,11 +64,55 @@ namespace LiPTT
         /// <summary>
         /// 當前連線物件
         /// </summary>
-        public static PTTProvider Current
+        private static PTTProvider Current
         {
             get
             {
                 return pTTProvider;
+            }
+        }
+
+        public static ScreenBuffer Screen
+        {
+            get
+            {
+                return pTTProvider.Screen;
+            }
+        }
+
+        public static event EventHandler Connected
+        {
+            add
+            {
+                pTTProvider.Connected += value;
+            }
+            remove
+            {
+                pTTProvider.Connected -= value;
+            }
+        }
+
+        public static event EventHandler Belled
+        {
+            add
+            {
+                pTTProvider.Belled += value;
+            }
+            remove
+            {
+                pTTProvider.Belled -= value;
+            }
+        }
+
+        public static event PTTClient.ScreenEventHandler ScreenDrawn
+        {
+            add
+            {
+                pTTProvider.ScreenDrawn += value;
+            }
+            remove
+            {
+                pTTProvider.ScreenDrawn -= value;
             }
         }
 
@@ -216,7 +260,7 @@ namespace LiPTT
                     Debug.WriteLine("看板資訊");
                     State = PttState.BoardInfomation;
                     OnPttEventEchoed(State, pTTProvider.Screen);
-                }  
+                }
             }
             else if (Current.MatchPattern(@"【板主", 0))
             {
@@ -336,6 +380,30 @@ namespace LiPTT
             }
 
             Current.ScreenLocker.Release();
+        }
+
+        public static bool SSH
+        {
+            get
+            {
+                return pTTProvider.SSH;
+            }
+            set
+            {
+                pTTProvider.SSH = value;
+            }
+        }
+
+        public static bool IsExit
+        {
+            get
+            {
+                return pTTProvider.IsExit;
+            }
+            set
+            {
+                pTTProvider.IsExit = value;
+            }
         }
 
         private static void Current_Disconnected(object sender, EventArgs e)
@@ -472,6 +540,11 @@ namespace LiPTT
         public static void SendMessage(char c)
         {
             Current.Send(c);
+        }
+
+        public static void Send(byte[] msg)
+        {
+            Current.Send(msg);
         }
 
         private static void WaitEcho()

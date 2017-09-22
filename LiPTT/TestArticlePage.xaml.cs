@@ -7,7 +7,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
@@ -35,21 +35,6 @@ namespace LiPTT
             this.InitializeComponent();
         }
 
-        CollectionViewSource source;
-
-        CollectionViewSource ViewSource
-        {
-            get
-            {
-                return source;
-            }
-            set
-            {
-                value = source;
-                NotifyPropertyChanged("ViewSource");
-            }
-        }
-
         private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
         {
             if (PropertyChanged != null)
@@ -62,8 +47,6 @@ namespace LiPTT
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            source = new CollectionViewSource();
-
             ObservableCollection<RichTextBlock> collection1 = new ObservableCollection<RichTextBlock>();
 
             for (int i = 0; i < 3; i++)
@@ -90,14 +73,6 @@ namespace LiPTT
                 hyper.NavigateUri = new Uri("https://www.google.com.tw/");
                 collection2.Add(hyper);
             }
-
-            ViewSource.IsSourceGrouped = true;
-
-            //ViewSource.View.Add(collection1);
-
-
-            this.DataContext = this;
-
         }
 
         public async Task<Image> GetImage(string url, double width, double height)
@@ -168,33 +143,114 @@ namespace LiPTT
             return bitmapImage;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private RichTextBlock tb;
+        private Paragraph ph;
+        private bool cut = false;
+
+        private void ListView_ItemClick(object sender, ItemClickEventArgs e)
         {
-            ListViewItem item1 = new ListViewItem() { IsHitTestVisible = false, Content = new Windows.UI.Xaml.Shapes.Rectangle() { Width = 1000, Height = 20, Fill = new SolidColorBrush(Windows.UI.Colors.Red) } };
-            TestView.Items.Add(item1);
+            Debug.WriteLine("Press");
+        }
 
-            RichTextBlock rb = new RichTextBlock();
-            Paragraph pa = new Paragraph();
-            Run run = new Run() { Text = "helloheooo", FontSize = 30 };
-            Run run2 = new Run() { Text = "helloheooo", FontSize = 22 };
-            Run run3 = new Run() { Text = "helloheooo", FontSize = 18 };
-            pa.Inlines.Add(run);
-            pa.Inlines.Add(new LineBreak());
-            pa.Inlines.Add(run2);
-            pa.Inlines.Add(new LineBreak());
-            pa.Inlines.Add(run3);
-            pa.Inlines.Add(new LineBreak());
-            rb.Blocks.Add(pa);
+        private void AddListViewItem_Click(object sender, RoutedEventArgs e)
+        {
+            ListView list = new ListView() { IsItemClickEnabled = true, HorizontalAlignment = HorizontalAlignment.Stretch };
+            list.Items.Add(new ListViewItem() { Content = "Hello", IsSelected = false });
+            list.ItemClick += ListView_ItemClick;
+            tCollection.Add(list);
 
-            ListViewItem item2 = new ListViewItem()
+            cut = true;
+        }
+
+        private void AddText_Click(object sender, RoutedEventArgs e)
+        {
+            if (tb == null || cut)
             {
-                IsHitTestVisible = true,
-                Content = rb,
+                cut = false;
+                tb = new RichTextBlock();
+                ph = new Paragraph();
+                tb.Blocks.Add(ph);
+                tCollection.Add(tb);
+            }
+
+            Run run = new Run() { Text = "HeeeHeeeee", FontSize = 30 };
+            ph.Inlines.Add(run);
+            ph.Inlines.Add(new LineBreak());
+        }
+
+        private void AddView_Click(object sender, RoutedEventArgs e)
+        { 
+            Grid YoutuGrid = new Grid() { Background = new SolidColorBrush(Colors.DarkRed), HorizontalAlignment = HorizontalAlignment.Stretch };
+            ColumnDefinition c1, c2, c3;
+            double space = 0.2;
+            c1 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
+            c2 = new ColumnDefinition { Width = new GridLength((1 - space), GridUnitType.Star) };
+            c3 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
+
+            double w = 800;
+            double h = 400;
+
+            WebView wv = new WebView() { Tag = "YoutubeWebView", Width = w, Height = h, DefaultBackgroundColor = Colors.Gray };
+
+            Grid grid = new Grid() { Width = w, Height = h, Tag = "Youtube", HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch, Background = new SolidColorBrush(Colors.Gray) };
+            ProgressRing progress = new ProgressRing() { IsActive = true, Width = 50, Height = 50, HorizontalAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.Red) };
+            string script = GetYoutubeScript("oXp2oE0xQcE", w, h);
+
+            wv.ContentLoading += (a, b) =>
+            {
+                wv.Visibility = Visibility.Collapsed;
             };
-            TestView.Items.Add(item2);
 
-            TestView.Items.Add(new ListViewItem() { IsHitTestVisible = true, Content = new Windows.UI.Xaml.Shapes.Rectangle() { Width = 1000, Height = 20, Fill = new SolidColorBrush(Windows.UI.Colors.Gray) } });
+            wv.FrameDOMContentLoaded += (a, b) =>
+            {
+                progress.IsActive = false;
+                wv.Visibility = Visibility.Visible;
+            };
 
+            wv.DOMContentLoaded += async (a, b) =>
+            {
+                try
+                {
+                    string returnStr = await wv.InvokeScriptAsync("eval", new string[] { script });
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Script Error" + ex.ToString() + script);
+                }
+            };
+
+            grid.Children.Add(wv);
+            grid.Children.Add(progress);
+            grid.SetValue(Grid.ColumnProperty, 1);
+            YoutuGrid.Children.Add(grid);
+
+            tCollection.Add(YoutuGrid);
+
+            cut = true;
+
+            wv.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
+        }
+    }
+
+    public class TestCollection : ObservableCollection<object>, ISupportIncrementalLoading
+    {
+        public IAsyncOperation<LoadMoreItemsResult> LoadMoreItemsAsync(uint count)
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool more;
+
+        public bool HasMoreItems
+        {
+            get
+            {
+                return false;
+            }
+            set
+            {
+                more = value;
+            }
         }
     }
 }

@@ -42,7 +42,7 @@ namespace LiPTT
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            LiPTT.Current.IsExit = false;
+            LiPTT.IsExit = false;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         }
 
@@ -174,7 +174,7 @@ namespace LiPTT
         private void ClearSearch()
         {
             string lastText = "";
-            var msg = LiPTT.Current.Screen.ToString(1, 34, 20).Trim();
+            var msg = LiPTT.Screen.ToString(1, 34, 20).Trim();
             Regex regex = new Regex(@"([\w-_]+)");
             Match match = regex.Match(msg);
             if (match.Success)
@@ -246,9 +246,9 @@ namespace LiPTT
 
         private void Exit()
         {
-            if (LiPTT.Current.IsExit == false)
+            if (LiPTT.IsExit == false)
             {
-                LiPTT.Current.IsExit = true;
+                LiPTT.IsExit = true;
                 LiPTT.TestConnectionTimer.Stop();
 
                 LiPTT.SendMessage('g', 0x0D, 'y', 0x0D, 0x20);

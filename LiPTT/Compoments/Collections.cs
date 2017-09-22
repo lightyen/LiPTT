@@ -27,6 +27,7 @@ using Windows.ApplicationModel.Core;
 
 namespace LiPTT
 {
+    //508171 #1PkEzljp #1PXU-fck
     //https://www.ptt.cc/bbs/PttNewhand/M.1265292872.A.991.html
     //未讀 + M S
     //已讀   m s
@@ -231,8 +232,6 @@ namespace LiPTT
             SomeTasks.Clear(); ;
             DownloadTasks.Clear();
             Echoes.Clear();
-
-            //508171 #1PkEzljp #1PXU-fck
             Content.Clear();
         }
 
@@ -1246,7 +1245,6 @@ namespace LiPTT
                 grid.Children.Add(ring);
                 Content.Add(grid);
 
-                //SomeTasks.Add(CreateImageView(Content.Count - 1, uri));
                 DownloadTasks.Add(CreateImageView(Content.Count - 1, uri));
             }
             else if (uri.Host == "imgur.com")
@@ -1449,15 +1447,6 @@ namespace LiPTT
         }
     }
 
-    public class ArticleContentCollection : ObservableCollection<object>
-    {
-        public ArticleContentCollection()
-        {
-            
-        }
-
-    }
-
     ///關於UWP ObservableCollection Sorting and Grouping
     //https://stackoverflow.com/questions/34915276/uwp-observablecollection-sorting-and-grouping
     //https://github.com/Microsoft/Windows-universal-samples/tree/master/Samples/XamlListView
@@ -1487,8 +1476,6 @@ namespace LiPTT
 
         private async Task<LoadMoreItemsResult> InnerLoadMoreItemsAsync(uint count)
         {
-            
-
             if (CurrentIndex == 0)
             {
                 HasMoreItems = false;

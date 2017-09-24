@@ -68,7 +68,7 @@ namespace LiPTT
             Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
         }
 
-        private async void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
             var scrollviewer = GetScrollViewer(ListVW);
 
@@ -91,23 +91,24 @@ namespace LiPTT
                 case VirtualKey.Left:
                 case VirtualKey.Escape:
                     if (!ContentCollection.InitialLoaded && ContentCollection.Loading) return;
-                    await StopVideo();
+                    StopVideo();
                     GoBack();
                     break;
             }
         }
 
-        private async void CoreWindow_PointerPressed(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.PointerEventArgs args)
+        private void CoreWindow_PointerPressed(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.PointerEventArgs args)
         {
             if (args.CurrentPoint.Properties.IsRightButtonPressed == true)
             {
                 if (!ContentCollection.InitialLoaded && ContentCollection.Loading) return;
-                await StopVideo();
+                StopVideo();
                 GoBack();
             }
         }
 
         private bool LoadingExtraData;
+
         private bool pressAny;
 
         private void ReadAIDandExtra(PTTProvider sender, LiPttEventArgs e)
@@ -183,7 +184,7 @@ namespace LiPTT
             }
         }
 
-        private async Task StopVideo()
+        private void StopVideo()
         {
             foreach (var o in ContentCollection)
             {
@@ -193,20 +194,9 @@ namespace LiPTT
                     {
                         foreach (object e in grid.Children)
                         {
-                            if (e.GetType() == typeof(WebView))
+                            if (e is WebView youtu)
                             {
-                                WebView youtu = (WebView)e;
-                                string script = @"document.getElementById('player').stopVideo();";
-
-                                try
-                                {
-                                    await youtu.InvokeScriptAsync("eval", new string[] { script });
-                                }
-                                catch (Exception ex)
-                                {
-                                    youtu.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
-                                    Debug.WriteLine(ex.ToString());
-                                }
+                                youtu.Navigate(new Uri("ms-appx-web:///Templates/youtube/blank.html"));
                             }
                         } 
                     }

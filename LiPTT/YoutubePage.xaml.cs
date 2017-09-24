@@ -211,7 +211,7 @@ namespace LiPTT
 
             MyPanel.Children.Add(grid);
 
-            wwvv.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
+            wwvv.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube.html"));
 
             
         }

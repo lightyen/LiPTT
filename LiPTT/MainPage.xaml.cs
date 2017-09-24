@@ -242,7 +242,7 @@ namespace LiPTT
             {
                 await StartDissolvingAsync();
                 DisplayFrame.Navigate(typeof(TestArticlePage));
-                SplitView1.DisplayMode = SplitViewDisplayMode.CompactOverlay;
+                SplitView1.DisplayMode = SplitViewDisplayMode.Overlay;
             }
         }
 

@@ -86,6 +86,7 @@ namespace LiPTT
         {
             WebView wv = new WebView() { Width = width == 0 ? 800 : width, Height = height == 0 ? width * 0.5625 : height, DefaultBackgroundColor = Windows.UI.Colors.Black };
 
+            
             wv.DOMContentLoaded += async (a, b) => {
 
                 string script = GetYoutubeScript(youtubeID, wv.ActualWidth, wv.ActualHeight);
@@ -102,6 +103,43 @@ namespace LiPTT
             };
 
             return wv;
+        }
+
+        private void Wv_ContainsFullScreenElementChanged(WebView sender, object args)
+        {
+            var applicationView = Windows.UI.ViewManagement.ApplicationView.GetForCurrentView();
+
+            if (sender.ContainsFullScreenElement)
+            {
+                applicationView.TryEnterFullScreenMode();
+            }
+            else if (applicationView.IsFullScreenMode)
+            {
+                applicationView.ExitFullScreenMode();
+            }
+
+            foreach (var o in tCollection)
+            {
+                if (o is Grid grid && grid.Tag is string tag && tag == "YoutubeGrid")
+                {
+                    foreach (var a in grid.Children)
+                    {
+                        if (a is Grid g && g.Tag is string t && t == "YoutubeInnerGrid")
+                        {
+                            if (g.Children.ElementAt(0) is WebView youtu)
+                            {
+                                
+
+
+
+                            }
+                        }
+                        
+                    }
+
+                }
+            }
+
         }
 
         private string GetYoutubeScript(string YoutubeID, double width, double height)
@@ -185,7 +223,7 @@ namespace LiPTT
 
         private void AddView_Click(object sender, RoutedEventArgs e)
         { 
-            Grid YoutuGrid = new Grid() { Background = new SolidColorBrush(Colors.DarkRed), HorizontalAlignment = HorizontalAlignment.Stretch };
+            Grid YoutuGrid = new Grid() { Tag = "YoutubeGrid", Background = new SolidColorBrush(Colors.DarkRed), HorizontalAlignment = HorizontalAlignment.Stretch };
             ColumnDefinition c1, c2, c3;
             double space = 0.2;
             c1 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
@@ -197,7 +235,10 @@ namespace LiPTT
 
             WebView wv = new WebView() { Tag = "YoutubeWebView", Width = w, Height = h, DefaultBackgroundColor = Colors.Gray };
 
-            Grid grid = new Grid() { Width = w, Height = h, Tag = "Youtube", HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch, Background = new SolidColorBrush(Colors.Gray) };
+            wv.ContainsFullScreenElementChanged += Wv_ContainsFullScreenElementChanged;
+
+
+            Grid grid = new Grid() { Width = w, Height = h, Tag = "YoutubeInnerGrid", HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch, Background = new SolidColorBrush(Colors.Gray) };
             ProgressRing progress = new ProgressRing() { IsActive = true, Width = 50, Height = 50, HorizontalAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.Red) };
             string script = GetYoutubeScript("oXp2oE0xQcE", w, h);
 

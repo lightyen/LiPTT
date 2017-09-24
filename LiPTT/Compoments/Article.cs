@@ -27,8 +27,6 @@ namespace LiPTT
     {
         private bool more;
 
-        private bool busy;
-
         public bool InitialLoaded { get; private set; }
 
         public bool Loading { get { return loading; } }
@@ -41,11 +39,11 @@ namespace LiPTT
         {
             get
             {
-                if (!busy && !loading && InitialLoaded)
+                if (InitialLoaded)
                 {
-                    if (RichTextBlock != null) Add(RichTextBlock);
+                    if (RichTextBlock != null)
+                        Add(RichTextBlock);
                     RichTextBlock = null;
-
                     return more;
                 }
                 else return false;
@@ -63,23 +61,28 @@ namespace LiPTT
 
         private async Task<LoadMoreItemsResult> InnerLoadMoreItemsAsync(uint count)
         {
+            bool success = false;
+
+            await sem.WaitAsync();
+
             await Task.Run(() => {
 
-                if (loading && !InitialLoaded)
+                if (!InitialLoaded)
                 {
-                    HasMoreItems = false;
-                    return;
+                    success = false;
                 }
                 else
                 {
-                    loading = true;
-
+                    success = true;
                     LiPTT.PttEventEchoed += PttUpdated;
                     LiPTT.PageDown();
                 }
             });
 
-            return new LoadMoreItemsResult { Count = (uint)this.Count };
+            if (success)
+                return new LoadMoreItemsResult { Count = (uint)this.Count };
+            else
+                return new LoadMoreItemsResult { Count = 0 };
         }
         
         public Article ArticleTag
@@ -95,7 +98,7 @@ namespace LiPTT
             header = false;
             ParsedLine = 0;
             RawLines.Clear();
-            more = busy = false;
+            more = false;
             base.ClearItems();
         }
 
@@ -138,6 +141,8 @@ namespace LiPTT
 
         public event EventHandler BeginLoaded;
 
+        private SemaphoreSlim sem = new SemaphoreSlim(1, 1);
+
         public ArticleContentCollection()
         {
             Space = 0.2;
@@ -162,6 +167,7 @@ namespace LiPTT
 
                 int o = header ? 1 : 0;
 
+                //有些文章bound.End - bound.Begin不等於23，而且也沒到100%，PTT的Bug嗎?
                 for (int i = line - bound.Begin + 1 + (bound.Begin < 5 ? o : 0); i < 23; i++, line++)
                 {
                     RawLines.Add(LiPTT.Copy(e.Screen[i]));
@@ -169,10 +175,10 @@ namespace LiPTT
 
                 var action = LiPTT.RunInUIThread(() =>
                 {
-                    loading = true;
                     Parse();
-                    loading = false;
                 });
+
+                sem.Release();
 
                 if (bound.Percent == 100) more = false;
                 else more = true;
@@ -271,11 +277,15 @@ namespace LiPTT
                 action = LiPTT.RunInUIThread(() => 
                 {
                     Parse();
+                    if (RichTextBlock != null)
+                        Add(RichTextBlock);
+                    RichTextBlock = null;
                     BeginLoaded?.Invoke(this, new EventArgs());
                 });
 
                 InitialLoaded = true;
-                if (bound.Percent < 100) HasMoreItems = true;
+                if (bound.Percent < 100) more = true;
+                else more = false;
             }
 
             loading = false;
@@ -310,8 +320,17 @@ namespace LiPTT
 
                     if (match.Success)
                     {
-                        PrepareAddText();
-                        AddUriTextLine(match, str, RawLines[row]);
+                        try
+                        {
+                            PrepareAddText();
+                            Uri uri = new Uri(match.ToString());
+                            AddUriTextLine(match, str, RawLines[row]);
+                        }
+                        catch (UriFormatException)
+                        {
+                            PrepareAddText();
+                            AddTextLine(RawLines[row]);
+                        }
                     }
                     else
                     {
@@ -352,10 +371,9 @@ namespace LiPTT
             for (int i = 0; i < blocks.Length; i++)
             {
                 Block b = blocks[i];
-                if (color != b.ForegroundColor || i == blocks.Length - 1)
+                if (color != b.ForegroundColor)
                 {
                     string text = LiPTT.GetString(blocks, index, i - index);
-
                     /***
                     InlineUIContainer container = new InlineUIContainer
                     {
@@ -386,10 +404,43 @@ namespace LiPTT
                     index = i;
                     color = b.ForegroundColor;
                 }
+
+                if (i == blocks.Length - 1)
+                {
+                    string text = LiPTT.GetString(blocks, index, blocks.Length - index);
+                    /***
+                    InlineUIContainer container = new InlineUIContainer
+                    {
+                        Child = new Border()
+                        {
+                            Background = GetBackgroundBrush(blocks[index]),
+                            Child = new TextBlock()
+                            {
+                                IsTextSelectionEnabled = true,
+                                Text = text.Replace('\0', ' '),
+                                FontSize = ArticleFontSize,
+                                FontFamily = ArticleFontFamily,
+                                Foreground = GetForegroundBrush(blocks[index]),
+                            }
+                        }
+                    };
+                    /***/
+                    //***
+                    Run container = new Run()
+                    {
+                        Text = text.Replace('\0', ' '),
+                        FontSize = ArticleFontSize,
+                        FontFamily = ArticleFontFamily,
+                        Foreground = GetForegroundBrush(blocks[index]),
+                    };
+                    /***/
+                    Paragraph.Inlines.Add(container);
+                    color = b.ForegroundColor;
+                    break;
+                }
             }
 
             Paragraph.Inlines.Add(new LineBreak());
-            //RichTB.Height = Paragraph.Inlines.Count * ArticleFontSize;
         }
 
         private void AddUriTextLine(Match match, string msg, Block[] blocks)
@@ -407,7 +458,7 @@ namespace LiPTT
                 {
                     Block b = blocks[i];
 
-                    if (color != b.ForegroundColor || i == count - 1)
+                    if (color != b.ForegroundColor)
                     {
                         string text = LiPTT.GetString(blocks, index, i - index).Replace('\0', ' ');
 
@@ -422,6 +473,22 @@ namespace LiPTT
                         Paragraph.Inlines.Add(container);
                         index = i;
                         color = b.ForegroundColor;
+                    }
+
+                    if (i == count - 1)
+                    {
+                        string text = LiPTT.GetString(blocks, index, count - index).Replace('\0', ' ');
+                        Run container = new Run()
+                        {
+                            Text = text,
+                            FontSize = ArticleFontSize,
+                            FontFamily = ArticleFontFamily,
+                            Foreground = GetForegroundBrush(blocks[index]),
+                        };
+
+                        Paragraph.Inlines.Add(container);
+                        color = b.ForegroundColor;
+                        break;
                     }
                 }
             }
@@ -468,7 +535,7 @@ namespace LiPTT
                 {
                     Block b = blocks[i];
 
-                    if (color != b.ForegroundColor || i == blocks.Length - 1)
+                    if (color != b.ForegroundColor)
                     {
                         string text = LiPTT.GetString(blocks, index, i - index).Replace('\0', ' ');
 
@@ -484,14 +551,30 @@ namespace LiPTT
                         index = i;
                         color = b.ForegroundColor;
                     }
+
+                    if (i == blocks.Length - 1)
+                    {
+                        string text = LiPTT.GetString(blocks, index, blocks.Length - index).Replace('\0', ' ');
+                        Run container = new Run()
+                        {
+                            Text = text,
+                            FontSize = ArticleFontSize,
+                            FontFamily = ArticleFontFamily,
+                            Foreground = GetForegroundBrush(blocks[index]),
+                        };
+
+                        Paragraph.Inlines.Add(container);
+                        color = b.ForegroundColor;
+                        break;
+                    }
                 }
             }
             Paragraph.Inlines.Add(new LineBreak());
 
             if (!hyperlinkVisible)
             {
-                //截斷RuchTextBlock
-                if (RichTextBlock != null) Add(RichTextBlock);
+                if (RichTextBlock != null)
+                    Add(RichTextBlock);
                 RichTextBlock = null;
                 CreateUriView(uri.OriginalString);
             }             
@@ -499,7 +582,8 @@ namespace LiPTT
 
         private void AddEcho(Block[] block)
         {
-            if (RichTextBlock != null) Add(RichTextBlock);
+            if (RichTextBlock != null)
+                Add(RichTextBlock);
             RichTextBlock = null;
 
             Uri uri = null;
@@ -579,6 +663,8 @@ namespace LiPTT
 
             if ((match = new Regex(LiPTT.http_regex).Match(echo.Content)).Success)
             {
+                string url = echo.Content.Substring(match.Index, match.Length);
+
                 StackPanel sp = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
 
                 if (match.Index > 0)
@@ -593,14 +679,27 @@ namespace LiPTT
                     });
                 }
 
-                string url = echo.Content.Substring(match.Index, match.Length);
-                uri = new Uri(url);
-                sp.Children.Add(new HyperlinkButton()
+                try
                 {
-                    NavigateUri = uri,
-                    FontSize = 22,
-                    Content = new TextBlock() { Text = url },
-                });
+                    uri = new Uri(url);
+                    sp.Children.Add(new HyperlinkButton()
+                    {
+                        NavigateUri = uri,
+                        FontSize = 22,
+                        Content = new TextBlock() { Text = url },
+                    });
+                }
+                catch (UriFormatException)
+                {
+                    sp.Children.Add(new TextBlock()
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                        FontSize = 22,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Foreground = new SolidColorBrush(Colors.Gray),
+                        Text = url,
+                    });
+                }
 
                 if (match.Index + match.Length < echo.Content.Length)
                 {

@@ -20,28 +20,34 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml;
-using Windows.UI.Core;
-using Windows.ApplicationModel.Core;
-using System.Windows.Input;
 
 namespace LiPTT
 {
     public class ArticleContentCollection : ObservableCollection<object>, ISupportIncrementalLoading
     {
-        public IAsyncOperation<LoadMoreItemsResult> LoadMoreItemsAsync(uint count)
-        {
-            return InnerLoadMoreItemsAsync(count).AsAsyncOperation();
-        }
-
-        private SemaphoreSlim Semaphore;
-
         private bool more;
+
+        private bool busy;
+
+        public bool InitialLoaded { get; private set; }
+
+        public bool Loading { get { return loading; } }
+
+        private bool loading;
+
+        public double Space { get; set; }
 
         public bool HasMoreItems
         {
             get
             {
-                if (ScrollEnd) return more;
+                if (!busy && !loading && InitialLoaded)
+                {
+                    if (RichTextBlock != null) Add(RichTextBlock);
+                    RichTextBlock = null;
+
+                    return more;
+                }
                 else return false;
             }
             private set
@@ -50,48 +56,51 @@ namespace LiPTT
             }
         }
 
+        public IAsyncOperation<LoadMoreItemsResult> LoadMoreItemsAsync(uint count)
+        {
+            return InnerLoadMoreItemsAsync(count).AsAsyncOperation();
+        }
+
         private async Task<LoadMoreItemsResult> InnerLoadMoreItemsAsync(uint count)
         {
-            await Semaphore.WaitAsync();
-            LiPTT.PttEventEchoed += PttUpdated;
-            LiPTT.PageDown();
-            return new LoadMoreItemsResult { Count = (uint)this.RawLines.Count };
-        }
+            await Task.Run(() => {
 
-        private void PttUpdated(PTTProvider sender, LiPttEventArgs e)
-        {
-            if (e.State == PttState.Article)
-            {
-                bound = ReadLineBound(e.Screen.ToString(23));
-
-                int o = header ? 1 : 0;
-
-                for (int i = line - bound.Begin + 1 + (bound.Begin < 5 ? o : 0); i < 23; i++, line++)
+                if (loading && !InitialLoaded)
                 {
-                    RawLines.Add(LiPTT.Copy(e.Screen[i]));
+                    HasMoreItems = false;
+                    return;
                 }
-
-                var action = LiPTT.RunInUIThread( () =>
+                else
                 {
-                    Parse();
-                    Semaphore.Release();
-                    ScrollEnd = false;
-                });
+                    loading = true;
 
-                if (bound.Percent == 100) HasMoreItems = false;
-                else HasMoreItems = true;
+                    LiPTT.PttEventEchoed += PttUpdated;
+                    LiPTT.PageDown();
+                }
+            });
 
-                LiPTT.PttEventEchoed -= PttUpdated;
-            }
+            return new LoadMoreItemsResult { Count = (uint)this.Count };
         }
-
+        
         public Article ArticleTag
         {
             get; set;
         }
 
+        protected override void ClearItems()
+        {
+            InitialLoaded = false;
+            RichTextBlock = null;
+            line = 0;
+            header = false;
+            ParsedLine = 0;
+            RawLines.Clear();
+            more = busy = false;
+            base.ClearItems();
+        }
+
         public double ViewWidth { get; set; }
-        public double ViewHeight { get; set; }
+        //public double ViewHeight { get; set; }
 
         private static HashSet<string> ShortCutUrlSet = new HashSet<string>()
         {
@@ -107,32 +116,35 @@ namespace LiPTT
 
         private bool header;
 
+        /// <summary>
+        /// 已讀的行數(包含標題頭)
+        /// </summary>
         private int line;
 
+        /// <summary>
+        /// 已過濾的行數(不包含標題頭)
+        /// </summary>
         private int ParsedLine;
 
         private const double ArticleFontSize = 24.0;
 
         private FontFamily ArticleFontFamily;
 
-        private RichTextBlock RichTB;
+        private RichTextBlock RichTextBlock;
 
         private Paragraph Paragraph;
 
         private Bound bound;
 
-        public bool ScrollEnd;
+        public event EventHandler BeginLoaded;
 
         public ArticleContentCollection()
         {
-            ScrollEnd = true;
-            Semaphore = new SemaphoreSlim(1, 1);
+            Space = 0.2;
             header = false;
             line = 0;
             RawLines = new List<Block[]>();
             DownloadPictureTasks = new List<Task<DownloadResult>>();
-
-            //this.CollectionChanged += ArticleContentCollection_CollectionChanged;
 
             var action = LiPTT.RunInUIThread(() =>
             {
@@ -140,17 +152,39 @@ namespace LiPTT
             });
         }
 
-        private void ArticleContentCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void PttUpdated(PTTProvider sender, LiPttEventArgs e)
         {
-            if (e.Action == NotifyCollectionChangedAction.Add)
+            LiPTT.PttEventEchoed -= PttUpdated;
+
+            if (e.State == PttState.Article)
             {
-                NotifyCollectionChangedEventArgs args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, e.NewItems);
-                OnCollectionChanged(args);
+                bound = ReadLineBound(e.Screen.ToString(23));
+
+                int o = header ? 1 : 0;
+
+                for (int i = line - bound.Begin + 1 + (bound.Begin < 5 ? o : 0); i < 23; i++, line++)
+                {
+                    RawLines.Add(LiPTT.Copy(e.Screen[i]));
+                }
+
+                var action = LiPTT.RunInUIThread(() =>
+                {
+                    loading = true;
+                    Parse();
+                    loading = false;
+                });
+
+                if (bound.Percent == 100) more = false;
+                else more = true;
             }
         }
 
         public void BeginLoad(Article article)
         {
+            Clear();
+
+            loading = true;
+
             ArticleTag = article;
 
             IAsyncAction action = null;
@@ -158,9 +192,6 @@ namespace LiPTT
             ScreenBuffer screen = LiPTT.Screen;
 
             bound = ReadLineBound(screen.ToString(23));
-
-            RawLines.Clear();
-            
 
             Regex regex;
             Match match;
@@ -239,16 +270,15 @@ namespace LiPTT
 
                 action = LiPTT.RunInUIThread(() => 
                 {
-                    ArticleTag.LoadCompleted = false;
-                    this.Clear();
                     Parse();
-                    ArticleTag.LoadCompleted = true;
+                    BeginLoaded?.Invoke(this, new EventArgs());
                 });
 
+                InitialLoaded = true;
                 if (bound.Percent < 100) HasMoreItems = true;
             }
 
-            ArticleTag.LoadCompleted = true;
+            loading = false;
         }
 
         public async void Parse()
@@ -269,11 +299,10 @@ namespace LiPTT
                     };
                     Paragraph.Inlines.Add(run);
                     Paragraph.Inlines.Add(new LineBreak());
-                    RichTB.Height = Paragraph.Inlines.Count * ArticleFontSize;
                 }
                 else if (IsEchoes(str))
                 {
-                    AddEcho(str);
+                    AddEcho(RawLines[row]);
                 }
                 else
                 {
@@ -306,12 +335,13 @@ namespace LiPTT
 
         private void PrepareAddText()
         {
-            if (RichTB == null)
+            if (RichTextBlock == null)
             {
-                RichTB = new RichTextBlock() { };
+                RichTextBlock = new RichTextBlock() { Margin = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Left };
                 Paragraph = new Paragraph();
-                RichTB.Blocks.Add(Paragraph);
-                Add(RichTB);
+                RichTextBlock.Blocks.Add(Paragraph);
+                //還不要加到Visual Tree
+                //Add(RichTextBlock);
             }
         }
 
@@ -359,7 +389,7 @@ namespace LiPTT
             }
 
             Paragraph.Inlines.Add(new LineBreak());
-            RichTB.Height = Paragraph.Inlines.Count * ArticleFontSize;
+            //RichTB.Height = Paragraph.Inlines.Count * ArticleFontSize;
         }
 
         private void AddUriTextLine(Match match, string msg, Block[] blocks)
@@ -451,33 +481,34 @@ namespace LiPTT
                         };
 
                         Paragraph.Inlines.Add(container);
-                        RichTB.Height = RichTB.ActualHeight;
                         index = i;
                         color = b.ForegroundColor;
                     }
                 }
             }
             Paragraph.Inlines.Add(new LineBreak());
-            RichTB.Height = Paragraph.Inlines.Count * ArticleFontSize;
 
-            if (hyperlinkVisible)
+            if (!hyperlinkVisible)
             {
                 //截斷RuchTextBlock
-                RichTB = null;
+                if (RichTextBlock != null) Add(RichTextBlock);
+                RichTextBlock = null;
                 CreateUriView(uri.OriginalString);
             }             
         }
 
-        private void AddEcho(string msg)
+        private void AddEcho(Block[] block)
         {
-            /***
+            if (RichTextBlock != null) Add(RichTextBlock);
+            RichTextBlock = null;
+
+            Uri uri = null;
             Echo echo = new Echo();
 
-            str = LiPTT.GetString(RawLines[row], 0, RawLines[row].Length - 13);
+            string str = LiPTT.GetString(block, 0, block.Length - 13).Replace('\0', ' ').Trim();
 
             int index = 2;
-            int end = index;
-            while (str[end] != ':') end++;
+            int end = str.IndexOf(':');
 
             string auth = str.Substring(index, end - index);
 
@@ -485,7 +516,7 @@ namespace LiPTT
 
             echo.Content = str.Substring(end + 1);
 
-            string time = LiPTT.GetString(RawLines[row], 67, 11);
+            string time = LiPTT.GetString(block, 67, 11);
             //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
             try
             {
@@ -500,10 +531,141 @@ namespace LiPTT
             if (str.StartsWith("推")) echo.Evaluation = Evaluation.推;
             else if (str.StartsWith("噓")) echo.Evaluation = Evaluation.噓;
             else echo.Evaluation = Evaluation.箭頭;
+            //////////////////////////////////////////////
+            Grid grid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
+            ColumnDefinition c0 = new ColumnDefinition() { Width = new GridLength(30, GridUnitType.Pixel) };
+            ColumnDefinition c1 = new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) };
+            ColumnDefinition c2 = new ColumnDefinition() { Width = new GridLength(8.0, GridUnitType.Star) };
+            ColumnDefinition c3 = new ColumnDefinition() { Width = new GridLength(1.5, GridUnitType.Star) };
+
+            grid.ColumnDefinitions.Add(c0);
+            grid.ColumnDefinitions.Add(c1);
+            grid.ColumnDefinitions.Add(c2);
+            grid.ColumnDefinitions.Add(c3);
+
+            Grid g0 = new Grid();
+            g0.SetValue(Grid.ColumnProperty, 0);
+            Grid g1 = new Grid();
+            g1.SetValue(Grid.ColumnProperty, 1);
+            Grid g2 = new Grid();
+            g2.SetValue(Grid.ColumnProperty, 2);
+            Grid g3 = new Grid();
+            g3.SetValue(Grid.ColumnProperty, 3);
             
+            //推、噓//////////////////////////////////////////
+            SolidColorBrush EvalColor;
+
+            switch (echo.Evaluation)
+            {
+                case Evaluation.推:
+                    EvalColor = new SolidColorBrush(Colors.Yellow);
+                    break;
+                case Evaluation.噓:
+                    EvalColor = new SolidColorBrush(Colors.Red);
+                    break;
+                default:
+                    EvalColor = new SolidColorBrush(Colors.Purple);
+                    break;
+            }
+
+            g0.Children.Add(new TextBlock() { HorizontalAlignment = HorizontalAlignment.Left, Text = str[0].ToString(), FontSize = 22, Foreground = EvalColor });
             
-            /***/
-            RichTB = null;
+            //推文ID////////////////////////////////////////////
+            SolidColorBrush authorColor = new SolidColorBrush(Colors.LightSalmon);
+            g1.Children.Add(new TextBlock() { HorizontalAlignment = HorizontalAlignment.Center, Text = echo.Author, FontSize = 22, Foreground = authorColor });
+            
+            //推文內容////////////////////////////////////////////
+            Match match;
+
+            if ((match = new Regex(LiPTT.http_regex).Match(echo.Content)).Success)
+            {
+                StackPanel sp = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
+
+                if (match.Index > 0)
+                {
+                    sp.Children.Add(new TextBlock()
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                        FontSize = 22,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Foreground = new SolidColorBrush(Colors.Gold),
+                        Text = echo.Content.Substring(0, match.Index),
+                    });
+                }
+
+                string url = echo.Content.Substring(match.Index, match.Length);
+                uri = new Uri(url);
+                sp.Children.Add(new HyperlinkButton()
+                {
+                    NavigateUri = uri,
+                    FontSize = 22,
+                    Content = new TextBlock() { Text = url },
+                });
+
+                if (match.Index + match.Length < echo.Content.Length)
+                {
+                    sp.Children.Add(new TextBlock()
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                        FontSize = 22,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Foreground = new SolidColorBrush(Colors.Gold),
+                        Text = echo.Content.Substring(match.Index + match.Length, echo.Content.Length - (match.Index + match.Length)),
+                    });
+                }
+
+                g2.Children.Add(sp);
+            }
+            else
+            {
+                g2.Children.Add(new TextBlock()
+                {
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    FontSize = 22,
+                    Foreground = new SolidColorBrush(Colors.Gold),
+                    Text = echo.Content,
+                });
+            }
+
+            //推文時間////////////////////////////////////////////
+            g3.Children.Add(new TextBlock()
+            {
+                FontSize = 22,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = new SolidColorBrush(Colors.Wheat),
+                Text = echo.Date.ToString("MM/dd HH:mm")
+            });
+
+            //////////////////////////////////////////////
+            grid.Children.Add(g0);
+            grid.Children.Add(g1);
+            grid.Children.Add(g2);
+            grid.Children.Add(g3);
+
+            ListView list = new ListView() { IsItemClickEnabled = true, HorizontalAlignment = HorizontalAlignment.Stretch };
+            list.Items.Add(new ListViewItem() { Content = grid, HorizontalContentAlignment = HorizontalAlignment.Stretch, AllowFocusOnInteraction = false });
+            Add(list);
+
+            if (uri != null)
+            {
+                bool CreateView = false;
+
+                if (IsPictureUri(uri))
+                {
+                    CreateView = true;
+                }
+                else if (IsYoutubeUri(uri))
+                {
+                    CreateView = true;
+                }
+                else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a") == -1)
+                {
+                    CreateView = true;
+                }
+
+                if (CreateView) CreateUriView(uri.OriginalString);
+            }
         }
 
         private void CreateUriView(string url)
@@ -524,7 +686,8 @@ namespace LiPTT
             if (IsPictureUri(uri))
             {
                 ProgressRing ring = new ProgressRing() { IsActive = true, Width = 55, Height = 55 };
-                Grid grid = new Grid() { Width = ViewWidth * 0.8, Height = 0.5625 * ViewWidth * 0.8, Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
+
+                Grid grid = new Grid() { Width = ViewWidth * (1 - Space), Height = 0.5625 * ViewWidth * (1 - Space), Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
                 grid.Children.Add(ring);
                 Add(grid);
 
@@ -545,7 +708,7 @@ namespace LiPTT
                         Uri new_uri = new Uri(str);
 
                         ProgressRing ring = new ProgressRing() { IsActive = true, Width = 55, Height = 55 };
-                        Grid grid = new Grid() { Width = ViewWidth * 0.8, Height = 0.5625 * ViewWidth * 0.8, Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
+                        Grid grid = new Grid() { Width = ViewWidth * (1 - Space), Height = 0.5625 * ViewWidth * (1 - Space), Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
                         grid.Children.Add(ring);
                         Add(grid);
 
@@ -661,7 +824,7 @@ namespace LiPTT
             grid.Children.Add(wv);
             grid.Children.Add(progress);
             Add(grid);
-            wv.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
+            wv.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube.html"));
         }
 
 

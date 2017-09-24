@@ -19,7 +19,7 @@ using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
 using System.Diagnostics;
-
+using System.Threading;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -145,7 +145,7 @@ namespace LiPTT
 
         private RichTextBlock tb;
         private Paragraph ph;
-        private bool cut = false;
+        //private bool cut = false;
 
         private void ListView_ItemClick(object sender, ItemClickEventArgs e)
         {
@@ -158,24 +158,29 @@ namespace LiPTT
             list.Items.Add(new ListViewItem() { Content = "Hello", IsSelected = false });
             list.ItemClick += ListView_ItemClick;
             tCollection.Add(list);
-
-            cut = true;
+            tb = null;
         }
 
         private void AddText_Click(object sender, RoutedEventArgs e)
         {
-            if (tb == null || cut)
+            if (tb == null)
             {
-                cut = false;
                 tb = new RichTextBlock();
                 ph = new Paragraph();
                 tb.Blocks.Add(ph);
+
+                Run run = new Run() { Text = "HeeeHeeeee", FontSize = 30 };
+                ph.Inlines.Add(run);
+                ph.Inlines.Add(new LineBreak());
+
                 tCollection.Add(tb);
             }
-
-            Run run = new Run() { Text = "HeeeHeeeee", FontSize = 30 };
-            ph.Inlines.Add(run);
-            ph.Inlines.Add(new LineBreak());
+            else
+            {
+                Run run = new Run() { Text = "HeeeHeeeee", FontSize = 30 };
+                ph.Inlines.Add(run);
+                ph.Inlines.Add(new LineBreak());
+            }
         }
 
         private void AddView_Click(object sender, RoutedEventArgs e)
@@ -226,9 +231,20 @@ namespace LiPTT
 
             tCollection.Add(YoutuGrid);
 
-            cut = true;
+            tb = null;
 
-            wv.Navigate(new Uri("ms-appx-web:///Templates/youtube.html"));
+            wv.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube.html"));
+        }
+
+        private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+            tb = null;
+            tCollection.Clear();
+        }
+
+        private void AddEmptyGrid_Click(object sender, RoutedEventArgs e)
+        {
+            
         }
     }
 
@@ -236,7 +252,48 @@ namespace LiPTT
     {
         public IAsyncOperation<LoadMoreItemsResult> LoadMoreItemsAsync(uint count)
         {
-            throw new NotImplementedException();
+            return AsyncInfo.Run((c) => InnerLoadMoreItemsAsync(c, count));
+        }
+
+        private RichTextBlock tb;
+        private Paragraph ph;
+
+        private int a = 0;
+
+        private async Task<LoadMoreItemsResult> InnerLoadMoreItemsAsync(CancellationToken c, uint count)
+        {
+            await Task.Run(() => { 
+
+                Random ran = new Random();
+
+                if (tb != null)
+                {
+                    Run run = new Run() { Text = "HeeeHeeeee", FontSize = 30 };
+
+                    ph.Inlines.Add(run);
+                    ph.Inlines.Add(new LineBreak());
+
+                    //OnCollectionChanged(new System.Collections.Specialized.NotifyCollectionChangedEventArgs(System.Collections.Specialized.NotifyCollectionChangedAction.Reset, r));
+                }
+                else
+                {
+                    //***
+                    tb = new RichTextBlock() { };
+                    ph = new Paragraph();
+                    tb.Blocks.Add(ph);
+                    Grid grid = new Grid();
+                    grid.Children.Add(tb);
+
+                    Add(grid);
+
+                    Run run = new Run() { Text = "HeeeHeeeee", FontSize = 30 };
+                    ph.Inlines.Add(run);
+                    ph.Inlines.Add(new LineBreak());
+                    /***/
+                }
+            });
+
+            return new LoadMoreItemsResult { Count = (uint)a++ };
         }
 
         private bool more;

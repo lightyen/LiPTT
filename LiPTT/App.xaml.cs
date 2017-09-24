@@ -51,9 +51,8 @@ namespace LiPTT
             LiPTT.ImageCache = new ImageCache();
 
             Frame rootFrame = Window.Current.Content as Frame;
-
             Application.Current.Resources["SystemControlHighlightListAccentLowBrush"] = new SolidColorBrush(Windows.UI.Colors.Black);
-            Application.Current.Resources["SystemControlHighlightListAccentMediumBrush"] = new SolidColorBrush(Windows.UI.Colors.Black);
+            Application.Current.Resources["SystemControlHighlightListAccentMediumBrush"] = Application.Current.Resources["SystemControlHighlightListLowBrush"];
             Application.Current.Resources["SystemControlHighlightListAccentHighBrush"] = Application.Current.Resources["SystemControlHighlightListLowBrush"];
 
             // 當視窗中已有內容時，不重複應用程式初始化，

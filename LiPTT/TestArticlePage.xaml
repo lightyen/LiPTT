@@ -21,6 +21,8 @@
                     <Button Content="AddText" Click="AddText_Click" Height="35" />
                     <Button Content="AddView" Click="AddView_Click" Height="35" />
                     <Button Content="AddListViewItem" Click="AddListViewItem_Click" Height="35" />
+                    <Button Content="Clear" Click="Clear_Click" Height="35" />
+                    <Button Content="AddEmptyGrid" Click="AddEmptyGrid_Click" Height="35" />
                     <RichTextBlock>
                         <Paragraph>
                             <Run Text="Hello"></Run>
@@ -34,8 +36,7 @@
             </Grid>
 
             <Grid Grid.Row="1">
-
-                <ListView ItemsSource="{Binding Source={StaticResource tCollection}}" SelectionMode="None">
+                <ListView ItemsSource="{Binding Source={StaticResource tCollection}}" SelectionMode="None" Height="500">
                     <!--[TextBlock] Text-->
                     <!--[Grid] Youtube or Image-->
                     <!--[ListViewItem] Echoes-->

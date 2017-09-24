@@ -23,8 +23,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Core;
 using Windows.ApplicationModel.Core;
 
-//https://stackoverflow.com/questions/5473001/itemscontrol-with-multiple-datatemplates-for-a-viewmodel
-
 namespace LiPTT
 {
     //https://www.ptt.cc/bbs/PttNewhand/M.1265292872.A.991.html

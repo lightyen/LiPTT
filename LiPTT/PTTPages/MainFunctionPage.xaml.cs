@@ -250,7 +250,7 @@ namespace LiPTT
             {
                 LiPTT.IsExit = true;
                 LiPTT.TestConnectionTimer.Stop();
-
+                LiPTT.KeepAliveTimer.Stop();
                 LiPTT.SendMessage('g', 0x0D, 'y', 0x0D, 0x20);
 
                 //隨便再送一個byte觸發Disconnect

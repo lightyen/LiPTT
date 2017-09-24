@@ -53,6 +53,8 @@ namespace LiPTT
 
         public static DispatcherTimer TestConnectionTimer { get; set; }
 
+        public static DispatcherTimer KeepAliveTimer { get; set; }
+
         public static Frame Frame { get; set; }
 
         //https://www.regexpal.com

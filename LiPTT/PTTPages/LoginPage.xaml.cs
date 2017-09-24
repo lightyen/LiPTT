@@ -130,6 +130,7 @@ namespace LiPTT
                         {
                             LiPTT.UserName = UserText.Text;
                             LiPTT.TestConnectionTimer.Start();
+                            LiPTT.KeepAliveTimer.Start();
                             LiPTT.EnterUserName();
                         });
                     }
@@ -177,6 +178,7 @@ namespace LiPTT
                         var action = LiPTT.RunInUIThread(() => {
 
                             LiPTT.TestConnectionTimer.Stop();
+                            LiPTT.KeepAliveTimer.Stop();
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
@@ -193,6 +195,7 @@ namespace LiPTT
                         var action = LiPTT.RunInUIThread(() => {
 
                             LiPTT.TestConnectionTimer.Stop();
+                            LiPTT.KeepAliveTimer.Stop();
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;

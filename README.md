@@ -10,9 +10,11 @@
 
 
 
-<img src="https://i.imgur.com/Bghj8fU.png"></img>
+<img src="https://i.imgur.com/5D6hFeB.png"></img>
 
 
+
+找不到Nuget的話可以：方案總管=>方案(右鍵)=>還原Nuget套件，然後重開visual Studio
 
 
 
@@ -76,6 +78,5 @@
 2. 文字Background color
 3. 搜尋標題、作者、同標題之文章
 4. 自動推文
-5. 防斷線功能
-6. UI設計
-7. 歷史紀錄、推文追蹤
+5. UI設計
+6. 歷史紀錄、推文追蹤

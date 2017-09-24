@@ -30,20 +30,20 @@ namespace LiPTT
 
             LiPTT.Frame = PTTFrame;
 
-            LiPTT.TestConnectionTimer = new DispatcherTimer();
-            LiPTT.TestConnectionTimer.Tick += Timer_Tick;
-            LiPTT.TestConnectionTimer.Interval = TimeSpan.FromSeconds(1);
-        }
+            LiPTT.TestConnectionTimer = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(1) };
+            LiPTT.TestConnectionTimer.Tick += (a, b) => {
+                if (!LiPTT.IsConnected)
+                {
+                    LiPTT.TestConnectionTimer.Stop();
 
+                    PTTFrame.Navigate(typeof(LoginPage));
+                }
+            };
 
-        private void Timer_Tick(object sender, object e)
-        {
-            if (!LiPTT.IsConnected)
-            {
-                LiPTT.TestConnectionTimer.Stop();
-
-                PTTFrame.Navigate(typeof(LoginPage));
-            }
+            LiPTT.KeepAliveTimer = new DispatcherTimer() { Interval = TimeSpan.FromMinutes(5) };
+            LiPTT.KeepAliveTimer.Tick += (a, b) => {
+                LiPTT.PressKeepAlive();
+            };
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -58,6 +58,7 @@ namespace LiPTT
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
             LiPTT.TestConnectionTimer.Stop();
+            LiPTT.KeepAliveTimer.Stop();
         }
     }
 }

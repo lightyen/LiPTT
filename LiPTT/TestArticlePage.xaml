@@ -7,17 +7,22 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <Page.Resources>
-        <CollectionViewSource x:Key="src" Source="{Binding Path=ViewSource}"/>
+
+        <local:TestCollection x:Key="tCollection" x:Name="tCollection" />
     </Page.Resources>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="3*"/>
-                <RowDefinition Height="8*"/>
+                <RowDefinition Height="3*" />
+                <RowDefinition Height="8*" />
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
-                <Button Content="AddItem" Click="Button_Click"></Button>
                 <StackPanel>
+                    <Button Content="AddText" Click="AddText_Click" Height="35" />
+                    <Button Content="AddView" Click="AddView_Click" Height="35" />
+                    <Button Content="AddListViewItem" Click="AddListViewItem_Click" Height="35" />
+                    <Button Content="Clear" Click="Clear_Click" Height="35" />
+                    <Button Content="AddEmptyGrid" Click="AddEmptyGrid_Click" Height="35" />
                     <RichTextBlock>
                         <Paragraph>
                             <Run Text="Hello"></Run>
@@ -29,48 +34,15 @@
                     </RichTextBlock>
                 </StackPanel>
             </Grid>
-            
-            <Grid Grid.Row="1">
-                <RichTextBlock>
-                    <Paragraph>
-                        <InlineUIContainer>
-                            <Border Background="Red">
-                                <TextBlock Text="Hello world">
 
-                                </TextBlock>
-                            </Border>
-                        </InlineUIContainer>
-                    </Paragraph>
-                </RichTextBlock>
-                <ListView x:Name="TestView" IsItemClickEnabled="True" >
+            <Grid Grid.Row="1">
+                <ListView ItemsSource="{Binding Source={StaticResource tCollection}}" SelectionMode="None" Height="500">
+                    <!--[TextBlock] Text-->
+                    <!--[Grid] Youtube or Image-->
+                    <!--[ListViewItem] Echoes-->
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
-                            <Setter Property="Background" Value="Transparent" />
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListViewItem">
-                                        <ListViewItemPresenter
-                                                              SelectionCheckMarkVisualEnabled="True"
-                                                              CheckBrush="{ThemeResource SystemControlForegroundBaseMediumHighBrush}"
-                                                              CheckBoxBrush="{ThemeResource SystemControlForegroundBaseMediumHighBrush}"
-                                                              DragBackground="{ThemeResource ListViewItemDragBackgroundThemeBrush}"
-                                                              DragForeground="{ThemeResource ListViewItemDragForegroundThemeBrush}"
-                                                              FocusBorderBrush="{ThemeResource SystemControlForegroundAltHighBrush}"
-                                                              FocusSecondaryBorderBrush="{ThemeResource SystemControlForegroundBaseHighBrush}"
-                                                              PlaceholderBackground="{ThemeResource ListViewItemPlaceholderBackgroundThemeBrush}"
-                                                              SelectedBackground="{ThemeResource SystemControlHighlightListAccentLowBrush}"
-                                                              SelectedPointerOverBackground="{ThemeResource SystemControlHighlightListAccentMediumBrush}"
-                                                              PressedBackground="{ThemeResource SystemControlHighlightListMediumBrush}"
-                                                              SelectedPressedBackground="{ThemeResource ListViewItemPlaceholderBackgroundThemeBrush}"
-                                                              DisabledOpacity="{ThemeResource ListViewItemDisabledThemeOpacity}"
-                                                              DragOpacity="{ThemeResource ListViewItemDragThemeOpacity}"
-                                                              ReorderHintOffset="{ThemeResource ListViewItemReorderHintThemeOffset}"
-                                                    />
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                         </Style>
                     </ListView.ItemContainerStyle>
                 </ListView>

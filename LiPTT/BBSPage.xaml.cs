@@ -27,8 +27,8 @@ namespace LiPTT
         public BBSPage()
         {
             this.InitializeComponent();
-            LiPTT.Current.Connected += Client_Connected;
-            LiPTT.Current.Belled += Client_BellPlayed;
+            LiPTT.Connected += Client_Connected;
+            LiPTT.Belled += Client_BellPlayed;
         }
 
         private async void Client_BellPlayed(object sender, EventArgs e)
@@ -84,7 +84,7 @@ namespace LiPTT
 
             if (e.VirtualKey == VirtualKey.Enter)
             {
-                LiPTT.Current.Send(new byte[] { (byte)'\r' });
+                LiPTT.Send(new byte[] { (byte)'\r' });
                 return;
             }
 
@@ -92,75 +92,75 @@ namespace LiPTT
             {
                 if (IsDigit(key))
                 {
-                    LiPTT.Current.Send(new byte[] { (byte)key });
+                    LiPTT.Send(new byte[] { (byte)key });
                 }
                 else if (IsUpperCase(key))
                 {
                     if (CapsLocked)
-                        LiPTT.Current.Send(new byte[] { (byte)(key) }); //A-Z
+                        LiPTT.Send(new byte[] { (byte)(key) }); //A-Z
                     else
-                        LiPTT.Current.Send(new byte[] { (byte)(key + 0x20) }); //a-z
+                        LiPTT.Send(new byte[] { (byte)(key + 0x20) }); //a-z
                 }
                 else
                 {
                     switch (key)
                     {
                         case 0xBA: // ';:'
-                            LiPTT.Current.Send(new byte[] { (byte)';' });
+                            LiPTT.Send(new byte[] { (byte)';' });
                             break;
                         case 0xBB: // '=+'
-                            LiPTT.Current.Send(new byte[] { (byte)'=' });
+                            LiPTT.Send(new byte[] { (byte)'=' });
                             break;
                         case 0xBC: // ',<'
-                            LiPTT.Current.Send(new byte[] { (byte)',' });
+                            LiPTT.Send(new byte[] { (byte)',' });
                             break;
                         case 0xBD: // '-_'
-                            LiPTT.Current.Send(new byte[] { (byte)'-' });
+                            LiPTT.Send(new byte[] { (byte)'-' });
                             break;
                         case 0xBE: // '.>'
-                            LiPTT.Current.Send(new byte[] { (byte)'.' });
+                            LiPTT.Send(new byte[] { (byte)'.' });
                             break;
                         case 0xBF: // '/?'
-                            LiPTT.Current.Send(new byte[] { (byte)'/' });
+                            LiPTT.Send(new byte[] { (byte)'/' });
                             break;
                         default:
                             //其他特殊鍵位
                             switch (e.VirtualKey)
                             {
                                 case VirtualKey.Up:
-                                    LiPTT.Current.Send(new byte[] { (byte)0x1B, (byte)'[', (byte)'A' });
+                                    LiPTT.Send(new byte[] { (byte)0x1B, (byte)'[', (byte)'A' });
                                     break;
                                 case VirtualKey.Down:
-                                    LiPTT.Current.Send(new byte[] { (byte)0x1B, (byte)'[', (byte)'B' });
+                                    LiPTT.Send(new byte[] { (byte)0x1B, (byte)'[', (byte)'B' });
                                     break;
                                 case VirtualKey.Right:
-                                    LiPTT.Current.Send(new byte[] { (byte)0x1B, (byte)'[', (byte)'C' });
+                                    LiPTT.Send(new byte[] { (byte)0x1B, (byte)'[', (byte)'C' });
                                     break;
                                 case VirtualKey.Left:
-                                    LiPTT.Current.Send(new byte[] { (byte)0x1B, (byte)'[', (byte)'D' });
+                                    LiPTT.Send(new byte[] { (byte)0x1B, (byte)'[', (byte)'D' });
                                     break;
                                 case VirtualKey.Escape:
-                                    LiPTT.Current.Send(new byte[] { (byte)0x1B, (byte)'[', (byte)'D' });
+                                    LiPTT.Send(new byte[] { (byte)0x1B, (byte)'[', (byte)'D' });
                                     break;
                                 case VirtualKey.Space:
-                                    LiPTT.Current.Send(new byte[] { (byte)' ' });
+                                    LiPTT.Send(new byte[] { (byte)' ' });
                                     break;
                                 case VirtualKey.Back:
-                                    LiPTT.Current.Send(new byte[] { (byte)0x08 });
+                                    LiPTT.Send(new byte[] { (byte)0x08 });
                                     break;
                                 case VirtualKey.PageUp:
-                                    LiPTT.Current.Send(new byte[] { (byte)0x02 });
+                                    LiPTT.Send(new byte[] { (byte)0x02 });
                                     break;
                                 case VirtualKey.PageDown:
-                                    LiPTT.Current.Send(new byte[] { (byte)0x06 });
+                                    LiPTT.Send(new byte[] { (byte)0x06 });
                                     break;
                                 case VirtualKey.Insert:
                                     break;
                                 case VirtualKey.Home:
-                                    LiPTT.Current.Send(new byte[] { (byte)'0', (byte)'\r' });
+                                    LiPTT.Send(new byte[] { (byte)'0', (byte)'\r' });
                                     break;
                                 case VirtualKey.End:
-                                    LiPTT.Current.Send(new byte[] { (byte)'$' });
+                                    LiPTT.Send(new byte[] { (byte)'$' });
                                     break;
                                 default:
                                     Debug.WriteLine("Not Implemented KeyDown 0x{0:X2} {1} {2}", key, Control_Down, Shift_Down);
@@ -177,34 +177,34 @@ namespace LiPTT
                     switch (e.VirtualKey)
                     {
                         case VirtualKey.Number1:
-                            LiPTT.Current.Send(new byte[] { (byte)'!' });
+                            LiPTT.Send(new byte[] { (byte)'!' });
                             break;
                         case VirtualKey.Number2:
-                            LiPTT.Current.Send(new byte[] { (byte)'@' });
+                            LiPTT.Send(new byte[] { (byte)'@' });
                             break;
                         case VirtualKey.Number3:
-                            LiPTT.Current.Send(new byte[] { (byte)'#' });
+                            LiPTT.Send(new byte[] { (byte)'#' });
                             break;
                         case VirtualKey.Number4:
-                            LiPTT.Current.Send(new byte[] { (byte)'$' });
+                            LiPTT.Send(new byte[] { (byte)'$' });
                             break;
                         case VirtualKey.Number5:
-                            LiPTT.Current.Send(new byte[] { (byte)'%' });
+                            LiPTT.Send(new byte[] { (byte)'%' });
                             break;
                         case VirtualKey.Number6:
-                            LiPTT.Current.Send(new byte[] { (byte)'^' });
+                            LiPTT.Send(new byte[] { (byte)'^' });
                             break;
                         case VirtualKey.Number7:
-                            LiPTT.Current.Send(new byte[] { (byte)'&' });
+                            LiPTT.Send(new byte[] { (byte)'&' });
                             break;
                         case VirtualKey.Number8:
-                            LiPTT.Current.Send(new byte[] { (byte)'*' });
+                            LiPTT.Send(new byte[] { (byte)'*' });
                             break;
                         case VirtualKey.Number9:
-                            LiPTT.Current.Send(new byte[] { (byte)'(' });
+                            LiPTT.Send(new byte[] { (byte)'(' });
                             break;
                         case VirtualKey.Number0:
-                            LiPTT.Current.Send(new byte[] { (byte)')' });
+                            LiPTT.Send(new byte[] { (byte)')' });
                             break;
                         default:
                             break;
@@ -213,31 +213,31 @@ namespace LiPTT
                 else if (IsUpperCase(key))
                 {
                     if (CapsLocked)
-                        LiPTT.Current.Send(new byte[] { (byte)(key + 0x20) }); //a-z
+                        LiPTT.Send(new byte[] { (byte)(key + 0x20) }); //a-z
                     else
-                        LiPTT.Current.Send(new byte[] { (byte)(key) }); //A-Z
+                        LiPTT.Send(new byte[] { (byte)(key) }); //A-Z
                 }
                 else
                 {
                     switch (key)
                     {
                         case 0xBA: // ';:'
-                            LiPTT.Current.Send(new byte[] { (byte)':' });
+                            LiPTT.Send(new byte[] { (byte)':' });
                             break;
                         case 0xBB: // '=+'
-                            LiPTT.Current.Send(new byte[] { (byte)'+' });
+                            LiPTT.Send(new byte[] { (byte)'+' });
                             break;
                         case 0xBC: // ',<'
-                            LiPTT.Current.Send(new byte[] { (byte)'<' });
+                            LiPTT.Send(new byte[] { (byte)'<' });
                             break;
                         case 0xBD: // '-_'
-                            LiPTT.Current.Send(new byte[] { (byte)'_' });
+                            LiPTT.Send(new byte[] { (byte)'_' });
                             break;
                         case 0xBE: // '.>'
-                            LiPTT.Current.Send(new byte[] { (byte)'>' });
+                            LiPTT.Send(new byte[] { (byte)'>' });
                             break;
                         case 0xBF: // '/?'
-                            LiPTT.Current.Send(new byte[] { (byte)'?' });
+                            LiPTT.Send(new byte[] { (byte)'?' });
                             break;
                         default:
                             Debug.WriteLine("Not Implemented KeyDown 0x{0:X2} {1} {2}", key, Control_Down, Shift_Down);
@@ -249,7 +249,7 @@ namespace LiPTT
             {
                 if (IsUpperCase(key))
                 {
-                    LiPTT.Current.Send(new byte[] { (byte)(key - 0x40) });
+                    LiPTT.Send(new byte[] { (byte)(key - 0x40) });
                 }
                 else if (IsDigit(key))
                 {
@@ -289,17 +289,17 @@ namespace LiPTT
 
         private void RadioButtonTCP_Click(object sender, RoutedEventArgs e)
         {
-            LiPTT.Current.SSH = false;
+            LiPTT.SSH = false;
         }
 
         private void RadioButtonSSH_Click(object sender, RoutedEventArgs e)
         {
-            LiPTT.Current.SSH = true;
+            LiPTT.SSH = true;
         }
 
         private void Reconnect_Click(object sender, RoutedEventArgs e)
         {
-            LiPTT.Current.Connect();
+            LiPTT.TryConnect();
         }
 
         private void ReDraw_Click(object sender, RoutedEventArgs e)

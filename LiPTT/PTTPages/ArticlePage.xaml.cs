@@ -27,35 +27,33 @@ namespace LiPTT
     /// </summary>
     public sealed partial class ArticlePage : Page
     {
-
-        private bool UILoadCompleted;
-
         public ArticlePage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         private Article article;
 
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            LoadingIndicator.IsActive = true;
-            
-            UILoadCompleted = false;
-            article = LiPTT.CurrentArticle;
-            article.LoadCompleted = false;
+            ArticleHeaderListBox.Visibility = Visibility.Collapsed;          
+            ListVW.Visibility = Visibility.Collapsed;
+
             ArticleHeaderListBox.Items.Clear();
+            LoadingIndicator.IsActive = true;
+            article = LiPTT.CurrentArticle;
 
-            ParagraphControl.ItemsSource = null;
+            ContentCollection.BeginLoaded += (a, b) => {
+                if (ListVW.Items.Count > 0) ListVW.ScrollIntoView(ListVW.Items[0]);
+            };
 
-            EchoView.ItemsSource = null;
-
-            article.DefaultState();
+            SizeChanged += (o, a) => {
+                ContentCollection.ViewWidth = ContentGrid.ActualWidth;
+            };
 
             LoadingExtraData = false;
             pressAny = false;
-            article.Echoes.Article = article;
-            article.ViewWidth = ContentScrollViewer.ViewportWidth;
 
             LiPTT.PttEventEchoed += ReadAIDandExtra;
             LiPTT.Right();
@@ -72,88 +70,41 @@ namespace LiPTT
 
         private async void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
+            var scrollviewer = GetScrollViewer(ListVW);
+
             switch (args.VirtualKey)
             {
                 case VirtualKey.PageDown:
                 case VirtualKey.Down:
-                    ContentScrollViewer.ChangeView(0, ContentScrollViewer.VerticalOffset + ContentScrollViewer.ViewportHeight - 50.0, null);
+                    scrollviewer?.ChangeView(0, scrollviewer.VerticalOffset + scrollviewer.ViewportHeight - 50.0, null);
                     break;
                 case VirtualKey.PageUp:
                 case VirtualKey.Up:
-                    ContentScrollViewer.ChangeView(0, ContentScrollViewer.VerticalOffset - ContentScrollViewer.ViewportHeight + 50.0, null);
+                    scrollviewer?.ChangeView(0, scrollviewer.VerticalOffset - scrollviewer.ViewportHeight + 50.0, null);
                     break;
                 case VirtualKey.Home:
-                    ContentScrollViewer.ChangeView(0, 0, null);
+                    if (ListVW.Items.Count > 0) ListVW.ScrollIntoView(ListVW.Items.First());
                     break;
                 case VirtualKey.End:
-                    ContentScrollViewer.ChangeView(0, ContentScrollViewer.ScrollableHeight, null);
+                    if (ListVW.Items.Count > 0) ListVW.ScrollIntoView(ListVW.Items.Last());
                     break;
                 case VirtualKey.Left:
                 case VirtualKey.Escape:
-                    if (!UILoadCompleted) return;
+                    if (!ContentCollection.InitialLoaded && ContentCollection.Loading) return;
                     await StopVideo();
                     GoBack();
                     break;
             }
         }
 
-
         private async void CoreWindow_PointerPressed(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.PointerEventArgs args)
         {
             if (args.CurrentPoint.Properties.IsRightButtonPressed == true)
             {
-                if (!UILoadCompleted) return;
+                if (!ContentCollection.InitialLoaded && ContentCollection.Loading) return;
                 await StopVideo();
                 GoBack();
             }
-        }
-
-        private void UpdateUI()
-        {
-            LoadingIndicator.IsActive = true;
-
-            ArticleHeaderListBox.Items.Add(article);
-            
-            EchoView.ItemsSource = article.Echoes;
-
-            ParagraphControl.ItemsSource = null;
-            ParagraphControl.ItemsSource = article.Content;
-
-            LoadingIndicator.IsActive = false;
-        }
-
-        private async Task UpdateDownloadTaskView()
-        {
-            if (article.DownloadTasks.Count == 0)
-            {
-                UILoadCompleted = true;
-            }
-            else
-            {
-                /***
-                foreach (var t in await Task.WhenAll(article.SomeTasks))
-                {
-                    article.Content[t.Item1] = t.Item2;
-                    ParagraphControl.ItemsSource = null;
-                    ParagraphControl.ItemsSource = article.Content;
-                }
-                /***/
-
-                while (article.DownloadTasks.Count > 0)
-                {
-                    var firstFinishedTask = await Task.WhenAny(article.DownloadTasks);
-
-                    article.Content[firstFinishedTask.Result.Index] = firstFinishedTask.Result.Item;
-                    ParagraphControl.ItemsSource = null;
-                    ParagraphControl.ItemsSource = article.Content;
-
-                    article.DownloadTasks.Remove(firstFinishedTask);
-                }
-
-                UILoadCompleted = true;
-            }
-
-            
         }
 
         private bool LoadingExtraData;
@@ -182,207 +133,27 @@ namespace LiPTT
 
         private void BrowseArticle(PTTProvider sender, LiPttEventArgs e)
         {
-            if (article.LoadCompleted) return;
-
             switch (e.State)
             {
                 case PttState.Article:
-                    {
-                        LoadArticle(e.Screen);
-                    }
-                    break;
-                case PttState.PressAny:
                     LiPTT.PttEventEchoed -= BrowseArticle;
-                    GoBack();
+                    LoadArticle();                   
                     break;
             }
         }
 
-
-        //已讀行數
-        private int line;
-
-        //有無文章標頭
-        bool header = false;
-
-        private void LoadArticle(ScreenBuffer screen)
+        private void LoadArticle()
         {
-            //var x = screen.ToStringArray();
-            //#1PkNrDxZ
-            IAsyncAction action = null;
-
-            Bound bound = ReadLineBound(screen.ToString(23));
-
-            Regex regex;
-            Match match;
-            string tmps;
-
-            if (bound.Begin == 1)
+            var action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                article.Content.Clear();
-
-                tmps = screen.ToString(3);
-
-                if (tmps.StartsWith("───────────────────────────────────────"))
-                {
-                    header = true;
-                }
-
-                if (header)
-                {
-                    //作者
-                    tmps = screen.ToString(0);
-                    regex = new Regex(@"作者  [A-Za-z0-9]+ ");
-                    match = regex.Match(tmps);
-                    if (match.Success)
-                    {                        
-                        article.Author = tmps.Substring(match.Index + 4, match.Length - 5);
-                    }
-
-                    //匿稱
-                    article.AuthorNickname = "";
-                    regex = new Regex(@"\([\S\s^\(^\)]+\)");
-                    match = regex.Match(tmps);
-                    if (match.Success)
-                    {
-                        article.AuthorNickname = tmps.Substring(match.Index + 1, match.Length - 2);
-                    }
-
-                    //標題
-                    //已讀過 這裡不再Parse
-
-                    //時間
-                    //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
-                    System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
-                    tmps = LiPTT.Current.Screen.ToString(2, 7, 24);
-                    if (tmps[8] == ' ') tmps = tmps.Remove(8, 1);
-
-                    try
-                    {
-                        article.Date = DateTimeOffset.ParseExact(tmps, "ddd MMM d HH:mm:ss yyyy", provider);
-                    }
-                    catch (FormatException)
-                    {
-                        Debug.WriteLine("時間格式有誤? " + tmps);
-                    }
-
-                    line = 3;
-                }
-                else
-                {
-                    line = 0;
-                    Debug.WriteLine("沒有文章標頭? " + tmps);
-                }
-
-                //////////////////////////////////////////////////////////////////////////////////////////
-                //第一頁文章內容
-                //////////////////////////////////////////////////////////////////////////////////////////
-
-                int o = bound.End - bound.Begin + 1;
-                if (o < 23)
-                {
-                    if (header) o = bound.End + 1;
-                    else o = bound.End;
-                }
-
-                for (int i = header ? 4 : 0; i < o; i++, line++)
-                {
-                    article.AppendLine(screen[i]);
-                }
-
-                action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    article.ParseBeta();
-                });
-            }
-            else
-            {
-                int o = header ? 1 : 0;
-
-                for (int i = line - bound.Begin + 1 + (bound.Begin < 5 ? o : 0); i < 23; i++, line++)
-                {
-                    article.AppendLine(screen[i]);
-                }
-
-                action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    article.ParseBeta();
-                });
-            }
-            
-            /***
-            else if (bound.Percent < 100)
-            {
+                ContentCollection.BeginLoad(LiPTT.CurrentArticle);
+                ArticleHeaderListBox.Items.Add(LiPTT.CurrentArticle);
                 
-                for (int i = line - bound.Begin - 1; i <= bound.End - bound.Begin; i++, line++)
-                {
-                    article.AppendLine(screen[i]);
-                }
-
-                action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    article.Parse();
-                });
-            }
-            else if (bound.Percent == 100)
-            {
-                //最後一頁
-                for (int i = article.RawLines.Count - bound.Begin + 4; i < 23; i++)
-                {
-                    article.AppendLine(screen[i]);
-                }
-
-                action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    article.Parse();
-                });
-            }
-            /***/
-            article.PageDownPercent = bound.Percent;
-
-            //捲到下一頁
-            if (bound.Percent < 100)
-            {
-                if (article.ParsedContent)
-                {
-                    LiPTT.PttEventEchoed -= BrowseArticle;
-
-                    var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
-                    {
-                        article.Echoes.Percent = bound.Percent;
-                        
-                        article.LoadCompleted = true;
-                        
-                        article.Echoes.HasMoreItems = true;
-
-                        UpdateUI();
-
-                        await UpdateDownloadTaskView();
-                        
-                    });
-                }
-                else
-                {
-                    LiPTT.PageDown();
-                }
-            }
-            else
-            {
-                LiPTT.PttEventEchoed -= BrowseArticle;
-
-                var task = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
-                {
-                    article.Echoes.Percent = bound.Percent;
-
-                    article.LoadCompleted = true;
-                    
-                    article.Echoes.HasMoreItems = false;
-
-                    UpdateUI();
-
-                    await UpdateDownloadTaskView();
-                }); 
-            }
+                LoadingIndicator.IsActive = false;
+                ArticleHeaderListBox.Visibility = Visibility.Visible;
+                ListVW.Visibility = Visibility.Visible;
+            });
+            
         }
 
         private void ReadExtraData(ScreenBuffer screen)
@@ -414,7 +185,7 @@ namespace LiPTT
 
         private async Task StopVideo()
         {
-            foreach (var o in LiPTT.CurrentArticle.Content)
+            foreach (var o in ContentCollection)
             {
                 if (o is Grid grid)
                 {
@@ -446,7 +217,7 @@ namespace LiPTT
 
         private void GoBack()
         {
-            if (LiPTT.State == PttState.Article && article.LoadCompleted)
+            if (LiPTT.State == PttState.Article)
             {
                 isReadArticleTag = true;
                 LiPTT.PttEventEchoed += PttEventEchoed_UpdateArticleTag;
@@ -501,30 +272,31 @@ namespace LiPTT
             }
         }
 
-        private Bound ReadLineBound(string msg)
+        private ScrollViewer GetScrollViewer(DependencyObject depObj)
         {
-            Bound bound = new Bound();
-            Regex regex = new Regex(@"\([\d\s]+%\)");
-            Match match = regex.Match(msg);
-
-            if (match.Success)
+            try
             {
-                string percent = msg.Substring(match.Index + 1, match.Length - 3);
-                bound.Percent = Convert.ToInt32(percent);
+                if (depObj is ScrollViewer)
+                {
+                    return depObj as ScrollViewer;
+                }
+
+                for (var i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    var child = VisualTreeHelper.GetChild(depObj, i);
+
+                    var result = GetScrollViewer(child);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+                return null;
             }
-
-            regex = new Regex(@"第\s[\d~]+\s行");
-            match = regex.Match(msg, match.Length);
-
-            if (match.Success)
+            catch
             {
-                string s = msg.Substring(match.Index + 2, match.Length - 4);
-                string[] a = s.Split('~');
-                bound.Begin = Convert.ToInt32(a[0]);
-                bound.End = Convert.ToInt32(a[1]);
+                return null;
             }
-
-            return bound;
         }
     }
 }

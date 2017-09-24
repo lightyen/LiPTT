@@ -90,7 +90,7 @@ namespace LiPTT
         {
             if (LiPTT.State == PttState.Board)
             {
-                ScreenBuffer screen = LiPTT.Current.Screen;
+                ScreenBuffer screen = LiPTT.Screen;
 
                 string str = screen.ToString(0);
 
@@ -108,7 +108,7 @@ namespace LiPTT
             }
             else
             {
-                var x = LiPTT.Current.Screen.ToStringArray();
+                var x = LiPTT.Screen.ToStringArray();
                 Debug.WriteLine("到底是哪裡?");
                 return false;
             }
@@ -184,7 +184,7 @@ namespace LiPTT
             else if (hasBoardInfo && e.State == PttState.Board)
             {
                 LiPTT.PttEventEchoed -= ReadBoardInfo;
-                Initialize(LiPTT.Current.Screen);
+                Initialize(LiPTT.Screen);
             }
         }
 

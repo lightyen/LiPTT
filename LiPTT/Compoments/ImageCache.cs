@@ -26,7 +26,7 @@ namespace LiPTT
 
         public ImageCache()
         {
-            MaxMemoryCacheCount = 1000;
+            MaxMemoryCacheCount = 10000;
             CacheDuration = TimeSpan.FromHours(12);
             cache_filename = new List<string>();
             semaphoreSlim = new SemaphoreSlim(1, 1);

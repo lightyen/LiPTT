@@ -53,7 +53,6 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="0.5*"/>
                 <RowDefinition Height="1.2*"/>
                 <RowDefinition Height="7*"/>
             </Grid.RowDefinitions>
@@ -62,10 +61,7 @@
                 <ColumnDefinition Width="8*" />
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
-            <Grid Grid.Row="0" Grid.Column="0">
-                <!--<Button Content="Back" Click="GoBack_Click" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>-->
-            </Grid>
-            <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
+            <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="1">
                 <ListBox x:Name="ArticleHeaderListBox" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Background="Black">
                     <ControlTemplate TargetType="ListBoxItem">
                         <Grid
@@ -200,13 +196,13 @@
                                 <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <TextBlock Text="{x:Bind Type, Converter={StaticResource MyArticleTypeStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" Foreground="{x:Bind Type, Converter={StaticResource MyArticleTypeColorConverter}}" VerticalAlignment="Center" />
-                                        <TextBlock Text="{x:Bind Category}" FontSize="24" VerticalAlignment="Center" Padding="2,0,2,0" Foreground="DarkSalmon" TextAlignment="Center" Width="50" />
-                                        <TextBlock Text="{x:Bind Title}" FontSize="28" VerticalAlignment="Center" Padding="10,0,10,0" Foreground="GreenYellow"/>
+                                        <TextBlock Text="{x:Bind Category}" FontSize="22" VerticalAlignment="Center" Padding="2,0,2,0" Foreground="DarkSalmon" TextAlignment="Center" Width="50" />
+                                        <TextBlock Text="{x:Bind Title}" FontSize="26" VerticalAlignment="Center" Padding="10,0,10,0" Foreground="GreenYellow"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <TextBlock Text="{x:Bind Author}" FontSize="26" VerticalAlignment="Center" Padding="10,0,10,0" Foreground="Yellow" IsTextSelectionEnabled="True"/>
-                                        <TextBlock Text="{x:Bind AuthorNickname}" FontSize="17" VerticalAlignment="Center"  Padding="10,0,10,0" Foreground="DarkCyan" IsTextSelectionEnabled="True"/>
-                                        <TextBlock Text="{x:Bind Date, Converter={StaticResource MyDateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:MM/dd HH:ss}'}" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="22" Padding="10,0,10,0" Foreground="Aquamarine" IsTextSelectionEnabled="True" />
+                                        <TextBlock Text="{x:Bind Author}" FontSize="24" VerticalAlignment="Center" Padding="10,0,10,0" Foreground="Yellow" IsTextSelectionEnabled="True"/>
+                                        <TextBlock Text="{x:Bind AuthorNickname}" FontSize="16" VerticalAlignment="Center"  Padding="10,0,10,0" Foreground="DarkCyan" IsTextSelectionEnabled="True"/>
+                                        <TextBlock Text="{x:Bind Date, Converter={StaticResource MyDateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:MM/dd HH:ss}'}" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="20" Padding="10,0,10,0" Foreground="Aquamarine" IsTextSelectionEnabled="True" />
                                     </StackPanel>
                                     <TextBlock FontSize="18" Padding="10,0,10,0" HorizontalAlignment="Center" IsTextSelectionEnabled="True">
                                         <Span>
@@ -223,10 +219,10 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Grid>
-            <Grid Grid.Column="1" Grid.RowSpan="3">
+            <Grid Grid.Column="1" Grid.RowSpan="2">
                 <ProgressRing x:Name="LoadingIndicator" IsActive="True" Width="100" Height="100"/>
             </Grid>
-            <Grid Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="ContentGrid">
+            <Grid Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="ContentGrid">
                 <ListView x:Name="ListVW" ItemsSource="{Binding Source={StaticResource ContentCollection}}" SelectionMode="None">
                     <!--[TextBlock] Text-->
                     <!--[Grid] Youtube or Image-->

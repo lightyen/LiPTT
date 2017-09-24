@@ -891,10 +891,10 @@ namespace LiPTT
             double w = width == 0 ? ViewWidth : width;
             double h = height == 0 ? w * 0.5625 : height;
 
-            WebView wv = new WebView() { Tag = "YoutubeWebView", Width = w, Height = h, DefaultBackgroundColor = Colors.Black };
+            WebView wv = new WebView() { Tag = "YoutubeWebView", Width = w, Height = h, DefaultBackgroundColor = Colors.Black, HorizontalAlignment = HorizontalAlignment.Center };
 
-            Grid grid = new Grid() { Width = w, Height = h, Tag = "Youtube", HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
-            ProgressRing progress = new ProgressRing() { IsActive = true, Width = 50, Height = 50, HorizontalAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.Red) };
+            Grid grid = new Grid() { Width = w, Height = h, Tag = "Youtube", HorizontalAlignment = HorizontalAlignment.Center };
+            ProgressRing progress = new ProgressRing() { IsActive = true, Width = 50, Height = 50, HorizontalAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.Orange) };
             string script = GetYoutubeScript(youtubeID, w, h);
 
             wv.ContentLoading += (a, b) =>

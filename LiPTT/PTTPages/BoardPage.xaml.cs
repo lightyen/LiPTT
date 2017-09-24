@@ -334,7 +334,7 @@ namespace LiPTT
                 else
                 {
                     //標題, 分類
-                    regex = new Regex(@"\[[\w\s]+\]");
+                    regex = new Regex(@"[\u005b\uff3b]+?[\w\s]+[\u005d\uff3d]+?");
                     match = regex.Match(str);
                     if (match.Success)
                     {

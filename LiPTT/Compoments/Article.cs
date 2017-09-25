@@ -647,6 +647,18 @@ namespace LiPTT
             grid.ColumnDefinitions.Add(c2);
             grid.ColumnDefinitions.Add(c3);
 
+            switch (echo.Evaluation)
+            {
+                case Evaluation.推:
+                    grid.Background = new SolidColorBrush(Color.FromArgb(0x60, 0x1A, 0x1A, 0x00));
+                    break;
+                case Evaluation.噓:
+                    grid.Background = new SolidColorBrush(Color.FromArgb(0x60, 0x1A, 0x00, 0x00));
+                    break;
+                default:
+                    break;
+            }
+
             Grid g0 = new Grid();
             g0.SetValue(Grid.ColumnProperty, 0);
             Grid g1 = new Grid();
@@ -672,7 +684,12 @@ namespace LiPTT
                     break;
             }
 
-            g0.Children.Add(new TextBlock() { HorizontalAlignment = HorizontalAlignment.Left, Text = str[0].ToString(), FontSize = 22, Foreground = EvalColor });
+            g0.Children.Add(new TextBlock() {
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+                Text = str[0].ToString(),
+                FontSize = 22,
+                Foreground = EvalColor });
             
             //推文ID////高亮五樓/////高亮原PO/////////////////////
             SolidColorBrush authorColor = new SolidColorBrush(Colors.LightSalmon);
@@ -690,7 +707,12 @@ namespace LiPTT
                 authorColor = new SolidColorBrush(Colors.LightBlue);
             }
 
-            TextBlock tb = new TextBlock() { HorizontalAlignment = HorizontalAlignment.Center, Text = echo.Author, FontSize = 22, Foreground = authorColor };
+            TextBlock tb = new TextBlock() {
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Text = echo.Author, FontSize = 22,
+                Foreground = authorColor
+            };
             g1.Children.Add(tb);
 
             //把五樓以前的五樓也高亮起來
@@ -725,8 +747,8 @@ namespace LiPTT
                     sp.Children.Add(new TextBlock()
                     {
                         HorizontalAlignment = HorizontalAlignment.Left,
-                        FontSize = 22,
                         VerticalAlignment = VerticalAlignment.Center,
+                        FontSize = 22,
                         Foreground = new SolidColorBrush(Colors.Gold),
                         Text = echo.Content.Substring(0, match.Index),
                     });
@@ -737,6 +759,7 @@ namespace LiPTT
                     uri = new Uri(url);
                     sp.Children.Add(new HyperlinkButton()
                     {
+                        VerticalAlignment = VerticalAlignment.Center,
                         NavigateUri = uri,
                         FontSize = 22,
                         Content = new TextBlock() { Text = url },
@@ -747,8 +770,8 @@ namespace LiPTT
                     sp.Children.Add(new TextBlock()
                     {
                         HorizontalAlignment = HorizontalAlignment.Left,
-                        FontSize = 22,
                         VerticalAlignment = VerticalAlignment.Center,
+                        FontSize = 22, 
                         Foreground = new SolidColorBrush(Colors.Gray),
                         Text = url,
                     });
@@ -759,8 +782,8 @@ namespace LiPTT
                     sp.Children.Add(new TextBlock()
                     {
                         HorizontalAlignment = HorizontalAlignment.Left,
-                        FontSize = 22,
                         VerticalAlignment = VerticalAlignment.Center,
+                        FontSize = 22,
                         Foreground = new SolidColorBrush(Colors.Gold),
                         Text = echo.Content.Substring(match.Index + match.Length, echo.Content.Length - (match.Index + match.Length)),
                     });
@@ -773,6 +796,7 @@ namespace LiPTT
                 g2.Children.Add(new TextBlock()
                 {
                     HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
                     FontSize = 22,
                     Foreground = new SolidColorBrush(Colors.Gold),
                     Text = echo.Content,
@@ -796,7 +820,13 @@ namespace LiPTT
             grid.Children.Add(g3);
 
             ListView list = new ListView() { IsItemClickEnabled = true, HorizontalAlignment = HorizontalAlignment.Stretch };
-            list.Items.Add(new ListViewItem() { Content = grid, HorizontalContentAlignment = HorizontalAlignment.Stretch, AllowFocusOnInteraction = false });
+            list.Items.Add(new ListViewItem()
+            {
+                Content = grid,
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                VerticalContentAlignment = VerticalAlignment.Stretch,
+                AllowFocusOnInteraction = false,
+            });
             Add(list);
 
             if (uri != null)
@@ -944,9 +974,11 @@ namespace LiPTT
             double w = width == 0 ? ViewWidth : width;
             double h = height == 0 ? w * 0.5625 : height;
 
-            WebView wv = new WebView() { Tag = "YoutubeWebView", Width = w, Height = h, DefaultBackgroundColor = Colors.Black, HorizontalAlignment = HorizontalAlignment.Center };
+            WebView wv = new WebView() { Tag = "YoutubeWebView", DefaultBackgroundColor = Colors.Gray, HorizontalAlignment = HorizontalAlignment.Stretch };
 
-            Grid grid = new Grid() { Width = w, Height = h, Tag = "Youtube", HorizontalAlignment = HorizontalAlignment.Center };
+            Grid grid = new Grid() { Tag = "Youtube", HorizontalAlignment = HorizontalAlignment.Stretch, Background = new SolidColorBrush(Colors.Red) };
+            Binding binding = new Binding() { RelativeSource = new RelativeSource() { Mode = RelativeSourceMode.Self }, Path = new PropertyPath("Width")};
+            grid.SetBinding(FrameworkElement.HeightProperty, binding);
             ProgressRing progress = new ProgressRing() { IsActive = true, Width = 50, Height = 50, HorizontalAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.Orange) };
             string script = GetYoutubeScript(youtubeID, w, h);
 

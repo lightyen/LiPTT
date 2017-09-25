@@ -74,6 +74,8 @@ namespace LiPTT
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
+            base.OnNavigatedTo(e);
+
             ControlVisible = Visibility.Collapsed;
             //冷靜一下，先喝杯咖啡
             await Task.Delay(100);
@@ -81,10 +83,6 @@ namespace LiPTT
 
             ContentCollection.BeginLoaded += (a, b) => {
                 if (ListVW.Items.Count > 0) ListVW.ScrollIntoView(ListVW.Items[0]);
-            };
-
-            SizeChanged += (o, a) => {
-                ContentCollection.ViewWidth = ContentGrid.ActualWidth;
             };
 
             LoadingExtraData = false;

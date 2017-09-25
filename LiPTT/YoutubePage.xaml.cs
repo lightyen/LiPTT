@@ -149,71 +149,53 @@ namespace LiPTT
             return script;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
             //string html = GetYoutubeIframeHtml("Bvojzrq9Ad4", myWebView.ActualWidth, myWebView.ActualHeight, true);
             //string html = "https://forum.gamer.com.tw/A.php?bsn=60030";
             //myWebView.NavigateToString(GGG());
 
-            MyPanel.Children.Clear();
+            //MyPanel.Children.Clear();
 
-            WebView wwvv = new WebView() { Width = 800, Height = 800 * 0.5625, DefaultBackgroundColor = Windows.UI.Colors.Gray };
+            WebView wwvv = new WebView() { DefaultBackgroundColor = Windows.UI.Colors.Gray };
 
 
-            Grid grid = new Grid() { Width = 800, Height = 800 * 0.5625 };
+            Grid grid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch,};
+
+            Binding bind = new Binding()
+            {
+                RelativeSource = new RelativeSource() { Mode = RelativeSourceMode.Self},
+                Path = new PropertyPath("ActualWidth"),
+                Mode = BindingMode.OneWay,
+            };
+
+            grid.SetBinding(HeightProperty, bind);
+
             ProgressRing ring = new ProgressRing() { IsActive = true };
+          
 
-            wwvv.NavigationStarting += (a, b) =>
-            {
-                Debug.WriteLine("NavigationStarting");
-                
-            };
+            grid.Children.Add(wwvv);
 
-            wwvv.ContentLoading += (a, b) =>
-            {
-                Debug.WriteLine("ContentLoading");
-                wwvv.Visibility = Visibility.Collapsed;
-            };
+            //MyPanel.Children.Add(grid);
 
-            wwvv.FrameDOMContentLoaded += (a, b) =>
-            {
-                Debug.WriteLine("FrameDOMContentLoaded");
-                ring.IsActive = false;
-                wwvv.Visibility = Visibility.Visible;
-            };
-
-            wwvv.FrameNavigationCompleted += (a, b) =>
-            {
-                Debug.WriteLine("FrameNavigationCompleted");
-                
-            };
+            
 
             wwvv.DOMContentLoaded += async (a, b) =>
             {
-                Debug.WriteLine("DOMContentLoaded");
-                
-                string script = GetYoutubeScript("oXp2oE0xQcE", wwvv.ActualWidth, wwvv.ActualHeight);
                 try
                 {
-                    Debug.WriteLine("Inject script");
-                    string returnStr = await wwvv.InvokeScriptAsync("eval", new string[] { script });
+                    string returnStr = await wwvv.InvokeScriptAsync("LoadYoutube", new string[] { "oXp2oE0xQcE" });
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine("Script Error" + ex.ToString() + script);
-                }               
+                    Debug.WriteLine("Script Error" + ex.ToString());
+                }
             };
 
-            
 
-            grid.Children.Add(wwvv);
-            grid.Children.Add(ring);
+            wwvv.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube_ex.html"));
 
-            MyPanel.Children.Add(grid);
 
-            wwvv.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube.html"));
-
-            
         }
 
         
@@ -234,7 +216,7 @@ namespace LiPTT
 
         private void AddImgur_Click(object sender, RoutedEventArgs e)
         {
-            MyPanel.Children.Clear();
+            //MyPanel.Children.Clear();
 
             WebView wwvv = new WebView() { Width = 800, Height = 800, DefaultBackgroundColor = Windows.UI.Colors.Gray };
 
@@ -242,7 +224,7 @@ namespace LiPTT
 
             grid.Children.Add(wwvv);
 
-            MyPanel.Children.Add(grid);
+            //MyPanel.Children.Add(grid);
 
             wwvv.Navigate(new Uri("ms-appx-web:///Templates/imgur/imgur.html"));
         }

@@ -89,7 +89,7 @@ namespace LiPTT
                 if (cache_filename.IndexOf(name) != -1)
                 {
                     semaphoreSlim.Release();
-                    await Task.Delay(1000);
+                    await Task.Delay(2000);
                 }
                 else
                 {

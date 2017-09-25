@@ -89,7 +89,7 @@ namespace LiPTT
         private SemaphoreSlim sem = new SemaphoreSlim(0, 1);
 
         private bool DividerLine = false;
-        private int Floor = 0;
+        private uint Floor = 0;
         private string FiveFloor = "";
 
         public ArticleContentCollection()
@@ -592,6 +592,11 @@ namespace LiPTT
             }             
         }
 
+        /// <summary>
+        /// 找五樓用的
+        /// </summary>
+        private Dictionary<Echo, TextBlock> tempEchoes = new Dictionary<Echo, TextBlock>();
+
         private void AddEcho(Block[] block)
         {
             if (DividerLine)
@@ -602,7 +607,7 @@ namespace LiPTT
             RichTextBlock = null;
 
             Uri uri = null;
-            Echo echo = new Echo();
+            Echo echo = new Echo() { Floor = Floor };
 
             string str = LiPTT.GetString(block, 0, block.Length - 13).Replace('\0', ' ').Trim();
 
@@ -669,7 +674,7 @@ namespace LiPTT
 
             g0.Children.Add(new TextBlock() { HorizontalAlignment = HorizontalAlignment.Left, Text = str[0].ToString(), FontSize = 22, Foreground = EvalColor });
             
-            //推文ID////////////////////////////////////////////
+            //推文ID////高亮五樓/////高亮原PO/////////////////////
             SolidColorBrush authorColor = new SolidColorBrush(Colors.LightSalmon);
             if (Floor == 5)
             {
@@ -684,9 +689,28 @@ namespace LiPTT
             {
                 authorColor = new SolidColorBrush(Colors.LightBlue);
             }
-                
-            g1.Children.Add(new TextBlock() { HorizontalAlignment = HorizontalAlignment.Center, Text = echo.Author, FontSize = 22, Foreground = authorColor });
-            
+
+            TextBlock tb = new TextBlock() { HorizontalAlignment = HorizontalAlignment.Center, Text = echo.Author, FontSize = 22, Foreground = authorColor };
+            g1.Children.Add(tb);
+
+            //把五樓以前的五樓也高亮起來
+            if (Floor <= 5)
+                tempEchoes.Add(echo, tb);
+
+            if (tempEchoes.Count >= 5)
+            {
+                foreach (var kv in tempEchoes)
+                {
+                    if (FiveFloor == kv.Key.Author)
+                    {
+                        if (FiveFloor != ArticleTag.Author)
+                            kv.Value.Foreground = new SolidColorBrush(Colors.LightPink);
+                    }
+                        
+                }
+                tempEchoes.Clear();
+            }
+
             //推文內容////////////////////////////////////////////
             Match match;
 

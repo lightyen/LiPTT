@@ -17,6 +17,8 @@ using Windows.UI.Xaml.Documents;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 
@@ -25,23 +27,56 @@ namespace LiPTT
     /// <summary>
     /// 瀏覽文章頁面
     /// </summary>
-    public sealed partial class ArticlePage : Page
+    public sealed partial class ArticlePage : Page, INotifyPropertyChanged
     {
         public ArticlePage()
         {
             InitializeComponent();
+            DataContext = this;
+            ArticleHeader.Click += (e, o) =>
+            {
+                Debug.WriteLine("Selected");
+            };
         }
 
         private Article article;
 
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            ArticleHeaderListBox.Visibility = Visibility.Collapsed;          
-            ListVW.Visibility = Visibility.Collapsed;
+        private bool control_visible;
 
-            ArticleHeaderListBox.Items.Clear();
-            LoadingIndicator.IsActive = true;
+        public Visibility ControlVisible
+        {
+            get
+            {
+                if (control_visible)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+            private set
+            {
+                if (value == Visibility.Visible)
+                    control_visible = true;
+                else
+                    control_visible = false;
+                NotifyPropertyChanged("ControlVisible");
+                NotifyPropertyChanged("RingActive");
+            }
+        }
+
+        public bool RingActive
+        {
+            get
+            {
+                return !control_visible;
+            }
+        }
+
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        {
+            ControlVisible = Visibility.Collapsed;
+            //冷靜一下，先喝杯咖啡
+            await Task.Delay(100);
             article = LiPTT.CurrentArticle;
 
             ContentCollection.BeginLoaded += (a, b) => {
@@ -90,8 +125,6 @@ namespace LiPTT
                     break;
                 case VirtualKey.Left:
                 case VirtualKey.Escape:
-                    if (!ContentCollection.InitialLoaded && ContentCollection.Loading) return;
-                    StopVideo();
                     GoBack();
                     break;
             }
@@ -101,8 +134,6 @@ namespace LiPTT
         {
             if (args.CurrentPoint.Properties.IsRightButtonPressed == true)
             {
-                if (!ContentCollection.InitialLoaded && ContentCollection.Loading) return;
-                StopVideo();
                 GoBack();
             }
         }
@@ -148,11 +179,9 @@ namespace LiPTT
             var action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
                 ContentCollection.BeginLoad(LiPTT.CurrentArticle);
-                ArticleHeaderListBox.Items.Add(LiPTT.CurrentArticle);
-                
-                LoadingIndicator.IsActive = false;
-                ArticleHeaderListBox.Visibility = Visibility.Visible;
-                ListVW.Visibility = Visibility.Visible;
+                ArticleHeader.DataContext = LiPTT.CurrentArticle;
+                //ArticleHeaderListBox.Items.Add(LiPTT.CurrentArticle);
+                ControlVisible = Visibility.Visible;
             });
             
         }
@@ -169,8 +198,16 @@ namespace LiPTT
             if (match.Success)
             {
                 string aaa = str.Substring(match.Index, match.Length);
-                article.Url = new Uri(str.Substring(match.Index, match.Length));
-                Debug.WriteLine("網頁版: " + article.Url.OriginalString);
+
+                try
+                {
+                    article.WebUri = new Uri(str.Substring(match.Index, match.Length));
+                    Debug.WriteLine("網頁版: " + article.WebUri.OriginalString);
+                }
+                catch (UriFormatException ex)
+                {
+                    Debug.WriteLine(ex.ToString());
+                }
             }
 
             //P幣
@@ -207,34 +244,25 @@ namespace LiPTT
 
         private void GoBack()
         {
-            if (LiPTT.State == PttState.Article)
-            {
-                isReadArticleTag = true;
-                LiPTT.PttEventEchoed += PttEventEchoed_UpdateArticleTag;
-                LiPTT.Left();
-            }
+            if (!control_visible && !ContentCollection.InitialLoaded && ContentCollection.Loading && LiPTT.ArticleCollection != null) return;
+            StopVideo();
+            LiPTT.PttEventEchoed += PttEventEchoed_UpdateArticleTag;
+            LiPTT.Left();
         }
-
-        private bool isReadArticleTag;
 
         private void PttEventEchoed_UpdateArticleTag(PTTProvider sender, LiPttEventArgs e)
         {
+            LiPTT.PttEventEchoed -= PttEventEchoed_UpdateArticleTag;
+
             if (e.State == PttState.Board)
             {
-                if (isReadArticleTag)
+                ReLoadArticleTag(e.Screen);
+                LiPTT.PageEnd();
+                //LiPTT.SendMessage(LiPTT.ArticleCollection.CurrentIndex.ToString(), 0x0D);
+                var action = LiPTT.RunInUIThread(() =>
                 {
-                    isReadArticleTag = false;
-                    ReLoadArticleTag(e.Screen);
-                    LiPTT.SendMessage(LiPTT.ArticleCollection.CurrentIndex.ToString(), 0x0D);
-                }
-                else
-                {
-                    LiPTT.PttEventEchoed -= PttEventEchoed_UpdateArticleTag;
-                    var action = LiPTT.RunInUIThread(() =>
-                    {
-                        LiPTT.Frame.Navigate(typeof(BoardPage));
-                    });
-                }
+                    LiPTT.Frame.Navigate(typeof(BoardPage));
+                });
             }
         }
 
@@ -242,23 +270,18 @@ namespace LiPTT
         {
             if (LiPTT.CurrentArticle.ID != int.MaxValue)
             {
-                Article article = LiPTT.ArticleCollection.FirstOrDefault(i => i.ID == LiPTT.CurrentArticle.ID);
-
-                if (article != null)
-                {
-                    char readtype = (char)screen.CurrentBlocks[8].Content;
-                    article.ReadType = LiPTT.GetReadType(readtype);
-                }
+                Article article = LiPTT.ArticleCollection.FirstOrDefault(i => i.ID == LiPTT.CurrentArticle.ID);  
             }
             else //置底文
             {
                 Article article = LiPTT.ArticleCollection.FirstOrDefault(i => (i.ID == int.MaxValue) && (i.Star == LiPTT.CurrentArticle.Star));
+            }
 
-                if (article != null)
-                {
-                    char readtype = (char)screen.CurrentBlocks[8].Content;
-                    article.ReadType = LiPTT.GetReadType(readtype);
-                }
+            if (article != null)
+            {
+                var act = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
+                    article.State = LiPTT.GetReadSate((char)screen.CurrentBlocks[8].Content);
+                });
             }
         }
 
@@ -286,6 +309,21 @@ namespace LiPTT
             catch
             {
                 return null;
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private async void ArticleHeader_Click(object sender, RoutedEventArgs e)
+        {
+            if (ArticleHeader.DataContext is Article article)
+            {
+                await Launcher.LaunchUriAsync(article.WebUri);
             }
         }
     }

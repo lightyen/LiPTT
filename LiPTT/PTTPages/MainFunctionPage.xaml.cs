@@ -256,10 +256,6 @@ namespace LiPTT
                 //隨便再送一個byte觸發Disconnect
                 LiPTT.PressAnyKey();
 
-                LiPTT.ArticleCollection = null;
-                LiPTT.CurrentArticle = null;
-                LiPTT.CurrentWebView = null;
-
                 LiPTT.Frame.Navigate(typeof(LoginPage));
             }
         }

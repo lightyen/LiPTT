@@ -108,6 +108,7 @@
       <DependentUpon>ColorPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Compoments\Article.cs" />
+    <Compile Include="Compoments\Board.cs" />
     <Compile Include="Compoments\VisualTreeHelperExtensions.cs" />
     <Compile Include="Compoments\Collections.cs" />
     <Compile Include="Compoments\Converter.cs" />

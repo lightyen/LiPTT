@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d" NavigationCacheMode="Enabled">
     <Page.Resources>
-        <local:ArticleCollection x:Key="ArticleCollection"/>
+        <local:BoardContentCollection x:Key="BoardContentCollection" x:Name="ContentCollection" />
     </Page.Resources>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
@@ -19,10 +19,10 @@
             <ColumnDefinition Width="8*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Grid Grid.Row="0" Grid.Column="0">
-            <!--<Button Content="back" Click="GoLeft" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>-->
+        <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="3">
+            <ProgressRing Grid.Column="1" Foreground="LightGoldenrodYellow" Width="120" Height="120" IsActive="{Binding RingActive}"/>
         </Grid>
-        <Grid Grid.Row="0" Grid.Column="1">
+        <Grid Grid.Row="0" Grid.Column="1" Visibility="{Binding ControlVisible}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="1*" />
@@ -32,14 +32,14 @@
                     <ColumnDefinition Width="5*" />
                     <ColumnDefinition Width="1*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="{Binding Source={StaticResource ArticleCollection}, Mode=OneWay, Path=BoardInfo.Description}" Visibility="{Binding ControlVisible}" FontSize="28" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
-                <TextBlock Grid.Column="1" Text="{Binding Source={StaticResource ArticleCollection}, Mode=OneWay, Path=BoardInfo.Popularity}" Visibility="{Binding ControlVisible}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{Binding Source={StaticResource ArticleCollection}, Converter={StaticResource MyPopularityColorConverter}, Mode=OneWay, Path=BoardInfo.Popularity}" />
+                <TextBlock Grid.Column="0" Text="{Binding Source={StaticResource BoardContentCollection}, Mode=OneWay, Path=Board.Description}" FontSize="28" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+                <TextBlock Grid.Column="1" Text="{Binding Source={StaticResource BoardContentCollection}, Mode=OneWay, Path=Board.Popularity}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{Binding Source={StaticResource BoardContentCollection}, Converter={StaticResource MyPopularityColorConverter}, Mode=OneWay, Path=Board.Popularity}" />
             </Grid>
             <TextBox Grid.Column="1" x:Name="SearchIDTextBox" BorderThickness="0" LostFocus="SearchIDTextBox_LostFocus" KeyDown="SearchIDTextBox_KeyDown" VerticalAlignment="Center" FontSize="21"/>
         </Grid>
-        <Grid Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid Grid.Row="1" Grid.Column="1"  Visibility="{Binding ControlVisible}">
             <Grid x:Name="ArticleListGrid" Grid.Column="1" HorizontalAlignment="Stretch">
-                <ListView x:Name="ArticleListView" Visibility="{Binding ControlVisible}" ItemsSource="{Binding Source={StaticResource ArticleCollection}, Mode=OneWay}" VerticalContentAlignment="Stretch" IsItemClickEnabled="True" ItemClick="ArticleList_ItemClick">
+                <ListView x:Name="ArticleListView" ItemsSource="{Binding Source={StaticResource BoardContentCollection}, Mode=OneWay}" VerticalContentAlignment="Stretch" IsItemClickEnabled="True" ItemClick="ArticleList_ItemClick">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="local:Article">
                             <StackPanel Orientation="Horizontal">
@@ -47,7 +47,7 @@
                                 <TextBlock Text="{x:Bind Like, Converter={StaticResource MyLikeStringFormatConverter}}" TextAlignment="Center" Width="38" FontSize="25" Foreground="{x:Bind Like, Converter={StaticResource MyLikeColorStringFormatConverter}}" Padding="5,0,5,0"/>
                                 <TextBlock Text="{x:Bind Date, Converter={StaticResource MyDateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:M/dd}'}" TextAlignment="Right" Padding="5,0,5,0" FontSize="22" Foreground="LightGreen" Width="80"/>
                                 <TextBlock Text="{x:Bind Author}" TextAlignment="Center" FontSize="25" Padding="5,0,5,0" Width="250" Foreground="Wheat" />
-                                <TextBlock Text="{x:Bind ReadType, Converter={StaticResource MyReadTypeStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" TextAlignment="Center" Width="40" Foreground="Green" />
+                                <TextBlock Text="{x:Bind State, Converter={StaticResource MyReadStateStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" TextAlignment="Center" Width="40" Foreground="Green" />
                                 <TextBlock Text="{x:Bind Type, Converter={StaticResource MyArticleTypeStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" Foreground="{x:Bind Type, Converter={StaticResource MyArticleTypeColorConverter}}" TextAlignment="Center" Width="40" />
                                 <TextBlock Text="{x:Bind Category}" FontSize="22" Padding="2,0,8,0" Foreground="DarkSalmon" TextAlignment="Center" />
                                 <TextBlock Text="{x:Bind Title}" FontSize="22" Padding="5,0,5,0" Foreground="{Binding Converter={StaticResource MyTitleColorConverter}}"/>

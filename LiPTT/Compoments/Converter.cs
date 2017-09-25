@@ -228,11 +228,11 @@ namespace LiPTT
                 {
                     color = Colors.IndianRed;
                 }
-                else if (article.ReadType.HasFlag(ReadType.有推文))
+                else if (article.State.HasFlag(ReadState.有推文))
                 {
                     color = Colors.AliceBlue;
                 }
-                else if (article.ReadType.HasFlag(ReadType.已讀))
+                else if (article.State.HasFlag(ReadState.已讀))
                 {
                     color = Colors.Gray;
                 }
@@ -255,32 +255,32 @@ namespace LiPTT
         }
     }
 
-    public class ReadTypeStringFormatConverter : IValueConverter
+    public class ReadStateStringFormatConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             if (value == null) return null;
 
-            if (value is ReadType t)
+            if (value is ReadState t)
             {
-                if (t == ReadType.無) return "+";
-                else if (t.HasFlag(ReadType.被鎖定)) return "!";
-                else if (t.HasFlag(ReadType.有推文))
+                if (t == ReadState.無) return "+";
+                else if (t.HasFlag(ReadState.被鎖定)) return "!";
+                else if (t.HasFlag(ReadState.有推文))
                 {
-                    if (t.HasFlag(ReadType.被標記)) return "=";
+                    if (t.HasFlag(ReadState.被標記)) return "=";
                     else return "~";
 
                 }
-                else if (t.HasFlag(ReadType.已讀))
+                else if (t.HasFlag(ReadState.已讀))
                 {
-                    if (t.HasFlag(ReadType.被標記)) return "m";
-                    else if (t.HasFlag(ReadType.待處理)) return "s";
+                    if (t.HasFlag(ReadState.被標記)) return "m";
+                    else if (t.HasFlag(ReadState.待處理)) return "s";
                     else return " ";
                 }
                 else
                 {
-                    if (t.HasFlag(ReadType.被標記)) return "M";
-                    else if (t.HasFlag(ReadType.待處理)) return "S";
+                    if (t.HasFlag(ReadState.被標記)) return "M";
+                    else if (t.HasFlag(ReadState.待處理)) return "S";
                     else return null;
                 }
             }

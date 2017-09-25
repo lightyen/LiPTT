@@ -1,27 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Windows.UI.Xaml.Data;
-using System.Collections.ObjectModel;
-using Windows.Foundation;
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
-using System.Net;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using Windows.UI;
-using Windows.UI.Xaml.Documents;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml;
-using Windows.UI.Core;
-using Windows.ApplicationModel.Core;
 
 namespace LiPTT
 {
@@ -34,18 +13,24 @@ namespace LiPTT
     //新推文 ~
     //被標記且有新推文 =
 
+    /// <summary>
+    /// 文章狀態
+    /// </summary>
     [Flags]
-    public enum ReadType
+    public enum ReadState
     {
-        無       = 0b0000_0000, //'+' 未讀
-        已讀     = 0b0000_0001,
-        被標記   = 0b0000_0010,
-        有推文   = 0b0000_0100,
-        被鎖定   = 0b0000_1000,
-        待處理   = 0b0001_0000,
-        未定義   = 0b1000_0000,
+        無 = 0b0000_0000, //'+' 未讀
+        已讀 = 0b0000_0001,
+        被標記 = 0b0000_0010,
+        有推文 = 0b0000_0100,
+        被鎖定 = 0b0000_1000,
+        待處理 = 0b0001_0000,
+        未定義 = 0b1000_0000,
     }
 
+    /// <summary>
+    /// 文章類型
+    /// </summary>
     public enum ArticleType
     {
         無,
@@ -54,26 +39,14 @@ namespace LiPTT
         轉文,
     }
 
+    /// <summary>
+    /// 文章評價
+    /// </summary>
     public enum Evaluation
     {
         箭頭 = 0,
         推 = 1,
         噓 = 2,
-    }
-
-    public class Bound
-    {
-        public int Begin { get; set; }
-        public int End { get; set; }
-        public int Percent { get; set; }
-    }
-
-    public class Echo
-    {
-        public Evaluation Evaluation { get; set; }
-        public string Author { get; set; }
-        public string Content { get; set; }
-        public DateTimeOffset Date { get; set; }
     }
 
     public class DownloadResult
@@ -82,183 +55,451 @@ namespace LiPTT
         public object Item { get; set; }
     }
 
-    public class BoardInfo : INotifyPropertyChanged
+    /// <summary>
+    /// 瀏覽狀態
+    /// </summary>
+    public class Bound
     {
-        private string name;
-        private int popularity;
-        private string nick;
-        private string description;
-        private string[] leaders;
-        private string category;
-        private int limit_login;
-        private int limit_reject;
+        /// <summary>
+        /// 開頭
+        /// </summary>
+        public int Begin { get; set; }
 
-        public string Name
-        {
-            get { return name; }
-            set { name = value; NotifyPropertyChanged("Name"); }
-        }
+        /// <summary>
+        /// 結尾
+        /// </summary>
+        public int End { get; set; }
 
-        public string Category
-        {
-            get { return category; }
-            set { category = value; NotifyPropertyChanged("Category"); }
-        }
-
-        public string NickName
-        {
-            get { return nick; }
-            set { nick = value; NotifyPropertyChanged("NickName"); }
-        }
-
-        public string Description
-        {
-            get { return description; }
-            set { description = value; NotifyPropertyChanged("Description"); }
-        }
-
-        public int Popularity
-        {
-            get { return popularity; }
-            set { popularity = value; NotifyPropertyChanged("Popularity"); }
-        }
-
-        public string[] Leaders
-        {
-            get { return leaders; }
-            set { leaders = value; NotifyPropertyChanged("Leaders"); }
-        }
-
-        public int LimitLogin
-        {
-            get { return limit_login; }
-            set { limit_login = value; NotifyPropertyChanged("LimitLogin"); }
-        }
-        public int LimitReject
-        {
-            get { return limit_reject; }
-            set { limit_reject = value; NotifyPropertyChanged("LimitReject"); }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
-        {
-            if (PropertyChanged != null)
-            {
-                var a = LiPTT.RunInUIThread(() => {
-                    PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
-                });
-                
-            }
-        }
+        /// <summary>
+        /// 瀏覽文章比例
+        /// </summary>
+        public int Percent { get; set; }
     }
 
-    public class Article : IComparable<Article>, INotifyPropertyChanged
+    /// <summary>
+    /// 回響
+    /// </summary>
+    public class Echo
     {
-        public uint ID { get; set; } //文章流水號
-        public string AID { get; set; } //文章代碼
-        public int Star { get; set; } //置底文index
-        public bool Deleted { get; set; } //已被刪除
-        public int Like { get; set; } //推/噓個數
-        public DateTimeOffset Date { get; set; } //時間
-        public string Author { get; set; } //作者
-        public string AuthorNickname { get; set; } //作者匿名
-        public string Category { get; set; } //文章分類
-        public string Title { get; set; } //標題
-        public ArticleType Type { get; set; } //文章類型
-        public int PttCoin { get; set; } //值多少P幣
-        public Uri Url { get; set; } //網頁版連結
-        private ReadType readtype;
-        public ReadType ReadType
+        public Evaluation Evaluation { get; set; }
+        public string Author { get; set; }
+        public string Content { get; set; }
+        public DateTimeOffset Date { get; set; }
+    }
+
+    /// <summary>
+    /// 看板資訊
+    /// </summary>
+    public class Board : INotifyPropertyChanged
+    {
+        /// <summary>
+        /// 看板名稱
+        /// </summary>
+        public string Name
         {
             get
             {
-                return readtype;
+                return name;
             }
             set
             {
-                readtype = value;
-                NotifyPropertyChanged("ReadType");
+                name = value;
+                NotifyPropertyChanged("Name");
             }
         }
+
+        /// <summary>
+        /// 看板分類
+        /// </summary>
+        public string Category
+        {
+            get
+            {
+                return category;
+            }
+            set
+            {
+                category = value;
+                NotifyPropertyChanged("Category");
+            }
+        }
+
+        /// <summary>
+        /// 看板短名、通稱
+        /// </summary>
+        public string Nick
+        {
+            get
+            {
+                return nick;
+            }
+            set
+            {
+                nick = value;
+                NotifyPropertyChanged("Nick");
+            }
+        }
+
+        /// <summary>
+        /// 看板描述
+        /// </summary>
+        public string Description
+        {
+            get
+            {
+                return description;
+            }
+            set
+            {
+                description = value;
+                NotifyPropertyChanged("Description");
+            }
+        }
+
+        /// <summary>
+        /// 人氣
+        /// </summary>
+        public int Popularity
+        {
+            get
+            {
+                return popularity;
+            }
+            set
+            {
+                popularity = value;
+                NotifyPropertyChanged("Popularity");
+            }
+        }
+
+        /// <summary>
+        /// 版主群
+        /// </summary>
+        public string[] Leaders
+        {
+            get
+            {
+                return leaders;
+            }
+            set
+            {
+                leaders = value;
+                NotifyPropertyChanged("Leaders");
+            }
+        }
+
+        /// <summary>
+        /// 發文限制-登入次數
+        /// </summary>
+        public int LimitLogin
+        {
+            get
+            {
+                return limitLogin;
+            }
+            set
+            {
+                limitLogin = value;
+                NotifyPropertyChanged("LimitLogin");
+            }
+        }
+
+        /// <summary>
+        /// 發文限制-被退文次數
+        /// </summary>
+        public int LimitReject
+        {
+            get
+            {
+                return limitReject;
+            }
+            set
+            {
+                limitReject = value;
+                NotifyPropertyChanged("LimitReject");
+            }
+        }
+
+        private string name;
+        private string category;
+        private string nick;
+        private string description;
+        private int popularity;
+        private string[] leaders;
+        private int limitLogin;
+        private int limitReject;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
         {
-            if (PropertyChanged != null)
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+
+    public class Article : IComparable<Article>, INotifyPropertyChanged
+    {
+        /// <summary>
+        /// 文章流水編號
+        /// </summary>
+        public uint ID
+        {
+            get
             {
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
+                return id;
+            }
+            set
+            {
+                id = value;
+                NotifyPropertyChanged("ID");
             }
         }
 
-        private SolidColorBrush GetForegroundBrush(Block b)
+        /// <summary>
+        /// 文章代碼
+        /// </summary>
+        public string AID
         {
-            switch (b.ForegroundColor)
+            get
             {
-                case 30:
-                    return b.Mode.HasFlag(AttributeMode.Bold) ?
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00));
-                case 31:
-                    return b.Mode.HasFlag(AttributeMode.Bold) ?
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0x00, 0x00)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0x00, 0x00));
-                case 32:
-                    return b.Mode.HasFlag(AttributeMode.Bold) ?
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xFF, 0x00)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xC0, 0x00));
-                case 33:
-                    return b.Mode.HasFlag(AttributeMode.Bold) ?
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0x00)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0x00));
-                case 34:
-                    return b.Mode.HasFlag(AttributeMode.Bold) ?
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0xFF)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0xC0));
-                case 35:
-                    return b.Mode.HasFlag(AttributeMode.Bold) ?
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0x00, 0xFF)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0x00, 0xC0));
-                case 36:
-                    return b.Mode.HasFlag(AttributeMode.Bold) ?
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xFF, 0xFF)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xC0, 0xC0));
-                case 37:
-                    return b.Mode.HasFlag(AttributeMode.Bold) ?
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF)):
-                        new SolidColorBrush(Color.FromArgb(0xFF, 0xD0, 0xD0, 0xD0));
-                default:
-                    return new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0));
+                return aid;
+            }
+            set
+            {
+                aid = value;
+                NotifyPropertyChanged("AID");
             }
         }
 
-        private SolidColorBrush GetBackgroundBrush(Block b)
+        /// <summary>
+        /// 置底文index
+        /// </summary>
+        public int Star
         {
-            switch (b.BackgroundColor)
+            get
             {
-                case 40:
-                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00));
-                case 41:
-                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x00, 0x00));
-                case 42:
-                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x80, 0x00));
-                case 43:
-                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x80, 0x00));
-                case 44:
-                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x80));
-                case 45:
-                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x80, 0x00, 0x80));
-                case 46:
-                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x80, 0x80));
-                case 47:
-                    return new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0));
-                default:
-                    return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00));
+                return star;
+            }
+            set
+            {
+                star = value;
+                NotifyPropertyChanged("Star");
             }
         }
-        
+
+        /// <summary>
+        /// 已刪除文章
+        /// </summary>
+        public bool Deleted
+        {
+            get
+            {
+                return deleted;
+            }
+            set
+            {
+                deleted = value;
+                NotifyPropertyChanged("Deleted");
+            }
+        }
+
+        /// <summary>
+        /// 推噓數
+        /// </summary>
+        public int Like
+        {
+            get
+            {
+                return like;
+            }
+            set
+            {
+                like = value;
+                NotifyPropertyChanged("Like");
+            }
+        }
+
+        /// <summary>
+        /// 文章日期
+        /// </summary>
+        public DateTimeOffset Date
+        {
+            get
+            {
+                return date;
+            }
+            set
+            {
+                date = value;
+                NotifyPropertyChanged("Date");
+            }
+        }
+
+        /// <summary>
+        /// 文章作者
+        /// </summary>
+        public string Author
+        {
+            get
+            {
+                return author;
+            }
+            set
+            {
+                author = value;
+                NotifyPropertyChanged("Author");
+            }
+        }
+
+        /// <summary>
+        /// 文章作者(匿名)
+        /// </summary>
+        public string AuthorNickname
+        {
+            get
+            {
+                return authorNick;
+            }
+            set
+            {
+                authorNick = value;
+                NotifyPropertyChanged("AuthorNickname");
+            }
+        }
+
+        /// <summary>
+        /// 文章分類 
+        /// </summary>
+        public string Category
+        {
+            get
+            {
+                return category;
+            }
+            set
+            {
+                category = value;
+                NotifyPropertyChanged("Category");
+            }
+        }
+
+        /// <summary>
+        /// 文章標題
+        /// </summary>
+        public string Title
+        {
+            get
+            {
+                return title;
+            }
+            set
+            {
+                title = value;
+                NotifyPropertyChanged("Title");
+            }
+        }
+
+        public string InnerTitle
+        {
+            get
+            {
+                return innerTitle;
+            }
+            set
+            {
+                innerTitle = value;
+                NotifyPropertyChanged("InnerTitle");
+            }
+        }
+
+        /// <summary>
+        /// 文章類型
+        /// </summary>
+        public ArticleType Type
+        {
+            get
+            {
+                return atype;
+            }
+            set
+            {
+                atype = value;
+                NotifyPropertyChanged("Type");
+            }
+        }
+
+        /// <summary>
+        /// P幣數
+        /// </summary>
+        public int PttCoin
+        {
+            get
+            {
+                return coin;
+            }
+            set
+            {
+                coin = value;
+                NotifyPropertyChanged("PttCoin");
+            }
+        }
+
+        /// <summary>
+        /// 網頁版連結
+        /// </summary>
+        public Uri WebUri
+        {
+            get
+            {
+                return uri;
+            }
+            set
+            {
+                uri = value;
+                NotifyPropertyChanged("WebUri");
+            }
+        }
+
+        /// <summary>
+        /// 文章狀態
+        /// </summary>
+        public ReadState State
+        {
+            get
+            {
+                return rstate;
+            }
+            set
+            {
+                rstate = value;
+                NotifyPropertyChanged("State");
+            }
+        }
+
+
+        private uint id;
+        private string aid;
+        private int star;
+        private bool deleted;
+        private int like;
+        private DateTimeOffset date;
+        private string author;
+        private string authorNick;
+        private string category;
+        private string title;
+        private string innerTitle;
+        private ArticleType atype;
+        private int coin;
+        private Uri uri;
+        private ReadState rstate;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         public int CompareTo(Article other)
         {
@@ -282,265 +523,4 @@ namespace LiPTT
             }
         }
     }
-
-    public class ArticleCollection : ObservableCollection<Article>, ISupportIncrementalLoading
-    {
-        private BoardInfo boardInfo;
-
-        public BoardInfo BoardInfo
-        {
-            get { return boardInfo; }
-            set
-            {
-                boardInfo = value;
-                var a = LiPTT.RunInUIThread(() => { OnPropertyChanged(new PropertyChangedEventArgs("BoardInfo")); });
-            }
-        }
-
-        public int StarCount { get; set; }
-
-        public IAsyncOperation<LoadMoreItemsResult> LoadMoreItemsAsync(uint count)
-        {
-            return InnerLoadMoreItemsAsync(count).AsAsyncOperation();
-        }
-
-        private async Task<LoadMoreItemsResult> InnerLoadMoreItemsAsync(uint count)
-        {
-            if (CurrentIndex == 0)
-            {
-                HasMoreItems = false;
-            }
-            else if(!reading)
-            {
-                reading = true;
-
-                await Task.Run(() => {
-                    LiPTT.PttEventEchoed += ReadBoard_EventEchoed;
-                    LiPTT.SendMessage(CurrentIndex.ToString(), 0x0D);
-                });
-            }
-
-            return new LoadMoreItemsResult { Count = CurrentIndex };
-        }
-
-        private bool reading;
-
-        private void ReadBoard_EventEchoed(PTTProvider sender, LiPttEventArgs e)
-        {
-            if (e.State == PttState.Board)
-            {
-                ReadBoard(e.Screen);
-            }
-        }
-
-        private void ReadBoard(ScreenBuffer screen)
-        {
-            Regex regex;
-            Match match;
-            string str;
-            int star = StarCount + 1;
-            /////////////////////////////
-            ///文章
-            ///
-            uint id = uint.MaxValue;
-
-            var x = screen.ToStringArray();
-
-            for (int i = 22; i >= 3; i--)
-            {
-                Article article = new Article();
-
-                //ID流水號
-                str = screen.ToString(i, 0, 8);
-
-                if (str.IndexOf('★') != -1)
-                {
-                    article.ID = uint.MaxValue;
-                    article.Star = star++;
-                    StarCount = article.Star;
-                }
-                else
-                {
-                    match = new Regex(@"\d+").Match(str);
-                    if (match.Success)
-                    {
-                        id = Convert.ToUInt32(str.Substring(match.Index, match.Length));
-                        article.ID = id;
-
-                        if (id > CurrentIndex) continue;
-
-                        else if (id == CurrentIndex) CurrentIndex = article.ID - 1;
-                        else //id 被遮住
-                        {
-                            article.ID = CurrentIndex;
-                            CurrentIndex = article.ID - 1;
-                        }
-                        //
-                        //if (this.Any(x => x.ID == article.ID)) continue;
-                    }
-                }
-
-                //推文數
-                str = screen.ToString(i, 9, 2);
-
-                if (str[0] == '爆')
-                {
-                    article.Like = 100;
-                }
-                else if (str[0] == 'X')
-                {
-                    if (str[1] == 'X')
-                    {
-                        article.Like = -100;
-                    }
-                    else
-                    {
-                        article.Like = Convert.ToInt32(str[1].ToString());
-                        article.Like = -article.Like * 10;
-                    }
-                }
-                else
-                {
-                    regex = new Regex(@"(\d+)");
-                    match = regex.Match(str);
-                    if (match.Success) article.Like = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                    else article.Like = 0;
-                }
-
-                //ReadType
-                char c = (char)screen[i][8].Content;
-                article.ReadType = LiPTT.GetReadType(c);
-                
-                //日期
-                str = screen.ToString(i, 11, 5);
-                try
-                {
-                    article.Date = DateTimeOffset.Parse(str);
-                }
-                catch(Exception ex)
-                {
-                    Debug.WriteLine(str + ex.ToString());
-                }
-
-                //作者
-                str = screen.ToString(i, 17, 13).Replace('\0', ' ');
-                regex = new Regex(@"[\w\S]+");
-                match = regex.Match(str);
-                if (match.Success) article.Author = str.Substring(match.Index, match.Length);
-
-                //文章類型
-                str = screen.ToString(i, 30, 2).Replace('\0', ' ');
-                if (str.StartsWith("R:")) article.Type = ArticleType.回覆;
-                else if (str.StartsWith("□")) article.Type = ArticleType.一般;
-                else if (str.StartsWith("轉")) article.Type = ArticleType.轉文;
-                else article.Type = ArticleType.無;
-                str = screen.ToString(i, 30, screen.Width - 30).Replace('\0', ' ');
-
-                //是否被刪除?
-                if (article.Author == "-") article.Deleted = true;
-                else article.Deleted = false;
-
-                if (article.Deleted)
-                {
-                    article.Title = str;
-                    regex = new Regex(@"\[\S+\]");
-                    match = regex.Match(str);
-                    if (match.Success)
-                    {
-                        //刪除的人
-                        article.Author = str.Substring(match.Index + 1, match.Length - 2);
-                        article.Title = "(本文已被刪除)";
-                    }
-                    else
-                    {
-                        //被其他人刪除
-                        regex = new Regex(@"\(已被\S+刪除\)");
-                        match = regex.Match(str);
-                        if (match.Success)
-                        {
-                            article.Author = str.Substring(match.Index + 3, match.Length - 6);
-                        }
-                        article.Title = str.Substring(1);
-                    }
-                }
-                else
-                {
-                    //標題, 分類
-                    regex = new Regex(@"[\u005b\uff3b]+?[\w\s]+[\u005d\uff3d]+?");
-                    match = regex.Match(str);
-                    if (match.Success)
-                    {
-                        article.Category = str.Substring(match.Index + 1, match.Length - 2).Trim();
-                        str = str.Substring(match.Index + match.Length);
-                        int k = 0;
-                        while (k < str.Length && str[k] == ' ') k++;
-                        int j = str.Length - 1;
-                        while (j >= 0 && str[j] == ' ') j--;
-                        if (k <= j) article.Title = str.Substring(k, j - k + 1);
-                    }
-                    else
-                    {
-                        article.Title = str.Substring(2);
-                    }
-                }
-
-                var action = LiPTT.RunInUIThread(() =>
-                {
-                    this.Add(article);
-                });
-            }
-
-            LiPTT.PttEventEchoed -= ReadBoard_EventEchoed;
-            reading = false;
-        }
-
-        /// <summary>
-        /// 當前位置
-        /// </summary>
-        public uint CurrentIndex;
-
-        public ArticleCollection()
-        {
-            CurrentIndex = uint.MaxValue;
-            StarCount = 0;
-            //locker = new SemaphoreSlim(1, 1);
-            BoardInfo = new BoardInfo();
-
-            this.CollectionChanged += ArticleCollection_CollectionChanged;
-        }
-
-        private void ArticleCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-                foreach (Article item in e.NewItems)
-                    item.PropertyChanged += MyType_PropertyChanged;
-
-            if (e.OldItems != null)
-                foreach (Article item in e.OldItems)
-                    item.PropertyChanged -= MyType_PropertyChanged;
-        }
-
-        private void MyType_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            NotifyCollectionChangedEventArgs args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, sender, sender, IndexOf((Article)sender));
-
-            var t = LiPTT.RunInUIThread(() =>
-            {
-                OnCollectionChanged(args);
-            });
-        }
-
-        private bool more;
-
-        public bool HasMoreItems
-        {
-            get
-            {
-                if (!reading) return more;
-                else return false;
-            }
-            set { more = value; }
-        }
-    }
-
 }

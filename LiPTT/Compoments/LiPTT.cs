@@ -63,6 +63,8 @@ namespace LiPTT
         //private const string http_exp = @"((http|https)://([A-Za-z0-9_]+:{0,1}[A-Za-z0-9_]*@)?([A-Za-z0-9_#!:.?+=&%@!-/$^,;|*~'()]+)(:[0-9]+)?(/|/([A-Za-z0-9_#!:.?+=&%@!-/]))?)|(pid://(\d{1,10}))";
         //private const string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w-./?%&=]*)?";
 
+        public const string bracket_regex = @"[\u005b\uff3b\u300a]+?[\w\s]+[\u005d\uff3d\u300b]+?";
+
         /// <summary>
         /// 當前連線物件
         /// </summary>
@@ -153,7 +155,7 @@ namespace LiPTT
             get; set;
         }
 
-        public static ArticleCollection ArticleCollection
+        public static BoardContentCollection ArticleCollection
         {
             get; set;
         }
@@ -371,13 +373,15 @@ namespace LiPTT
             }
             else
             {
-                Debug.WriteLine("這裡是哪裡?");
-
+#if DEBUG
+                StringBuilder sb = new StringBuilder();
+                sb.Append("這裡是哪裡?\n");
                 foreach (string s in Current.Screen.ToStringArray())
                 {
-                    Debug.WriteLine(s);
+                    sb.AppendFormat("{0}\n", s);
                 }
-
+                Debug.WriteLine(sb.ToString());
+#endif
                 State = PttState.Angel;
             }
 
@@ -491,12 +495,14 @@ namespace LiPTT
 
         public static void Right()
         {
-            Current.Send(new byte[] { 0x1B, 0x5B, 0x43 }); //ESC[C
+            //Current.Send(new byte[] { 0x1B, 0x5B, 0x43 }); //ESC[C
+            Current.Send(0x72); //r
         }
 
         public static void Left()
         {
-            Current.Send(new byte[] { 0x1B, 0x5B, 0x44 }); //ESC[D
+            //Current.Send(new byte[] { 0x1B, 0x5B, 0x44 }); //ESC[D
+            Current.Send(0x71); //q
         }
 
         public static void PageDown()
@@ -569,30 +575,57 @@ namespace LiPTT
             task.Wait();
         }
 
-        public static ReadType GetReadType(char readtype)
+        public static ReadState GetReadSate(char state)
         {
-            switch (readtype)
+            switch (state)
             {
                 case '+':
-                    return ReadType.無;
+                    return ReadState.無;
                 case 'M':
-                    return ReadType.被標記;
+                    return ReadState.被標記;
                 case 'S':
-                    return ReadType.待處理;
+                    return ReadState.待處理;
                 case 'm':
-                    return ReadType.已讀 | ReadType.被標記;
+                    return ReadState.已讀 | ReadState.被標記;
                 case 's':
-                    return ReadType.已讀 | ReadType.待處理;
+                    return ReadState.已讀 | ReadState.待處理;
                 case '!':
-                    return ReadType.被鎖定;
+                    return ReadState.被鎖定;
                 case '~':
-                    return ReadType.有推文;
+                    return ReadState.有推文;
                 case '=':
-                    return ReadType.有推文 | ReadType.被標記;
+                    return ReadState.有推文 | ReadState.被標記;
                 case ' ':
-                    return ReadType.已讀;
+                    return ReadState.已讀;
                 default:
-                    return ReadType.未定義;
+                    return ReadState.未定義;
+            }
+        }
+
+        public static string GetBoardNick(string name)
+        {
+            switch (name)
+            {
+                case "Gossiping":
+                    return "八卦";
+                case "LoL":
+                    return "LOL";
+                case "C_Sharp":
+                    return "C#";
+                case "StupidClown":
+                    return "笨板";
+                case "GirlsFront":
+                    return "少女前線";
+                case "Windows":
+                    return "Windows";
+                case "Soft_Job":
+                    return "軟體工作板";
+                case "Beauty":
+                    return "表特";
+                case "PC_Shopping":
+                    return "電蝦";
+                default:
+                    return "☐☐";
             }
         }
 

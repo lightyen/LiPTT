@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using System.Threading.Tasks;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
@@ -23,23 +21,22 @@ using System.Runtime.CompilerServices;
 namespace LiPTT
 {
     //https://docs.microsoft.com/en-us/windows/uwp/debug-test-perf/listview-and-gridview-data-optimization
+
     public sealed partial class BoardPage : Page, INotifyPropertyChanged
     {
-
         public BoardPage()
         {
-            this.InitializeComponent();
-            LiPTT.ArticleCollection = ArticleListView.ItemsSource as ArticleCollection;
-            this.DataContext = this;
+            InitializeComponent();
+            DataContext = this;
+            LiPTT.ArticleCollection = ContentCollection;
         }
 
-        private bool hasBoardInfo = false;
-
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            Debug.WriteLine(">>載入新看板");
-
-            if (!hasBoardInfo) ReadBoardInfomation();
+            ControlVisible = Visibility.Collapsed;
+            //冷靜一下，先喝杯咖啡
+            await Task.Delay(100);
+            ReadBoardInfomation();
             //追蹤剪貼簿
             //Clipboard.ContentChanged += Clipboard_ContentChanged;
 
@@ -65,8 +62,6 @@ namespace LiPTT
             Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
         }
 
-        int star;
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
@@ -76,56 +71,35 @@ namespace LiPTT
 
         private bool control_visible;
 
-        public bool ControlVisible
+        public Visibility ControlVisible
         {
-            get { return control_visible; }
+            get {
+                if (control_visible)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
             private set
             {
-                control_visible = value;
+                if (value == Visibility.Visible)
+                    control_visible = true;
+                else
+                    control_visible = false;
                 NotifyPropertyChanged("ControlVisible");
+                NotifyPropertyChanged("RingActive");
             }
         }
 
-        private bool CheckBoard()
+        public bool RingActive
         {
-            if (LiPTT.State == PttState.Board)
+            get
             {
-                ScreenBuffer screen = LiPTT.Screen;
-
-                string str = screen.ToString(0);
-
-                //本版名稱
-                string board_name = "";
-                Regex regex = new Regex(@"(看板《[\w\S]+》)");
-                Match match = regex.Match(str);
-                if (match.Success)
-                {
-                    board_name = str.Substring(match.Index + 3, match.Length - 4);
-                }
-
-                if (board_name == LiPTT.ArticleCollection?.BoardInfo.Name) return true;
-                else return false;
+                return !control_visible;
             }
-            else
-            {
-                var x = LiPTT.Screen.ToStringArray();
-                Debug.WriteLine("到底是哪裡?");
-                return false;
-            }
-            
-        }
-
-        private void UpdateUI()
-        {
-            var act = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-            {
-                //ArticleList.ItemsSource = LiPTT.ArticleCollection;
-            });
         }
 
         private void ReadBoardInfomation()
         {
-            ControlVisible = false;
             LiPTT.PttEventEchoed += ReadBoardInfo;
             LiPTT.PressI();
         }
@@ -134,14 +108,17 @@ namespace LiPTT
         {
             if (e.State == PttState.BoardInfomation)
             {
-                var Board = new BoardInfo();
+                LiPTT.PttEventEchoed -= ReadBoardInfo;
+
+                var Board = new Board();
 
                 //看板名稱
                 string str = e.Screen.ToString(3);
-                Match match = new Regex(@"(《[\w\S]+》)").Match(str);
+                Match match = new Regex(LiPTT.bracket_regex).Match(str);
                 if (match.Success)
                 {
                     Board.Name = str.Substring(match.Index + 1, match.Length - 2);
+                    Board.Nick = LiPTT.GetBoardNick(Board.Name);
                 }
 
                 //看板分類 中文敘述
@@ -176,198 +153,28 @@ namespace LiPTT
                     catch { Debug.WriteLine(str.Substring(match.Index, match.Length)); }
                 }
 
-                LiPTT.ArticleCollection.BoardInfo = Board;
-                hasBoardInfo = true;
-
+                //總是重新載入
+                var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    ContentCollection.Clear();
+                    ContentCollection.Board = Board;
+                });
+                LiPTT.PttEventEchoed += InitBoard;
                 LiPTT.PressAnyKey();
-            }
-            else if (hasBoardInfo && e.State == PttState.Board)
-            {
-                LiPTT.PttEventEchoed -= ReadBoardInfo;
-                Initialize(LiPTT.Screen);
             }
         }
 
-        private void Initialize(ScreenBuffer screen)
+        private void InitBoard(PTTProvider sender, LiPttEventArgs e)
         {
-            Regex regex;
-            Match match;
-            string str;
-            star = 0;
-            uint id = 0;
-
-            ArticleCollection ArticleCollection = LiPTT.ArticleCollection;
-
-            var x = screen.ToStringArray();
-
-            IAsyncAction action;
-
-            //人氣
-            str = screen.ToString(2);
-            regex = new Regex(@"\d+");
-            match = regex.Match(str);
-
-            if (match.Success)
+            if (e.State == PttState.Board)
             {
-                int popu = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                ArticleCollection.BoardInfo.Popularity = popu;
-            }
-
-            /////////////////////////////
-            ///置底文 and 其他文章
-            ///
-
-            action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => 
-            {
-                ArticleCollection.Clear();
-            });
-            
-
-
-            for (int i = 22; i >= 3; i--)
-            {
-                Article article = new Article();
-
-                //ID流水號
-                str = screen.ToString(i, 0, 8);
-                regex = new Regex(@"(\d+)");
-                match = regex.Match(str);
-
-                if (match.Success)
+                LiPTT.PttEventEchoed -= InitBoard;
+                var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    article.ID = id = Convert.ToUInt32(str.Substring(match.Index, match.Length));
-                }
-                else if (str.IndexOf('★') != -1)
-                {
-                    article.ID = uint.MaxValue;
-                    article.Star = star++;
-                    ArticleCollection.StarCount = article.Star;
-                }
-                else
-                {
-                    continue;
-                }
-
-                //推文數
-                str = screen.ToString(i, 9, 2);
-
-                if (str[0] == '爆')
-                {
-                    article.Like = 100;
-                }
-                else if (str[0] == 'X')
-                {
-                    if (str[1] == 'X')
-                    {
-                        article.Like = -100;
-                    }
-                    else
-                    {
-                        article.Like = Convert.ToInt32(str[1].ToString());
-                        article.Like = -article.Like * 10;
-                    }
-                }
-                else
-                {
-                    regex = new Regex(@"(\d+)");
-                    match = regex.Match(str);
-                    if (match.Success) article.Like = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                    else article.Like = 0;
-                }
-
-                //ReadType
-                char c = (char)screen[i][8].Content;
-                article.ReadType = LiPTT.GetReadType(c);
-
-                //日期
-                str = screen.ToString(i, 11, 5);
-                try
-                {
-                    article.Date = DateTimeOffset.Parse(str);
-                }
-                catch
-                {
-                    continue;
-                }
-
-                //作者
-                str = screen.ToString(i, 17, 13).Replace('\0', ' ');
-                regex = new Regex(@"[\w\S]+");
-                match = regex.Match(str);
-                if (match.Success) article.Author = str.Substring(match.Index, match.Length);
-
-                //文章類型
-                str = screen.ToString(i, 30, 2).Replace('\0', ' ');
-                if (str.StartsWith("R:")) article.Type = ArticleType.回覆;
-                else if (str.StartsWith("□")) article.Type = ArticleType.一般;
-                else if (str.StartsWith("轉")) article.Type = ArticleType.轉文;
-                else article.Type = ArticleType.無;
-                str = screen.ToString(i, 30, screen.Width - 30).Replace('\0', ' ');
-
-                //是否被刪除?
-                if (article.Author == "-") article.Deleted = true;
-                else article.Deleted = false;
-
-                if (article.Deleted)
-                {
-                    article.Title = str;
-                    regex = new Regex(@"\[\S+\]");
-                    match = regex.Match(str);
-                    if (match.Success)
-                    {
-                        //刪除的人
-                        article.Author = str.Substring(match.Index + 1, match.Length - 2);
-                        article.Title = "(本文已被刪除)";
-                    }
-                    else
-                    {
-                        //被其他人刪除
-                        regex = new Regex(@"\(已被\S+刪除\)");
-                        match = regex.Match(str);
-                        if (match.Success)
-                        {
-                            article.Author = str.Substring(match.Index + 3, match.Length - 6);
-                        }
-                        article.Title = str.Substring(1);
-                    }
-                }
-                else
-                {
-                    //標題, 分類
-                    regex = new Regex(@"[\u005b\uff3b]+?[\w\s]+[\u005d\uff3d]+?");
-                    match = regex.Match(str);
-                    if (match.Success)
-                    {
-                        article.Category = str.Substring(match.Index + 1, match.Length - 2).Trim();
-                        str = str.Substring(match.Index + match.Length);
-                        int k = 0;
-                        while (k < str.Length && str[k] == ' ') k++;
-                        int j = str.Length - 1;
-                        while (j >= 0 && str[j] == ' ') j--;
-                        if (k <= j) article.Title = str.Substring(k, j - k + 1);
-                    }
-                    else
-                    {
-                        article.Title = str.Substring(2);
-                    }
-                }
-
-                action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    ArticleCollection.Add(article);
+                    ContentCollection.BeginLoad();
+                    ControlVisible = Visibility.Visible;
                 });
             }
-
-            if (id > 1)
-            {
-                ArticleCollection.CurrentIndex = id - 1;
-                ArticleCollection.HasMoreItems = true;
-            }
-
-            action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                ControlVisible = true;
-            });
         }
 
         //進入文章
@@ -405,7 +212,7 @@ namespace LiPTT
 
         private void GoBack()
         {
-            hasBoardInfo = false;
+            if (!control_visible) return;
             LiPTT.Left();
             LiPTT.Frame.Navigate(typeof(MainFunctionPage));
         }
@@ -488,6 +295,8 @@ namespace LiPTT
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         }
 
+        int star;
+
         private Article ParseArticleTag(Block[] b)
         {
             string str;
@@ -545,39 +354,7 @@ namespace LiPTT
 
             //ReadType
             char c = (char)b[8].Content;
-            switch (c)
-            {
-                case '+':
-                    article.ReadType = ReadType.無;
-                    break;
-                case 'M':
-                    article.ReadType = ReadType.被標記;
-                    break;
-                case 'S':
-                    article.ReadType = ReadType.待處理;
-                    break;
-                case 'm':
-                    article.ReadType = ReadType.已讀 | ReadType.被標記;
-                    break;
-                case 's':
-                    article.ReadType = ReadType.已讀 | ReadType.待處理;
-                    break;
-                case '!':
-                    article.ReadType = ReadType.被鎖定;
-                    break;
-                case '~':
-                    article.ReadType = ReadType.有推文;
-                    break;
-                case '=':
-                    article.ReadType = ReadType.有推文 | ReadType.被標記;
-                    break;
-                case ' ':
-                    article.ReadType = ReadType.已讀;
-                    break;
-                default:
-                    article.ReadType = ReadType.未定義;
-                    break;
-            }
+            article.State = LiPTT.GetReadSate(c);
 
             //日期
             str = LiPTT.GetString(b, 11, 5);
@@ -705,14 +482,14 @@ namespace LiPTT
                 {
                     LiPTT.CurrentArticle = article;
 
-                    var b = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    var b = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         LiPTT.Frame.Navigate(typeof(ArticlePage));
                     });
 
                 }
 
-                var action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     SearchIDTextBox.Text = "";
                 });

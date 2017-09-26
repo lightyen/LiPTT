@@ -531,7 +531,7 @@ namespace LiPTT
             {
                 hyperlinkVisible = false;
             }
-            else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a") == -1)
+            else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a/") == -1)
             {
                 hyperlinkVisible = false;
             }
@@ -863,7 +863,7 @@ namespace LiPTT
                 {
                     CreateView = true;
                 }
-                else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a") == -1)
+                else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a/") == -1)
                 {
                     CreateView = true;
                 }
@@ -902,7 +902,7 @@ namespace LiPTT
             {
                 string str = uri.OriginalString;
 
-                if (str.IndexOf("imgur.com/a") == -1)
+                if (str.IndexOf("imgur.com/a/") == -1)
                 {
                     Match match = new Regex("imgur.com").Match(str);
 

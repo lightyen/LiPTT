@@ -5,7 +5,7 @@
     xmlns:local="using:LiPTT"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d" NavigationCacheMode="Disabled" >
+    mc:Ignorable="d" NavigationCacheMode="Disabled">
     <Page.Resources>
         <local:ArticleContentCollection x:Key="ContentCollection" x:Name="ContentCollection" />
         <local:ArticleHeaderConverter x:Key="ArticleHeaderConverter" />
@@ -113,7 +113,7 @@
                         </Style>
                     </ListView.ItemContainerStyle>
                     <ListView.Header>
-                        <StackPanel Background="#0A0A0A" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章開頭" />
+                        <StackPanel Background="#000000" HorizontalAlignment="Stretch" Height="10" ToolTipService.ToolTip="文章開頭" />
                     </ListView.Header>
                     <ListView.Footer>
                         <StackPanel Background="{ThemeResource SystemControlHighlightListLowBrush}" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章結尾" />

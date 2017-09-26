@@ -87,22 +87,21 @@ namespace LiPTT
 
             ContentCollection.BeginLoaded += (a, b) => {
                 if (ListVW.Items.Count > 0) ListVW.ScrollIntoView(ListVW.Items[0]);
+                Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
+                Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             };
 
             LoadingExtraData = false;
             pressAny = false;
 
             LiPTT.PttEventEchoed += ReadAIDandExtra;
-            LiPTT.Right();
-
-            Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
-            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+            LiPTT.Right();            
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-            Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
+            Window.Current.CoreWindow.PointerPressed -= ArticlePage_PointerPressed;
         }
 
         private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
@@ -149,12 +148,27 @@ namespace LiPTT
             }
         }
 
-        private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
+        private bool PressRight = false;
+
+        private void ArticlePage_PointerPressed(CoreWindow sender, PointerEventArgs args)
         {
             if (EchoDialog.Showing) return;
 
-            if (args.CurrentPoint.Properties.IsRightButtonPressed == true)
+            if (PressRight == false && args.CurrentPoint.Properties.IsRightButtonPressed)
             {
+                Debug.WriteLine("Article PressRight");
+                PressRight = true;
+                Window.Current.CoreWindow.PointerReleased += ArticlePage_PointerReleased;
+            }
+        }
+
+        private void ArticlePage_PointerReleased(CoreWindow sender, PointerEventArgs args)
+        {
+            if (PressRight)
+            {
+                PressRight = false;
+                Window.Current.CoreWindow.PointerPressed -= ArticlePage_PointerPressed;
+                Window.Current.CoreWindow.PointerReleased -= ArticlePage_PointerReleased;
                 GoBack();
             }
         }
@@ -267,7 +281,7 @@ namespace LiPTT
 
         private void GoBack()
         {
-            if (!control_visible && !ContentCollection.InitialLoaded && ContentCollection.Loading && LiPTT.ArticleCollection != null) return;
+            if (!control_visible && !ContentCollection.InitialLoaded && ContentCollection.Loading && LiPTT.ArticleCollection != null || LiPTT.Frame.CurrentSourcePageType != typeof(ArticlePage)) return;
 
             if (back) return;
             back = true;

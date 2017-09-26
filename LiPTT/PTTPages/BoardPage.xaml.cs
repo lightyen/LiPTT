@@ -51,8 +51,6 @@ namespace LiPTT
             //追蹤剪貼簿
             //Clipboard.ContentChanged += Clipboard_ContentChanged;
 
-            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
-            Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -173,6 +171,8 @@ namespace LiPTT
                 {
                     ContentCollection.BeginLoad();
                     ControlVisible = Visibility.Visible;
+                    Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+                    Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
                 });
             }
         }
@@ -212,15 +212,12 @@ namespace LiPTT
 
         private void GoBack()
         {
-            if (!control_visible) return;
+            if (!control_visible || LiPTT.Frame.CurrentSourcePageType != typeof(BoardPage)) return;
             LiPTT.Left();
             LiPTT.Frame.Navigate(typeof(MainFunctionPage));
         }
 
-        private void GoLeft(object sender, RoutedEventArgs e)
-        {
-            GoBack();
-        }
+        private bool pressRight = false;
 
         private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
         {
@@ -285,8 +282,23 @@ namespace LiPTT
 
         private void Board_PointerPressed(CoreWindow sender, PointerEventArgs args)
         {
-            if (args.CurrentPoint.Properties.IsRightButtonPressed)
+            if (pressRight == false && args.CurrentPoint.Properties.IsRightButtonPressed)
+            {
+                Debug.WriteLine("PressRight");
+                pressRight = true;
+                Window.Current.CoreWindow.PointerReleased += Board_PointerReleased;
+            }
+        }
+
+        private void Board_PointerReleased(CoreWindow sender, PointerEventArgs args)
+        {
+            if (pressRight)
+            {
+                pressRight = false;
+                Window.Current.CoreWindow.PointerPressed -= Board_PointerPressed;
+                Window.Current.CoreWindow.PointerReleased -= Board_PointerReleased;
                 GoBack();
+            }
         }
 
         private void SearchIDTextBox_LostFocus(object sender, RoutedEventArgs e)

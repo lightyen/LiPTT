@@ -35,6 +35,7 @@ namespace LiPTT
             cache_filename = new List<string>();
             cache_task = new Dictionary<Uri, Task<StorageFile>>();
             semaphoreSlim = new SemaphoreSlim(1, 1);
+            Task.Run(async () => { await ClearAllCache(); });
         }
 
         public async Task ClearAllCache()

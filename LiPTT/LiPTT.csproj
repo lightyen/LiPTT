@@ -20,7 +20,7 @@
     <PackageCertificateKeyFile>LiPTT_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxBundle>Always</AppxBundle>
-    <AppxBundlePlatforms>x64</AppxBundlePlatforms>
+    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
     <PackageCertificateThumbprint>6AD15F935CEBDDCAF2598F1FB1B8876E04769D7A</PackageCertificateThumbprint>
   </PropertyGroup>

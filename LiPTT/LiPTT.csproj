@@ -109,6 +109,9 @@
     </Compile>
     <Compile Include="Compoments\Article.cs" />
     <Compile Include="Compoments\Board.cs" />
+    <Compile Include="Compoments\EchoContentDialog.xaml.cs">
+      <DependentUpon>EchoContentDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Compoments\VisualTreeHelperExtensions.cs" />
     <Compile Include="Compoments\Collections.cs" />
     <Compile Include="Compoments\Converters.cs" />
@@ -222,6 +225,10 @@
     <Page Include="ColorPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Compoments\EchoContentDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="CustomSwapChainPanel.xaml">
       <SubType>Designer</SubType>

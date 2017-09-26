@@ -89,7 +89,7 @@
                                                 <Run Text="  " />
                                                 <Run Text="{x:Bind AuthorNickname}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=16}" Foreground="DarkCyan" />
                                                 <Run Text="  " />
-                                                <Run Text="{x:Bind Date, Converter={StaticResource MyDateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:MM/dd HH:ss}'}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=20}" Foreground="Aquamarine" />
+                                                <Run Text="{x:Bind Date, Converter={StaticResource MyDateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:yyyy MMMM dd dddd HH:mm:ss}'}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=20}" Foreground="Aquamarine" />
                                             </Paragraph>
                                         </RichTextBlock>
                                     </StackPanel>

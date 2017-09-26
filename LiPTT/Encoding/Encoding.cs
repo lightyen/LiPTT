@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading.Tasks;
-
 using Windows.Storage;
 using System.Diagnostics;
 
@@ -23,7 +21,7 @@ namespace LiPTT
         public static Encoding GetEncoding(string name)
         {
             string ln = name.ToLower();
-            if (ln == "big5-uao" || name == "big5_uao" || name == "big5 uao")
+            if (ln == "big5-uao" || ln == "big5_uao" || ln == "big5 uao")
             {
                 if (big5_uao == null) big5_uao = new Big5_UAO();
                 return big5_uao;
@@ -63,7 +61,7 @@ namespace LiPTT
             try
             {
                 //https://moztw.org/docs/big5/table/uao250-b2u.txt
-                var file_b2u = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Encoding//b2u_table.txt"));
+                var file_b2u = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Encoding/b2u_table.txt"));
 
                 using (var inputStream = await file_b2u.OpenReadAsync())
                 using (var classicStream = inputStream.AsStreamForRead())
@@ -90,7 +88,7 @@ namespace LiPTT
                     }
                 }
 
-                var file_u2b = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Encoding//u2b_table.txt"));
+                var file_u2b = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Encoding/u2b_table.txt"));
 
                 using (var inputStream = await file_u2b.OpenReadAsync())
                 using (var classicStream = inputStream.AsStreamForRead())
@@ -219,7 +217,21 @@ namespace LiPTT
 
         public override int GetByteCount(char[] chars, int index, int count)
         {
-            throw new NotImplementedException();
+            int c = 0;
+
+            for (int i = index; i < index + count; i++)
+            {
+                if (chars[i] < 0x7F)
+                {
+                    c++;
+                }
+                else
+                {
+                    c += 2;
+                }
+            }
+
+            return c;
         }
 
         public override int GetCharCount(byte[] bytes, int index, int count)
@@ -247,17 +259,47 @@ namespace LiPTT
 
         public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex)
         {
-            throw new NotImplementedException();
+            int c = 0;
+            int i = byteIndex;
+
+            while (i < byteIndex + byteCount)
+            {
+                if (bytes[i] < 0x7F) //ASCII
+                {
+                    chars[c + charIndex] = (char)bytes[i];
+                    i++;
+                    c++;
+                }
+                else if (i + 2 < byteIndex + byteCount)
+                {
+                    int k = bytes[i++];
+                    k <<= 8;
+                    k += bytes[i++];
+                    try
+                    {
+                        int v = (int)b2u_table[k];
+                        chars[c + charIndex] = (char)v;
+                    }
+                    catch (NullReferenceException)
+                    {
+                        chars[c + charIndex] = '☐';
+                        Debug.WriteLine("找不到編碼? ☐☐☐");
+                    }
+                    c++;
+                }
+            }
+
+            return c;
         }
 
         public override int GetMaxByteCount(int charCount)
         {
-            throw new NotImplementedException();
+            return charCount * 2;
         }
 
         public override int GetMaxCharCount(int byteCount)
         {
-            throw new NotImplementedException();
+            return byteCount;
         }
     }
 }

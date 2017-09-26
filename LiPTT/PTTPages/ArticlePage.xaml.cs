@@ -6,6 +6,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.System;
 using Windows.Foundation.Collections;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -33,10 +34,17 @@ namespace LiPTT
         {
             InitializeComponent();
             DataContext = this;
+            EchoDialog = new EchoContentDialog();
+
+            EchoDialog.PrimaryButtonClick += (a, b) =>
+            {
+                GoBack();
+            };
         }
 
-        private Article article;
+        private EchoContentDialog EchoDialog { get; set; }
 
+        private Article article;
 
         private bool control_visible;
 
@@ -97,8 +105,14 @@ namespace LiPTT
             Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
         }
 
-        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
         {
+            if (EchoDialog.Showing) return;
+            
+            bool Control_Down = (Window.Current.CoreWindow.GetKeyState(VirtualKey.Control) & CoreVirtualKeyStates.Down) != 0;
+            bool Shift_Down = (Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift) & CoreVirtualKeyStates.Down) != 0;
+            bool CapsLocked = (Window.Current.CoreWindow.GetKeyState(VirtualKey.CapitalLock) & CoreVirtualKeyStates.Locked) != 0;
+
             var scrollviewer = GetScrollViewer(ListVW);
 
             switch (args.VirtualKey)
@@ -121,11 +135,24 @@ namespace LiPTT
                 case VirtualKey.Escape:
                     GoBack();
                     break;
+                default:
+                    if (Shift_Down ^ CapsLocked)
+                    {
+                        switch (args.VirtualKey)
+                        {
+                            case VirtualKey.X:
+                                await EchoDialog.ShowAsync();
+                                break;
+                        }
+                    }
+                    break;
             }
         }
 
-        private void CoreWindow_PointerPressed(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.PointerEventArgs args)
+        private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
         {
+            if (EchoDialog.Showing) return;
+
             if (args.CurrentPoint.Properties.IsRightButtonPressed == true)
             {
                 GoBack();

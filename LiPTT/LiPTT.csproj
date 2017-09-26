@@ -211,6 +211,7 @@
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
     <Content Include="Templates\imgur\imgur.html" />
+    <Content Include="Templates\twitch\twitch.html" />
     <Content Include="Templates\youtube\blank.html" />
     <Content Include="Templates\youtube\sample.html" />
     <Content Include="Templates\youtube\sample_ex.html" />

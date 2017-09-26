@@ -34,8 +34,6 @@ namespace LiPTT
         /// </summary>
         public double Space { get; set; }
 
-        //public double ViewWidth { get; set; }
-
         public ActualSizePropertyProxy ListViewProxy { get; set; }
 
         public Article ArticleTag
@@ -1117,8 +1115,6 @@ namespace LiPTT
                 AddYoutubeView(youtubeID);
             }
         }
-
-        ///#1PoaSW6h
 
         /// <summary>
         /// 下載圖片，並加入到ListView

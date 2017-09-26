@@ -559,20 +559,7 @@ namespace LiPTT
             }
 
             //判斷Uri是否要顯示出來
-            bool hyperlinkVisible = true;
-
-            if (IsPictureUri(uri))
-            {
-                hyperlinkVisible = false;
-            }
-            else if (IsYoutubeUri(uri))
-            {
-                hyperlinkVisible = false;
-            }
-            else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a/") == -1)
-            {
-                hyperlinkVisible = false;
-            }
+            bool hyperlinkVisible = !IsUriView(uri);
 
             //插入超連結
             if (hyperlinkVisible)
@@ -643,6 +630,30 @@ namespace LiPTT
                 RichTextBlock = null;
                 CreateUriView(uri);
             }             
+        }
+
+        private bool IsUriView(Uri uri)
+        {
+            bool view = false;
+
+            if (IsPictureUri(uri))
+            {
+                view = true;
+            }
+            else if (IsYoutubeUri(uri))
+            {
+                view = true;
+            }
+            else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a/") == -1)
+            {
+                view = true;
+            }
+            else if (uri.Host == "i.imgur.com" && uri.OriginalString.IndexOf("i.imgur.com/a/") == -1)
+            {
+                view = true;
+            }
+
+            return view;
         }
 
         private void AddText(Block[] blocks, int index, string text)
@@ -734,20 +745,8 @@ namespace LiPTT
         private bool AddHyperlink(Uri uri)
         {
             //判斷Uri是否要顯示出來
-            bool hyperlinkVisible = true;
+            bool hyperlinkVisible = !IsUriView(uri);
 
-            if (IsPictureUri(uri))
-            {
-                hyperlinkVisible = false;
-            }
-            else if (IsYoutubeUri(uri))
-            {
-                hyperlinkVisible = false;
-            }
-            else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a/") == -1)
-            {
-                hyperlinkVisible = false;
-            }
 
             //插入超連結
             if (hyperlinkVisible)
@@ -1067,6 +1066,28 @@ namespace LiPTT
                     if (match.Success)
                     {
                         str = str.Insert(match.Index, "i.");
+                        str += ".png";
+                        Uri new_uri = new Uri(str);
+
+                        ProgressRing ring = new ProgressRing() { IsActive = true, Width = 55, Height = 55 };
+                        Grid grid = new Grid() { Width = ViewWidth * (1 - Space), Height = 0.5625 * ViewWidth * (1 - Space), Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
+                        grid.Children.Add(ring);
+                        Add(grid);
+
+                        DownloadPictureTasks.Add(CreateImageView(Count - 1, new_uri));
+                    }
+                }
+            }
+            else if (uri.Host == "i.imgur.com")
+            {
+                string str = uri.OriginalString;
+
+                if (str.IndexOf("i.imgur.com/a/") == -1)
+                {
+                    Match match = new Regex("i.imgur.com").Match(str);
+
+                    if (match.Success)
+                    {
                         str += ".png";
                         Uri new_uri = new Uri(str);
 

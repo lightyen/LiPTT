@@ -277,6 +277,7 @@ namespace LiPTT
             {
                 sshClient = new SshClient(conInfo);
                 sshClient.Connect();
+                
                 if (sshClient.IsConnected)
                 {
                     isConnected = true;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
@@ -16,11 +15,16 @@ namespace LiPTT
 {
     public class ImageCache
     {
+        /// <summary>
+        /// 還沒實作，先放著
+        /// </summary>
         public TimeSpan CacheDuration { get; set; }
 
         public int MaxMemoryCacheCount { get; set; }
 
         private List<string> cache_filename;
+
+        private Dictionary<Uri, Task<StorageFile>> cache_task;
 
         private SemaphoreSlim semaphoreSlim;
 
@@ -29,6 +33,7 @@ namespace LiPTT
             MaxMemoryCacheCount = 10000;
             CacheDuration = TimeSpan.FromHours(12);
             cache_filename = new List<string>();
+            cache_task = new Dictionary<Uri, Task<StorageFile>>();
             semaphoreSlim = new SemaphoreSlim(1, 1);
         }
 
@@ -86,32 +91,31 @@ namespace LiPTT
 
                 await semaphoreSlim.WaitAsync();
 
-                if (cache_filename.IndexOf(name) != -1)
+                if (cache_task.Keys.Contains(uri))
                 {
-                    semaphoreSlim.Release();
-                    await Task.Delay(2000);
+                    semaphoreSlim.Release();                   
                 }
                 else
                 {
                     cache_filename.Add(name);
+                    cache_task[uri] = DownloadAndGetFile(uri, name);
                     semaphoreSlim.Release();
                 }
 
-                var file = await GetFileFromLocalCache(name);
-
-                if (file == null)
-                {
-                    IBuffer buffer = await GetBufferAsync(uri);
-                    await SaveFile(buffer, name);
-                    file = await GetFileFromLocalCache(name);
-                }
-
-                return await GetBitmapImage(file);
+                var f = await cache_task[uri];
+                return await GetBitmapImage(f);
             }
             else
             {
                 return null;
             }
+        }
+
+        private async Task<StorageFile> DownloadAndGetFile(Uri uri, string name)
+        {
+            IBuffer buffer = await GetBufferAsync(uri);
+            await SaveFile(buffer, name);
+            return await GetFileFromLocalCache(name);
         }
 
         /// <summary>

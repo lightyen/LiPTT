@@ -39,9 +39,7 @@ namespace LiPTT
         public bool MatchPattern(string pattern, int row)
         {
             Regex re = new Regex(pattern);
-
             bool ans = re.Match(Screen.ToString(row)).Success;
-            //if (ans) Debug.WriteLine(string.Format("[{0}]<==>;{1};", pattern, Screen.ToString(row)));
             return ans;
         }
 
@@ -60,8 +58,7 @@ namespace LiPTT
             {
                 first = "";
             }
-            
-            //if (ans) Debug.WriteLine(string.Format("[{0}]<==>;{1};", pattern, Screen.ToString(row)));
+
             return ans;
         }
 
@@ -72,14 +69,5 @@ namespace LiPTT
             if (ans) Debug.WriteLine(string.Format("[{0}]<==>;{1};", pattern, Screen.ToString(Screen.CurrentY - 1)));
             return ans;
         }
-
-        private string ReadLine(int row)
-        {
-            if (row < 1 || row > Screen.Height) return "";
-            byte[] msg = new byte[Screen.Width];
-            for (int j = 0; j < Screen.Width; j++) msg[j] = Screen[row - 1][j].Content;
-            return LiPTT_Encoding.GetEncoding().GetString(msg);
-        }
     }
-
 }

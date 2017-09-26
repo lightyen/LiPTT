@@ -16,7 +16,9 @@
 
 
 
+```
 找不到Nuget的話可以：方案總管=>方案(右鍵)=>還原Nuget套件，然後重開visual Studio
+```
 
 
 
@@ -24,7 +26,7 @@
 
 - [SharpDX](https://github.com/sharpdx/SharpDX)
 
-  在套用傳統的顯示介面時，底層用的是DirectX的DrawText功能，以前稍微有玩過SharpDX，就拿來用了。
+  在套用傳統的顯示介面時，底層用的是DirectX的[DrawText](https://msdn.microsoft.com/en-us/library/windows/desktop/dd371919(v=vs.85).aspx)功能，以前稍微有玩過SharpDX，就拿來用了。
 
   實作這個主要的目的是拿來Debug用。
 
@@ -32,21 +34,21 @@
 
 
 
-- Big5 和 Unicode轉換
+- [Big5](https://zh.wikipedia.org/wiki/%E5%A4%A7%E4%BA%94%E7%A2%BC) 和 [Unicode](http://graphemica.com/)轉換
 
-  參考了PTT的source code，裡面有兩張table，一個是Big5轉Unicode，另一個是Unicode轉Big5，代號是UAO250。
+  參考了[PTT](https://github.com/ptt/pttbbs)的source code，裡面有兩張table，一個是Big5轉Unicode，另一個是Unicode轉Big5，代號是[UAO250](https://moztw.org/docs/big5/)。
 
   ​
 
 - VT100 escape codes與ASCII code
 
-  這邊應該已經不太需要介紹了，就是一直查表查功能、查表查功能......
+  這邊應該已經不太需要介紹了，就是一直查表查功能，在實作的時候隨手握著一張表是必須的。
 
   ​
 
 - [SSH.NET](https://github.com/sshnet/SSH.NET)
 
-  本來是要用來做ssh連線的，但是後來發現我在公司不能用SSH，不知道是不是port被擋還是甚麼被擋。大概是許多公用場所都沒開放吧，所以目前的SSH的功能測試進度先放著，以後再說。(目前我是TCP 連 port 443)
+  本來是要用來做ssh連線的，但是後來發現我在公司不能用SSH，不知道是不是port被擋還是甚麼被擋。大概是許多公用場所都沒開放吧，所以目前的SSH的功能測試進度先放著，以後再說。(目前我是直連 port 443)
 
   ​
 
@@ -58,11 +60,11 @@
 
 - [TSF](https://msdn.microsoft.com/zh-tw/library/windows/desktop/ms629032(v=vs.85).aspx)
 
-  關於中文輸入法的問題我還在研究，先放著。(謎：你富樫？)
+  關於中文輸入法的問題我還在研究，繼續先放著。
 
   ​
 
-- [UWP](https://docs.microsoft.com/en-us/uwp/api/)
+- [UWP](https://docs.microsoft.com/zh-tw/windows/uwp/controls-and-patterns/)
 
   Universal Windows Platform、通用Windows平台，或者你可以叫他Windows Store App。
 
@@ -70,7 +72,7 @@
 
   ​
 
-敝人也是個剛入門的新手，2016年的12月我連Windows API都還不知道是什麼碗糕，初嘗了Windows Form，接著開始寫了WPF的程式，到現在的UWP。我還很年輕很菜，很多事我還是有所經驗不足，請各路大神們不吝嗇指教。(土下座拜師！)
+敝人也是個剛入門的程式新手，2016年的12月我連Windows API都還不知道是什麼碗糕，初嘗了Windows Form，接著開始寫了WPF的程式，到現在的UWP。我目前資歷太淺很菜雞，很多事我還是有所經驗不足，請各路大神們不吝嗇指教。(土下座拜師！)
 
 
 
@@ -82,6 +84,5 @@
 4. 自動推文
 5. UI設計
 6. 歷史紀錄、推文追蹤
-7. 重複圖片載入議題
-8. 文字與媒體自適應視窗大小
-9. Youtube全螢幕
+7. 文字與媒體自適應視窗大小
+8. Youtube全螢幕

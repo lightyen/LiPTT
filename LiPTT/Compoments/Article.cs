@@ -20,7 +20,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml;
-//#1PXU-fck
+
 namespace LiPTT
 {
     public class ArticleContentCollection : ObservableCollection<object>, ISupportIncrementalLoading
@@ -34,7 +34,9 @@ namespace LiPTT
         /// </summary>
         public double Space { get; set; }
 
-        public double ViewWidth { get; set; }
+        //public double ViewWidth { get; set; }
+
+        public ActualSizePropertyProxy ListViewProxy { get; set; }
 
         public Article ArticleTag
         {
@@ -249,6 +251,13 @@ namespace LiPTT
                         {
                             ArticleTag.InnerTitle = tmps.Substring(match.Index + match.Length + 1);
                         }
+                    }
+                    else
+                    {
+                        if (tmps.StartsWith("標題 "))
+                            ArticleTag.InnerTitle = tmps.Substring(3);
+                        else
+                            ArticleTag.InnerTitle = tmps;
                     }
 
                     //時間
@@ -632,6 +641,7 @@ namespace LiPTT
             {
                 System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
                 echo.Date = DateTimeOffset.ParseExact(time, "MM/dd HH:mm", provider);
+                echo.DateFormated = true;
             }
             catch (Exception ex)
             {
@@ -810,14 +820,17 @@ namespace LiPTT
             }
 
             //推文時間////////////////////////////////////////////
-            g3.Children.Add(new TextBlock()
+            if (echo.DateFormated)
             {
-                FontSize = 22,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                VerticalAlignment = VerticalAlignment.Center,
-                Foreground = new SolidColorBrush(Colors.Wheat),
-                Text = echo.Date.ToString("MM/dd HH:mm")
-            });
+                g3.Children.Add(new TextBlock()
+                {
+                    FontSize = 22,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Foreground = new SolidColorBrush(Colors.Wheat),
+                    Text = echo.Date.ToString("MM/dd HH:mm")
+                });
+            }
 
             //////////////////////////////////////////////
             grid.Children.Add(g0);
@@ -825,13 +838,16 @@ namespace LiPTT
             grid.Children.Add(g2);
             grid.Children.Add(g3);
 
+            ToolTip toolTip = new ToolTip() { Content = string.Format("{0}樓", echo.Floor) };
             ListView list = new ListView() { IsItemClickEnabled = true, HorizontalAlignment = HorizontalAlignment.Stretch };
+            ToolTipService.SetToolTip(list, toolTip);
             list.Items.Add(new ListViewItem()
             {
                 Content = grid,
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch,
                 AllowFocusOnInteraction = false,
+                
             });
             Add(list);
 
@@ -870,6 +886,7 @@ namespace LiPTT
                 uri = webResponse.ResponseUri;
             }
             /***/
+            double ViewWidth = ListViewProxy == null ? 0 : ListViewProxy.ActualWidthValue;
 
             if (IsPictureUri(uri))
             {
@@ -879,7 +896,7 @@ namespace LiPTT
                 grid.Children.Add(ring);
                 Add(grid);
 
-                DownloadPictureTasks.Add(CreateImageView(this.Count - 1, uri));
+                DownloadPictureTasks.Add(CreateImageView(Count - 1, uri));
             }
             else if (uri.Host == "imgur.com")
             {
@@ -900,7 +917,7 @@ namespace LiPTT
                         grid.Children.Add(ring);
                         Add(grid);
 
-                        DownloadPictureTasks.Add(CreateImageView(this.Count - 1, new_uri));
+                        DownloadPictureTasks.Add(CreateImageView(Count - 1, new_uri));
                     }
                 }
             }
@@ -922,6 +939,9 @@ namespace LiPTT
             }
         }
 
+        /// <summary>
+        /// 下載圖片，並加入到ListView
+        /// </summary>
         private async Task<DownloadResult> CreateImageView(int index, Uri uri)
         {
             Task<BitmapImage> task = LiPTT.ImageCache.GetFromCacheAsync(uri);
@@ -931,6 +951,8 @@ namespace LiPTT
             Image img = new Image() { Source = bmp, HorizontalAlignment = HorizontalAlignment.Stretch };
 
             double ratio = (double)bmp.PixelWidth / bmp.PixelHeight;
+
+            double ViewWidth = ListViewProxy == null ? 0 : ListViewProxy.ActualWidthValue;
 
             ColumnDefinition c1, c2, c3;
 
@@ -1078,9 +1100,9 @@ namespace LiPTT
 
                 if (match.Success)
                 {
-                    
-                    match = new Regex(@"\d{2}/\d{2} \d{2}:\d{2} *\Z").Match(msg.Replace('\0', ' ').Trim());
-                    if (match.Success) return true;
+                    //match = new Regex(@"\d{2}/\d{2} \d{2}:\d{2} *\Z").Match(msg.Replace('\0', ' ').Trim());
+                    //if (match.Success) return true;
+                    return true;
                 }
             }
             return false;

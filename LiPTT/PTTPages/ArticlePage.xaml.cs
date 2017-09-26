@@ -33,10 +33,6 @@ namespace LiPTT
         {
             InitializeComponent();
             DataContext = this;
-            ArticleHeader.Click += (e, o) =>
-            {
-                Debug.WriteLine("Selected");
-            };
         }
 
         private Article article;
@@ -176,9 +172,9 @@ namespace LiPTT
         {
             var action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
+                ContentCollection.ListViewProxy = ListVW.Resources["proxy"] as ActualSizePropertyProxy;
                 ContentCollection.BeginLoad(LiPTT.CurrentArticle);
                 ArticleHeader.DataContext = LiPTT.CurrentArticle;
-                //ArticleHeaderListBox.Items.Add(LiPTT.CurrentArticle);
                 ControlVisible = Visibility.Visible;
             });
             

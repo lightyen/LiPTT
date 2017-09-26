@@ -457,4 +457,32 @@ namespace LiPTT
             throw new NotImplementedException();
         }
     }
+
+    public class ArticleHeaderConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double height)
+            {
+                try
+                {
+                    double FontSize = double.Parse(parameter as string);
+                    return FontSize * height / 81.6;
+                }
+                catch (Exception)
+                {
+                    return 22.0;
+                }
+            }
+
+            return 22.0;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

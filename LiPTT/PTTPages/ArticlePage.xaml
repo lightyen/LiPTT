@@ -8,7 +8,7 @@
     mc:Ignorable="d" NavigationCacheMode="Disabled" >
     <Page.Resources>
         <local:ArticleContentCollection x:Key="ContentCollection" x:Name="ContentCollection" />
-
+        <local:ArticleHeaderConverter x:Key="ArticleHeaderConverter" />
         <Style x:Key="ListViewStyle1" TargetType="ListView">
             <Setter Property="IsTabStop" Value="False"/>
             <Setter Property="TabNavigation" Value="Once"/>
@@ -63,32 +63,47 @@
             </Grid.ColumnDefinitions>
             <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="1" Visibility="{Binding ControlVisible}">
                 <Button x:Name="ArticleHeader" HorizontalAlignment ="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="Black" BorderThickness="0" Click="ArticleHeader_Click" ToolTipService.ToolTip="前往網頁版">
-                    <Grid HorizontalAlignment="Stretch">
-                        <StackPanel HorizontalAlignment="Stretch">
-                            <RichTextBlock  IsTextSelectionEnabled="True" HorizontalAlignment="Center">
-                                <Paragraph>
-                                    <Run Text="{Binding Type, Converter={StaticResource MyArticleTypeStringFormatConverter}}" FontSize="22" Foreground="{Binding Type, Converter={StaticResource MyArticleTypeColorConverter}}" />
-                                    <Run Text="  " />
-                                    <Run Text="{Binding Category}" FontSize="22" Foreground="DarkSalmon" />
-                                    <Run Text="  " />
-                                    <Run Text="{Binding InnerTitle}" FontSize="26" Foreground="GreenYellow" />
-                                    <LineBreak />
-                                    <Run Text="{Binding Author}" FontSize="24" Foreground="Yellow" />
-                                    <Run Text="  " />
-                                    <Run Text="{Binding AuthorNickname}" FontSize="16" Foreground="DarkCyan" />
-                                    <Run Text="  " />
-                                    <Run Text="{Binding Date, Converter={StaticResource MyDateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:MM/dd HH:ss}'}" FontSize="20" Foreground="Aquamarine" />
-                                </Paragraph>
-                            </RichTextBlock>
-                        </StackPanel>
-                    </Grid>
+                    <Button.Resources>
+                        <local:ActualSizePropertyProxy Element="{Binding ElementName=ArticleHeader}" x:Name="HeaderProxy" />
+                    </Button.Resources>
+                    <ContentControl>
+                        <ContentControl.Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            </Style>
+                        </ContentControl.Style>
+                        <ContentControl.ContentTemplate>
+                            <DataTemplate x:DataType="local:Article">
+                                <Grid HorizontalAlignment="Stretch">
+                                    <StackPanel HorizontalAlignment="Stretch">
+                                        <RichTextBlock  IsTextSelectionEnabled="True" HorizontalAlignment="Center">
+                                            <Paragraph>
+                                                <Run Text="{x:Bind Type, Converter={StaticResource MyArticleTypeStringFormatConverter}}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=22}" Foreground="{x:Bind Type, Converter={StaticResource MyArticleTypeColorConverter}}" />
+                                                <Run Text="  " />
+                                                <Run Text="{x:Bind Category}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=22}" Foreground="DarkSalmon" />
+                                                <Run Text="  " />
+                                                <Run Text="{x:Bind InnerTitle}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=24}" Foreground="GreenYellow" />
+                                                <LineBreak />
+                                                <Run Text="{x:Bind Author}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=24}" Foreground="Yellow" />
+                                                <Run Text="  " />
+                                                <Run Text="{x:Bind AuthorNickname}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=16}" Foreground="DarkCyan" />
+                                                <Run Text="  " />
+                                                <Run Text="{x:Bind Date, Converter={StaticResource MyDateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:MM/dd HH:ss}'}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=20}" Foreground="Aquamarine" />
+                                            </Paragraph>
+                                        </RichTextBlock>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ContentControl.ContentTemplate>
+                    </ContentControl>
                 </Button>
             </Grid>
             <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="3">
                 <ProgressRing IsActive="{Binding RingActive}" Width="100" Height="100" />
             </Grid>
             <Grid Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="ContentGrid"  Visibility="{Binding ControlVisible}">
-                <ListView x:Name="ListVW" ItemsSource="{Binding Source={StaticResource ContentCollection}}" SelectionMode="None">
+                <ListView x:Name="ListVW" ItemsSource="{Binding Source={StaticResource ContentCollection}}" SelectionMode="None" HorizontalAlignment="Stretch">
                     <!--[TextBlock] Text-->
                     <!--[Grid] Youtube or Image-->
                     <!--[ListViewItem] Echoes-->
@@ -97,6 +112,9 @@
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                         </Style>
                     </ListView.ItemContainerStyle>
+                    <ListView.Header>
+                        <StackPanel Background="#0A0A0A" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章開頭" />
+                    </ListView.Header>
                     <ListView.Footer>
                         <StackPanel Background="{ThemeResource SystemControlHighlightListLowBrush}" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章結尾" />
                     </ListView.Footer>

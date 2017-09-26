@@ -31,6 +31,17 @@ namespace LiPTT
             LiPTT.ArticleCollection = ContentCollection;
         }
 
+        private async void Clipboard_ContentChanged(object sender, object e)
+        {
+            DataPackageView dataPackageView = Clipboard.GetContent();
+            if (dataPackageView.Contains(StandardDataFormats.Text))
+            {
+                string text = await dataPackageView.GetTextAsync();
+                // To output the text from this example, you need a TextBlock control
+                Debug.WriteLine("Clipboard now contains: " + text);
+            }
+        }
+
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             ControlVisible = Visibility.Collapsed;
@@ -41,25 +52,14 @@ namespace LiPTT
             //Clipboard.ContentChanged += Clipboard_ContentChanged;
 
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
-            Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
+            Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
         }
 
-        private async void Clipboard_ContentChanged(object sender, object e)
-        {
-            DataPackageView dataPackageView = Clipboard.GetContent();
-            if (dataPackageView.Contains(StandardDataFormats.Text))
-            {
-                string text = await dataPackageView.GetTextAsync();
-                // To output the text from this example, you need a TextBlock control
-                Debug.WriteLine( "Clipboard now contains: " + text);
-            }
-        }
-
-        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             //Clipboard.ContentChanged -= Clipboard_ContentChanged;
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-            Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
+            Window.Current.CoreWindow.PointerPressed -= Board_PointerPressed;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -283,7 +283,7 @@ namespace LiPTT
             }
         }
 
-        private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
+        private void Board_PointerPressed(CoreWindow sender, PointerEventArgs args)
         {
             if (args.CurrentPoint.Properties.IsRightButtonPressed)
                 GoBack();

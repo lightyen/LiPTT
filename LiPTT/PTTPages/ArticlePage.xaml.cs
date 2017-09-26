@@ -263,9 +263,14 @@ namespace LiPTT
             }
         }
 
+        private bool back = false;
+
         private void GoBack()
         {
             if (!control_visible && !ContentCollection.InitialLoaded && ContentCollection.Loading && LiPTT.ArticleCollection != null) return;
+
+            if (back) return;
+            back = true;
             StopVideo();
             LiPTT.PttEventEchoed += PttEventEchoed_UpdateArticleTag;
             LiPTT.Left();

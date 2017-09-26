@@ -10,7 +10,9 @@
 
 
 
-<img src="https://i.imgur.com/5D6hFeB.png"></img>
+<img src="https://i.imgur.com/1XRlB3j.png"></img>
+
+<img src="https://i.imgur.com/RPSJQKG.png"></img>
 
 
 
@@ -80,3 +82,6 @@
 4. 自動推文
 5. UI設計
 6. 歷史紀錄、推文追蹤
+7. 重複圖片載入議題
+8. 文字與媒體自適應視窗大小
+9. Youtube全螢幕

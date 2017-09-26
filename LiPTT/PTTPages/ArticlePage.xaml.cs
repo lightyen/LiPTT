@@ -78,7 +78,7 @@ namespace LiPTT
 
             ControlVisible = Visibility.Collapsed;
             //冷靜一下，先喝杯咖啡
-            await Task.Delay(100);
+            await Task.Delay(50);
             article = LiPTT.CurrentArticle;
 
             ContentCollection.BeginLoaded += (a, b) => {

@@ -20,7 +20,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml;
-
+//#1PXU-fck
 namespace LiPTT
 {
     public class ArticleContentCollection : ObservableCollection<object>, ISupportIncrementalLoading
@@ -33,6 +33,8 @@ namespace LiPTT
         /// 圖片、影片左右留空白，左右各留10%，即0.2
         /// </summary>
         public double Space { get; set; }
+
+        public double ViewWidth { get; set; }
 
         public Article ArticleTag
         {
@@ -50,8 +52,6 @@ namespace LiPTT
             more = false;
             base.ClearItems();
         }
-
-        public double ViewWidth { get; set; }
 
         private static HashSet<string> ShortCutUrlSet = new HashSet<string>()
         {
@@ -87,6 +87,9 @@ namespace LiPTT
 
         private Bound bound;
 
+        /// <summary>
+        /// Load完成。(給ScrollViewer在Load完成後捲到頂部用)
+        /// </summary>
         public event EventHandler BeginLoaded;
 
         private SemaphoreSlim sem = new SemaphoreSlim(0, 1);
@@ -1016,7 +1019,8 @@ namespace LiPTT
             {
                 try
                 {
-                    string returnStr = await webview.InvokeScriptAsync("LoadYoutube", new string[] { youtubeID });
+                    //在WebView裡面執行Javascript, 撒尿牛丸膩?
+                    string returnStr = await webview.InvokeScriptAsync("LoadYoutubeByID", new string[] { youtubeID });
                 }
                 catch (Exception ex)
                 {

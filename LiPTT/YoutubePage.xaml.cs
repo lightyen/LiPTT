@@ -200,12 +200,14 @@ namespace LiPTT
             grid.Children.Add(wwvv);
             /***/
             //MyPanel.Children.Add(grid);
+            ActualSizePropertyProxy po = MyGrid.Resources["proxy"] as ActualSizePropertyProxy;
+
 
             ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Orange) };
             Binding ringBinding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["MyRingRatioConverter"] as RingRatioConverter };
             ring.SetBinding(WidthProperty, ringBinding);
             ring.SetBinding(HeightProperty, ringBinding);
-            WebView wwvv = new WebView() { DefaultBackgroundColor = Colors.Gray };
+            wwvv = new WebView() { DefaultBackgroundColor = Colors.Gray };
 
 
             wwvv.ContentLoading += (a, b) =>
@@ -237,10 +239,14 @@ namespace LiPTT
             wwvv.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube.html"));
         }
 
-        
+        WebView wwvv;
 
         private void StopVideo(object sender, RoutedEventArgs e)
         {
+            if (wwvv != null)
+            { 
+}
+
             string script = @"player.stopVideo();";
             try
             {

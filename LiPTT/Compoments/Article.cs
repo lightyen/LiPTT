@@ -29,6 +29,9 @@ namespace LiPTT
 
         public bool InitialLoaded { get; private set; }
 
+        /// <summary>
+        /// 圖片、影片左右留空白，左右各留10%，即0.2
+        /// </summary>
         public double Space { get; set; }
 
         public Article ArticleTag
@@ -911,6 +914,7 @@ namespace LiPTT
                         break;
                     }
                 }
+
                 AddYoutubeView(youtubeID);
             }
         }
@@ -927,9 +931,7 @@ namespace LiPTT
 
             ColumnDefinition c1, c2, c3;
 
-            double space = 0.2; //也就是佔總寬的80%
-
-            if (bmp.PixelWidth < ViewWidth * (1 - space))
+            if (bmp.PixelWidth < ViewWidth * (1 - Space))
             {
                 c1 = new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) };
                 c2 = new ColumnDefinition { Width = new GridLength(bmp.PixelWidth, GridUnitType.Pixel) };
@@ -937,16 +939,16 @@ namespace LiPTT
             }
             else if (ratio >= 1.0)
             {
-                c1 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
-                c2 = new ColumnDefinition { Width = new GridLength((1 - space), GridUnitType.Star) };
-                c3 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
+                c1 = new ColumnDefinition { Width = new GridLength(Space / 2.0, GridUnitType.Star) };
+                c2 = new ColumnDefinition { Width = new GridLength((1 - Space), GridUnitType.Star) };
+                c3 = new ColumnDefinition { Width = new GridLength(Space / 2.0, GridUnitType.Star) };
             }
             else
             {
-                double x = ratio * (1 - space) / 2.0;
-                c1 = new ColumnDefinition { Width = new GridLength(space / 2.0 + x, GridUnitType.Star) };
-                c2 = new ColumnDefinition { Width = new GridLength((1 - space) * ratio, GridUnitType.Star) };
-                c3 = new ColumnDefinition { Width = new GridLength(space / 2.0 + x, GridUnitType.Star) };
+                double x = ratio * (1 - Space) / 2.0;
+                c1 = new ColumnDefinition { Width = new GridLength(Space / 2.0 + x, GridUnitType.Star) };
+                c2 = new ColumnDefinition { Width = new GridLength((1 - Space) * ratio, GridUnitType.Star) };
+                c3 = new ColumnDefinition { Width = new GridLength(Space / 2.0 + x, GridUnitType.Star) };
             }
 
 
@@ -969,48 +971,65 @@ namespace LiPTT
             return new DownloadResult() { Index = index, Item = ImgGrid };
         }
 
-        private void AddYoutubeView(string youtubeID, double width = 0, double height = 0)
+        private void AddYoutubeView(string youtubeID)
         {
-            double w = width == 0 ? ViewWidth : width;
-            double h = height == 0 ? w * 0.5625 : height;
+            Grid MainGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
 
-            WebView wv = new WebView() { Tag = "YoutubeWebView", DefaultBackgroundColor = Colors.Gray, HorizontalAlignment = HorizontalAlignment.Stretch };
+            ColumnDefinition c1, c2, c3;
 
-            Grid grid = new Grid() { Tag = "Youtube", HorizontalAlignment = HorizontalAlignment.Stretch, Background = new SolidColorBrush(Colors.Red) };
-            Binding binding = new Binding() { RelativeSource = new RelativeSource() { Mode = RelativeSourceMode.Self }, Path = new PropertyPath("Width")};
-            grid.SetBinding(FrameworkElement.HeightProperty, binding);
-            ProgressRing progress = new ProgressRing() { IsActive = true, Width = 50, Height = 50, HorizontalAlignment = HorizontalAlignment.Center, Foreground = new SolidColorBrush(Colors.Orange) };
-            string script = GetYoutubeScript(youtubeID, w, h);
+            c1 = new ColumnDefinition { Width = new GridLength(Space / 2.0, GridUnitType.Star) };
+            c2 = new ColumnDefinition { Width = new GridLength((1 - Space), GridUnitType.Star) };
+            c3 = new ColumnDefinition { Width = new GridLength(Space / 2.0, GridUnitType.Star) };
 
-            wv.ContentLoading += (a, b) =>
+            MainGrid.ColumnDefinitions.Add(c1);
+            MainGrid.ColumnDefinitions.Add(c2);
+            MainGrid.ColumnDefinitions.Add(c3);
+
+            Grid InnerGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
+            InnerGrid.SetValue(Grid.ColumnProperty, 1);
+            MainGrid.Children.Add(InnerGrid);
+
+            Grid youtuGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
+            Binding binding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["MyRatioConverter"] as RatioConverter };
+            youtuGrid.SetBinding(FrameworkElement.HeightProperty, binding);
+            InnerGrid.Children.Add(youtuGrid);
+
+            ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Orange) };
+            Binding ringBinding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["MyRingRatioConverter"] as RingRatioConverter };
+            ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
+            ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
+
+            WebView webview = new WebView { DefaultBackgroundColor = Colors.Black };
+
+            webview.ContentLoading += (a, b) =>
             {
-                wv.Visibility = Visibility.Collapsed;
+                webview.Visibility = Visibility.Collapsed;
             };
 
-            wv.FrameDOMContentLoaded += (a, b) =>
+            webview.FrameDOMContentLoaded += (a, b) =>
             {
-                progress.IsActive = false;
-                wv.Visibility = Visibility.Visible;
+                ring.IsActive = false;
+                webview.Visibility = Visibility.Visible;
             };
 
-            wv.DOMContentLoaded += async (a, b) =>
+            webview.DOMContentLoaded += async (a, b) =>
             {
                 try
                 {
-                    string returnStr = await wv.InvokeScriptAsync("eval", new string[] { script });
+                    string returnStr = await webview.InvokeScriptAsync("LoadYoutube", new string[] { youtubeID });
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine("Script Error" + ex.ToString() + script);
+                    Debug.WriteLine("Script Error" + ex.ToString());
                 }
             };
 
-            grid.Children.Add(wv);
-            grid.Children.Add(progress);
-            Add(grid);
-            wv.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube.html"));
-        }
+            youtuGrid.Children.Add(webview);
+            youtuGrid.Children.Add(ring);
 
+            Add(MainGrid);
+            webview.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube.html"));
+        }
 
         private bool IsPictureUri(Uri uri)
         {
@@ -1061,15 +1080,6 @@ namespace LiPTT
                 }
             }
             return false;
-        }
-
-        private string GetYoutubeScript(string YoutubeID, double width, double height)
-        {
-            string script = "function onYouTubeIframeAPIReady() { var player = new YT.Player('player', { height: '@Height', width: '@Width', videoId: '@YoutubeID'}); }";
-            script = script.Replace("@YoutubeID", YoutubeID);
-            script = script.Replace("@Width", ((int)Math.Round(width)).ToString());
-            script = script.Replace("@Height", ((int)Math.Round(height)).ToString());
-            return script;
         }
 
         private int CountBlocks(string msg, int index, int length)
@@ -1174,6 +1184,5 @@ namespace LiPTT
                     return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00));
             }
         }
-
     }
 }

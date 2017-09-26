@@ -212,7 +212,7 @@
     <Content Include="Templates\youtube\sample.html" />
     <Content Include="Templates\youtube\sample_ex.html" />
     <Content Include="Templates\youtube\youtube.html" />
-    <Content Include="Templates\youtube\youtube_ex.html" />
+    <Content Include="Templates\youtube\youtube_.html" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">

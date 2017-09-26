@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Data;
 
 namespace LiPTT
 {
@@ -522,6 +524,102 @@ namespace LiPTT
                 else if (other.ID == uint.MaxValue) return 1;
                 else return 0;
             }
+        }
+    }
+
+    public class ActualSizePropertyProxy : FrameworkElement, INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public FrameworkElement Element
+        {
+            get { return (FrameworkElement)GetValue(ElementProperty); }
+            set { SetValue(ElementProperty, value); }
+        }
+
+        public double ActualHeightValue
+        {
+            get { return Element == null ? 0 : Element.ActualHeight; }
+        }
+
+        public double ActualWidthValue
+        {
+            get { return Element == null ? 0 : Element.ActualWidth; }
+        }
+
+        public static readonly DependencyProperty ElementProperty =
+            DependencyProperty.Register("Element", typeof(FrameworkElement), typeof(ActualSizePropertyProxy),
+                                        new PropertyMetadata(null, OnElementPropertyChanged));
+
+        private static void OnElementPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((ActualSizePropertyProxy)d).OnElementChanged(e);
+        }
+
+        private void OnElementChanged(DependencyPropertyChangedEventArgs e)
+        {
+            FrameworkElement oldElement = (FrameworkElement)e.OldValue;
+            FrameworkElement newElement = (FrameworkElement)e.NewValue;
+
+            newElement.SizeChanged += new SizeChangedEventHandler(Element_SizeChanged);
+            if (oldElement != null)
+            {
+                oldElement.SizeChanged -= new SizeChangedEventHandler(Element_SizeChanged);
+            }
+
+            NotifyPropertyChanged("ActualWidthValue");
+            NotifyPropertyChanged("ActualHeightValue");
+        }
+
+        private void Element_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            NotifyPropertyChanged("ActualWidthValue");
+            NotifyPropertyChanged("ActualHeightValue");
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+    public class RatioConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double width)
+            {
+                return (1-0.2) * width * 0.5625;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class RingRatioConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double width)
+            {
+                return width * 0.075;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
         }
     }
 }

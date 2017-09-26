@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -13,7 +14,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using System.Diagnostics;
 using Windows.UI.Xaml.Navigation;
-
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Windows.UI.ViewManagement;
 
 using System.Text;
@@ -149,36 +151,73 @@ namespace LiPTT
             return script;
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
             //string html = GetYoutubeIframeHtml("Bvojzrq9Ad4", myWebView.ActualWidth, myWebView.ActualHeight, true);
             //string html = "https://forum.gamer.com.tw/A.php?bsn=60030";
             //myWebView.NavigateToString(GGG());
 
             //MyPanel.Children.Clear();
+            //https://stackoverflow.com/questions/1602148/binding-to-actualwidth-does-not-work
+            Grid MainGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch, Background = new SolidColorBrush(Colors.Gray) };
 
-            WebView wwvv = new WebView() { DefaultBackgroundColor = Windows.UI.Colors.Gray };
+            ColumnDefinition c1, c2, c3;
 
+            double space = 0.2; //也就是佔總寬的80%
 
+            c1 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
+            c2 = new ColumnDefinition { Width = new GridLength((1 - space), GridUnitType.Star) };
+            c3 = new ColumnDefinition { Width = new GridLength(space / 2.0, GridUnitType.Star) };
+
+            MainGrid.ColumnDefinitions.Add(c1);
+            MainGrid.ColumnDefinitions.Add(c2);
+            MainGrid.ColumnDefinitions.Add(c3);
+
+            Grid InnerGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch, Background = new SolidColorBrush(Colors.Black) };     
+            InnerGrid.SetValue(Grid.ColumnProperty, 1);
+            MainGrid.Children.Add(InnerGrid);
+
+            Grid youtuGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
+            youtuGrid.SetBinding(HeightProperty, new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["MyRatioConverter"] as RatioConverter });
+            InnerGrid.Children.Add(youtuGrid);
+
+            MyGrid.Children.Add(MainGrid);
+            /***
             Grid grid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch,};
 
             Binding bind = new Binding()
             {
-                RelativeSource = new RelativeSource() { Mode = RelativeSourceMode.Self},
+                RelativeSource = new RelativeSource() { Mode = RelativeSourceMode.TemplatedParent },
                 Path = new PropertyPath("ActualWidth"),
                 Mode = BindingMode.OneWay,
             };
 
             grid.SetBinding(HeightProperty, bind);
 
-            ProgressRing ring = new ProgressRing() { IsActive = true };
+            
           
 
             grid.Children.Add(wwvv);
-
+            /***/
             //MyPanel.Children.Add(grid);
 
-            
+            ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Orange) };
+            Binding ringBinding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["MyRingRatioConverter"] as RingRatioConverter };
+            ring.SetBinding(WidthProperty, ringBinding);
+            ring.SetBinding(HeightProperty, ringBinding);
+            WebView wwvv = new WebView() { DefaultBackgroundColor = Colors.Gray };
+
+
+            wwvv.ContentLoading += (a, b) =>
+            {
+                wwvv.Visibility = Visibility.Collapsed;
+            };
+
+            wwvv.FrameDOMContentLoaded += (a, b) =>
+            {
+                ring.IsActive = false;
+                wwvv.Visibility = Visibility.Visible;
+            };
 
             wwvv.DOMContentLoaded += async (a, b) =>
             {
@@ -192,10 +231,10 @@ namespace LiPTT
                 }
             };
 
+            youtuGrid.Children.Add(wwvv);
+            youtuGrid.Children.Add(ring);
 
-            wwvv.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube_ex.html"));
-
-
+            wwvv.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube.html"));
         }
 
         

@@ -100,6 +100,9 @@
                     <ListView.Footer>
                         <StackPanel Background="{ThemeResource SystemControlHighlightListLowBrush}" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章結尾" />
                     </ListView.Footer>
+                    <ListView.Resources>
+                        <local:ActualSizePropertyProxy Element="{Binding ElementName=ListVW}" x:Name="proxy" />
+                    </ListView.Resources>
                 </ListView>
             </Grid>
         </Grid>

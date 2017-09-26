@@ -18,5 +18,7 @@
         <local:EchoEvaluationColorConverter x:Key="MyEchoEvaluationColorConverter" />
         <local:EchoContentConverter x:Key="MyEchoContentConverter"/>
         <local:PopularityColorConverter x:Key="MyPopularityColorConverter" />
+        <local:RatioConverter x:Key="MyRatioConverter" />
+        <local:RingRatioConverter x:Key="MyRingRatioConverter" />
     </Application.Resources>
 </Application>

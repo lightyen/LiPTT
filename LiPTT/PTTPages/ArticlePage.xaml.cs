@@ -38,7 +38,7 @@ namespace LiPTT
 
             EchoDialog.PrimaryButtonClick += (a, b) =>
             {
-                GoBack();
+                //GoBack();
             };
         }
 

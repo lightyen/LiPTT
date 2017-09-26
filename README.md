@@ -22,6 +22,10 @@
 
 
 
+LiPTT取名並沒有什麼特別的含意，只是拿我的ID前兩個英文字母塞進去而已(笑。
+
+
+
 > ## 相依性
 
 - [SharpDX](https://github.com/sharpdx/SharpDX)

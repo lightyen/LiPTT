@@ -16,7 +16,7 @@
     </ContentDialog.Resources>
 
     <StackPanel VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Width="Auto">
-        <TextBlock TextWrapping="Wrap" Text="施工中......"/>
+        <TextBlock TextWrapping="Wrap" Text="道路施工中......"/>
         <TextBox Name="EchoTextBox" Header=""/>
         <StackPanel HorizontalAlignment="Stretch">
             <RelativePanel>

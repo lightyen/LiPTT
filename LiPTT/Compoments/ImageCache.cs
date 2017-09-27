@@ -22,7 +22,9 @@ namespace LiPTT
 
         public int MaxMemoryCacheCount { get; set; }
 
-        private List<string> cache_filename;
+        private List<Uri> cache_file_uri;
+
+        private Dictionary<Uri, Guid> guid_table;
 
         private Dictionary<Uri, Task<StorageFile>> cache_task;
 
@@ -32,7 +34,8 @@ namespace LiPTT
         {
             MaxMemoryCacheCount = 10000;
             CacheDuration = TimeSpan.FromHours(12);
-            cache_filename = new List<string>();
+            cache_file_uri = new List<Uri>();
+            guid_table = new Dictionary<Uri, Guid>();
             cache_task = new Dictionary<Uri, Task<StorageFile>>();
             semaphoreSlim = new SemaphoreSlim(1, 1);
             Task.Run(async () => { await ClearAllCache(); });
@@ -52,12 +55,13 @@ namespace LiPTT
 
         private async Task ClearCache(int num)
         {
-            if (num <= cache_filename.Count)
+            if (num <= cache_file_uri.Count)
             {
                 for (int i = 0; i < num; i++)
                 {
-                    string name = cache_filename.First();
-                    cache_filename.Remove(name);
+                    Uri uri = cache_file_uri.First();
+                    string name = guid_table[uri].ToString();
+                    cache_file_uri.Remove(uri);
                     try
                     {
                         StorageFile file = await ApplicationData.Current.LocalCacheFolder.GetFileAsync(name);
@@ -77,39 +81,27 @@ namespace LiPTT
         /// <param name="uri">遠端位址</param>
         public async Task<BitmapImage> GetFromCacheAsync(Uri uri)
         {
-            if (cache_filename.Count == MaxMemoryCacheCount)
+            if (cache_file_uri.Count == MaxMemoryCacheCount)
             {
                 await ClearCache(MaxMemoryCacheCount / 2);
             }
 
-            string path = uri.LocalPath;
+            await semaphoreSlim.WaitAsync();
 
-            string[] arr = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries );
-
-            if (arr.Length > 0)
+            if (cache_task.Keys.Contains(uri))
             {
-                string name = arr.Last();
-
-                await semaphoreSlim.WaitAsync();
-
-                if (cache_task.Keys.Contains(uri))
-                {
-                    semaphoreSlim.Release();                   
-                }
-                else
-                {
-                    cache_filename.Add(name);
-                    cache_task[uri] = DownloadAndGetFile(uri, name);
-                    semaphoreSlim.Release();
-                }
-
-                var f = await cache_task[uri];
-                return await GetBitmapImage(f);
+                semaphoreSlim.Release();
             }
             else
             {
-                return null;
+                cache_file_uri.Add(uri);
+                guid_table[uri] = Guid.NewGuid();
+                cache_task[uri] = DownloadAndGetFile(uri, guid_table[uri].ToString());
+                semaphoreSlim.Release();
             }
+
+            var f = await cache_task[uri];
+            return await GetBitmapImage(f);
         }
 
         private async Task<StorageFile> DownloadAndGetFile(Uri uri, string name)

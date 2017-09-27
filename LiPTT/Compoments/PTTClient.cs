@@ -9,7 +9,9 @@ using System.IO;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 using System.Diagnostics;
-
+//https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_servers
+//https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications
+//https://docs.microsoft.com/zh-tw/windows/uwp/networking/websockets
 namespace LiPTT
 {
     public class ScreenEventArgs : EventArgs

@@ -30,11 +30,12 @@
 	<body>
 
     <div class="auto-resizable-iframe">
-    	<iframe id="frame" src="https://www.youtube.com/embed/" frameborder="0" allowfullscreen></iframe>
+    	<iframe id="frame" frameborder="0" src="https://www.youtube.com/embed/" allowfullscreen>
+		</iframe>
     </div>
 
 	<script type="text/javascript">
-		function LoadYoutubeByID(youtuID)
+		function LoadVideoByID(youtuID)
 		{
 			var frame = document.getElementById('frame');
 			frame.src += youtuID;

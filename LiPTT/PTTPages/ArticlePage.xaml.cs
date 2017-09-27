@@ -262,17 +262,10 @@ namespace LiPTT
             {
                 if (o is Grid grid)
                 {
-                    if ((string)(grid.Tag) == "Youtube")
+                    if (GetUIElement<WebView>(grid) is WebView view)
                     {
-                        foreach (object e in grid.Children)
-                        {
-                            if (e is WebView youtu)
-                            {
-                                youtu.Navigate(new Uri("ms-appx-web:///Templates/youtube/blank.html"));
-                            }
-                        } 
-                    }
-                    
+                        view.Navigate(new Uri("ms-appx-web:///Templates/blank.html"));
+                    }                 
                 }
             }
         }
@@ -322,6 +315,33 @@ namespace LiPTT
                 var act = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
                     article.State = LiPTT.GetReadSate((char)screen.CurrentBlocks[8].Content);
                 });
+            }
+        }
+
+        private DependencyObject GetUIElement<T>(DependencyObject depObj)
+        {
+            try
+            {
+                if (depObj is T)
+                {
+                    return depObj;
+                }
+
+                for (var i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    var child = VisualTreeHelper.GetChild(depObj, i);
+
+                    var result = GetUIElement<T>(child);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
             }
         }
 

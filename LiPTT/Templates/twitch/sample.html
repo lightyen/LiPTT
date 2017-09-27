@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Youtube Web</title>
+		<title>Twitch Web</title>
 		<style type="text/css">
 			body {
 				margin : 0;
@@ -24,23 +24,25 @@
 			  height: 100%;
 			}
 	  </style>
-
 	</head>
 
 	<body>
 
+	<!-- https://dev.twitch.tv/docs/embed#embedding-video-and-clips -->	
+
     <div class="auto-resizable-iframe">
-    	<iframe id="frame" frameborder="0" allowfullscreen></iframe>
+    	<iframe id="frame" frameborder="0" scrolling="no" src="http://player.twitch.tv/" allowfullscreen>
+		</iframe>
     </div>
 
 	<script type="text/javascript">
-		function LoadYoutube(youtuID)
+		function LoadVideoByID(twitchID)
 		{
-			var frame = document.getElementById('frame');
-			frame.src = youtuID;
+			var frame = document.getElementById('frame'); 
+			frame.src += '?channel=' + twitchID + '&autoplay=false';
+			console.log(frame.src);
 		}
-		
-		LoadYoutube('https://www.youtube.com/embed/oXp2oE0xQcE');
+		LoadVideoByID('trackingthepros');
 	</script>
 
 	</body>

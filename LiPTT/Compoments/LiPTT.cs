@@ -317,7 +317,7 @@ namespace LiPTT
                     OnPttEventEchoed(State, pTTProvider.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"任意鍵繼續", 23))
+            else if (Current.MatchPattern(@"任意鍵繼續", 23) || Current.MatchPattern(@"其它任意鍵停止", 23))
             {
                 if (State != PttState.PressAny)
                 {

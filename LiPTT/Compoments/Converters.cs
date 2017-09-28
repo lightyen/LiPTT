@@ -230,7 +230,7 @@ namespace LiPTT
                 }
                 else if (article.State.HasFlag(ReadState.有推文))
                 {
-                    color = Colors.AliceBlue;
+                    color = Colors.Cornsilk;
                 }
                 else if (article.State.HasFlag(ReadState.已讀))
                 {
@@ -242,7 +242,7 @@ namespace LiPTT
                 }
                 else
                 {
-                    color = Colors.Goldenrod;
+                    color = Colors.AliceBlue;
                 }
             }
 

@@ -96,6 +96,7 @@ namespace LiPTT
             {
                 cache_file_uri.Add(uri);
                 guid_table[uri] = Guid.NewGuid();
+                //用GUID當檔名了，我就不信你會衝突
                 cache_task[uri] = DownloadAndGetFile(uri, guid_table[uri].ToString());
                 semaphoreSlim.Release();
             }

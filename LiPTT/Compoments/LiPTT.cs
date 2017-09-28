@@ -66,7 +66,7 @@ namespace LiPTT
         //private const string http_exp = @"((http|https)://([A-Za-z0-9_]+:{0,1}[A-Za-z0-9_]*@)?([A-Za-z0-9_#!:.?+=&%@!-/$^,;|*~'()]+)(:[0-9]+)?(/|/([A-Za-z0-9_#!:.?+=&%@!-/]))?)|(pid://(\d{1,10}))";
         //private const string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w-./?%&=]*)?";
 
-        public const string bracket_regex = @"[\u005b\uff3b\u300a]+?[\w\s]+[\u005d\uff3d\u300b]+?";
+        public const string bracket_regex = @"[\u005b\u003c\uff3b\u300a]{1}[\w\s]+[\u005d\u003e\uff3d\u300b]{1}";
 
         /// <summary>
         /// 當前連線物件

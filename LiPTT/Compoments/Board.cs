@@ -207,25 +207,16 @@ namespace LiPTT
                 if (article.Deleted)
                 {
                     article.Title = str;
-                    regex = new Regex(@"\[\S+\]");
+                    regex = new Regex(LiPTT.bracket_regex);
                     match = regex.Match(str);
+                    string s = str.Substring(1);
                     if (match.Success)
                     {
-                        //刪除的人
                         article.Author = str.Substring(match.Index + 1, match.Length - 2);
-                        article.Title = "(本文已被刪除)";
+                        s = s.Replace(match.ToString(), "");
                     }
-                    else
-                    {
-                        //被其他人刪除
-                        regex = new Regex(@"\(已被\S+刪除\)");
-                        match = regex.Match(str);
-                        if (match.Success)
-                        {
-                            article.Author = str.Substring(match.Index + 3, match.Length - 6);
-                        }
-                        article.Title = str.Substring(1);
-                    }
+                    article.Title = s;
+                    article.Type = ArticleType.無;
                 }
                 else
                 {

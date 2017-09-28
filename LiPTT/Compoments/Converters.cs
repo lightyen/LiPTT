@@ -216,7 +216,7 @@ namespace LiPTT
 
             if (value is Article article)
             {
-                if (article.ID == uint.MaxValue)
+                if (article.ID == uint.MaxValue) //置底
                 {
                     color = Colors.LightSkyBlue;
                 }
@@ -224,9 +224,13 @@ namespace LiPTT
                 {
                     color = Colors.CadetBlue;
                 }
-                else if (article.Deleted)
+                else if (article.Deleted) //已刪除
                 {
                     color = Colors.IndianRed;
+                }
+                else if (Math.Abs(article.Like) > 30)
+                {
+                    color = Colors.Gold;
                 }
                 else if (article.State.HasFlag(ReadState.有推文))
                 {
@@ -236,11 +240,7 @@ namespace LiPTT
                 {
                     color = Colors.Gray;
                 }
-                else if (Math.Abs(article.Like) > 25)
-                {
-                    color = Colors.Gold;
-                }
-                else
+                else //未讀
                 {
                     color = Colors.AliceBlue;
                 }

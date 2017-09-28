@@ -214,7 +214,7 @@ namespace LiPTT
         {
             if (!control_visible || LiPTT.Frame.CurrentSourcePageType != typeof(BoardPage)) return;
             LiPTT.Left();
-            LiPTT.Frame.Navigate(typeof(MainFunctionPage));
+            LiPTT.Frame.Navigate(typeof(PTTPage));
         }
 
         private bool pressRight = false;

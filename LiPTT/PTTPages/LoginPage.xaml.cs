@@ -215,7 +215,7 @@ namespace LiPTT
                     { 
                         var action = LiPTT.RunInUIThread(() =>
                         {
-                            LiPTT.Frame.Navigate(typeof(MainFunctionPage));
+                            LiPTT.Frame.Navigate(typeof(PTTPage));
                         });
 
                         action.AsTask().Wait();

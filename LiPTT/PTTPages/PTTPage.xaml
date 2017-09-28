@@ -1,0 +1,54 @@
+﻿<Page
+    x:Class="LiPTT.PTTPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:LiPTT.PTTPages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Pivot x:Name="pivot" SelectionChanged="Pivot_SelectionChanged" HorizontalContentAlignment="Center">
+            <PivotItem>
+                <PivotItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <SymbolIcon Symbol="Home" Margin="10,10,10,8" />
+                        <TextBlock Text="主功能表" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
+                    </StackPanel>
+                </PivotItem.Header>
+                <Frame />
+            </PivotItem>
+            <PivotItem>
+                <PivotItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
+                        <SymbolIcon Symbol="Favorite" Margin="10,10,10,8" />
+                        <TextBlock Text="我的最愛" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
+                    </StackPanel>
+                </PivotItem.Header>
+                <Frame />
+            </PivotItem>
+            <PivotItem>
+                <PivotItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
+                        <SymbolIcon Symbol="Setting" Margin="10,10,10,8" />
+                        <TextBlock Text="設定" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
+                    </StackPanel>
+                </PivotItem.Header>
+                <Frame />
+            </PivotItem>
+            <PivotItem>
+                <PivotItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
+                        <SymbolIcon Symbol="Bookmarks" Margin="10,10,10,8" />
+                        <TextBlock Text="內建圖標清單" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
+                    </StackPanel>
+                </PivotItem.Header>
+                <Page Loaded="Page_Loaded">
+                    <ScrollViewer>
+                        <StackPanel x:Name="Panel" />
+                    </ScrollViewer>
+                </Page>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+</Page>

@@ -26,11 +26,6 @@
                 </Grid>
 
                 <TextBlock x:Name="State" FontSize="26" Height="60" Text="{Binding State, Source={StaticResource ViewModel}}" />
-                <!--
-                <RelativePanel>
-                    <TextBlock x:Name="ConnectState" FontSize="26" Height="60" Width="150" Text="Read" />
-                </RelativePanel>
-                -->
             </StackPanel>
         </Grid>
     </Grid>

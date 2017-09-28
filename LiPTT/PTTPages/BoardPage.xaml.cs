@@ -47,7 +47,15 @@ namespace LiPTT
             ControlVisible = Visibility.Collapsed;
             //冷靜一下，先喝杯咖啡
             await Task.Delay(100);
-            ReadBoardInfomation();
+            if (LiPTT.CacheBoard)
+            {
+                LiPTT.CacheBoard = false;
+                ControlVisible = Visibility.Visible;
+                Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+                Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
+            }
+            else
+                ReadBoardInfomation();
             //追蹤剪貼簿
             //Clipboard.ContentChanged += Clipboard_ContentChanged;
 

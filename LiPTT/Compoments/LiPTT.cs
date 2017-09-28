@@ -65,7 +65,11 @@ namespace LiPTT
         //private const string http_exp = @"((http|https)://([A-Za-z0-9_]+:{0,1}[A-Za-z0-9_]*@)?([A-Za-z0-9_#!:.?+=&%@!-/$^,;|*~'()]+)(:[0-9]+)?(/|/([A-Za-z0-9_#!:.?+=&%@!-/]))?)|(pid://(\d{1,10}))";
         //private const string http_exp = @"http(s)?://([\w]+\.)+[\w]+(/[\w-./?%&=]*)?";
 
+        /// <summary>
+        /// 判斷括號的正規表示式 // '[' '(' '［' '《' '<'
+        /// </summary>
         public const string bracket_regex = @"[\u005b\u003c\uff3b\u300a]{1}[^\u005b\u003c\uff3b\u300a\u005d\u003e\uff3d\u300b]+[\u005d\u003e\uff3d\u300b]{1}";
+        public const string bound_regex = @"[\u0028]{1}[^\u0028\u0029]+[\u0029]{1}";
 
         public static ScreenBuffer Screen
         {

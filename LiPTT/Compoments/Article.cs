@@ -424,7 +424,7 @@ namespace LiPTT
         {
             if (RichTextBlock == null)
             {
-                RichTextBlock = new RichTextBlock() { Margin = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Left };
+                RichTextBlock = new RichTextBlock() { Margin = new Thickness(0), IsRightTapEnabled = false , HorizontalAlignment = HorizontalAlignment.Left};
                 Paragraph = new Paragraph();
                 RichTextBlock.Blocks.Add(Paragraph);
                 //還不要加到Visual Tree
@@ -442,6 +442,8 @@ namespace LiPTT
                 if (color != b.ForegroundColor)
                 {
                     string text = LiPTT.GetString(blocks, idx, i - idx);
+                    //目前UWP沒有可以畫半個字的API，而且也沒有可以把不同景色的文字放在同一個TextBlock的功能
+                    //因為選字的時候，只有在同一個TextBlock底下才有可能
                     /***
                     InlineUIContainer container = new InlineUIContainer
                     {
@@ -1132,7 +1134,7 @@ namespace LiPTT
         private Bound ReadLineBound(string msg)
         {
             Bound bound = new Bound();
-            Regex regex = new Regex(@"\([\d\s]+%\)");
+            Regex regex = new Regex(LiPTT.bound_regex);
             Match match = regex.Match(msg);
 
             if (match.Success)

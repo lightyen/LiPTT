@@ -228,9 +228,13 @@ namespace LiPTT
                 {
                     color = Colors.IndianRed;
                 }
-                else if (Math.Abs(article.Like) > 29)
+                else if (article.Like > 29)
                 {
                     color = Colors.Gold;
+                }
+                else if (article.Like < -29)
+                {
+                    color = Colors.Crimson;
                 }
                 else if (article.State.HasFlag(ReadState.有推文))
                 {

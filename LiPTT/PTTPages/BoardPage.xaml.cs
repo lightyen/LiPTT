@@ -207,6 +207,8 @@ namespace LiPTT
                 LiPTT.SendMessage(m.ToArray()); 
             }
 
+            searchEnter = false;
+
             LiPTT.Frame.Navigate(typeof(ArticlePage));
         }
 
@@ -263,7 +265,6 @@ namespace LiPTT
                 {
                     if (args.VirtualKey == VirtualKey.Number3 && SearchIDTextBox != FocusManager.GetFocusedElement())
                     {
-                        Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
                         SearchIDTextBox.Text = '#'.ToString();
                         SearchIDTextBox.SelectionStart = 1;
                         SearchIDTextBox.Focus(FocusState.Programmatic);
@@ -271,11 +272,11 @@ namespace LiPTT
                 }
                 else
                 {
-                    Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
                     if (args.VirtualKey >= VirtualKey.Number0 && args.VirtualKey <= VirtualKey.Number9)
                         SearchIDTextBox.Text = ((char)args.VirtualKey).ToString();
                     else
-                        SearchIDTextBox.Text = ((char)(args.VirtualKey - VirtualKey.NumberPad0 + VirtualKey.Number0)).ToString();
+                        SearchIDTextBox.Text = ((args.VirtualKey - VirtualKey.NumberPad0)).ToString();
+
                     SearchIDTextBox.SelectionStart = 1;
                     SearchIDTextBox.Focus(FocusState.Programmatic);
                 }
@@ -305,8 +306,13 @@ namespace LiPTT
 
         private void SearchIDTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+        }
+
+
+        private void SearchIDTextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         }
 
         int star;
@@ -446,6 +452,8 @@ namespace LiPTT
             return article;
         }
 
+        private bool searchEnter = false;
+
         private void SearchIDTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == VirtualKey.Escape)
@@ -478,6 +486,8 @@ namespace LiPTT
             }
         }
 
+        
+
         private void SearchIDEnter(PTTClient sender, LiPttEventArgs e)
         {
             Match match;
@@ -495,6 +505,8 @@ namespace LiPTT
                 if (article != null)
                 {
                     LiPTT.CurrentArticle = article;
+
+                    searchEnter = true;
 
                     var b = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {

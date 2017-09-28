@@ -4,16 +4,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:LiPTT"
     RequestedTheme="Dark">
-    
     <Application.Resources>
-
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Styles.xaml" />
-                <ResourceDictionary Source="Converters.xaml"/>
+                <ResourceDictionary Source="Converters.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            
+            <local:GlobalProperty x:Key="GlobalProperty" />
         </ResourceDictionary>
-        
     </Application.Resources>
-    
 </Application>

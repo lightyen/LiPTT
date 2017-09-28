@@ -6,6 +6,7 @@ using Windows.UI.Xaml.Data;
 using System.Collections.ObjectModel;
 using Windows.Foundation;
 using System.Text.RegularExpressions;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
 using Windows.UI;
@@ -26,7 +27,20 @@ namespace LiPTT
         /// <summary>
         /// 圖片、影片左右留空白，左右各留10%，即0.2
         /// </summary>
-        public double Space { get; set; }
+        public double Space
+        {
+            get
+            {
+                return space;
+            }
+            set
+            {
+                space = value;
+                OnPropertyChanged(new PropertyChangedEventArgs("Space"));
+            }
+        }
+
+        private double space;
 
         public ActualSizePropertyProxy ListViewProxy { get; set; }
 

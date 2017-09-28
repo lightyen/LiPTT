@@ -8,6 +8,9 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <TextBlock Text="還在施工中..." />
+        <StackPanel>
+            <TextBlock Text="還在施工中..." />
+            <Slider Header="Space%" Width="500" HorizontalAlignment="Left" Value="" />
+        </StackPanel>
     </Grid>
 </Page>

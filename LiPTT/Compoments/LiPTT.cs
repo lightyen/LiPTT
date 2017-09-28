@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.ApplicationModel.Core;
@@ -731,6 +733,33 @@ namespace LiPTT
         public ScreenBuffer Screen
         {
             get; set;
+        }
+    }
+
+    public class GlobalProperty : INotifyPropertyChanged
+    {
+        public double Space
+        {
+            get
+            {
+                return space;
+            }
+            set
+            {
+                space = value;
+                NotifyPropertyChanged("Space");
+            }
+        }
+
+        private double space;
+
+
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

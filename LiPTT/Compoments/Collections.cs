@@ -481,7 +481,6 @@ namespace LiPTT
             }
         }
 
-
         private uint id;
         private string aid;
         private int star;

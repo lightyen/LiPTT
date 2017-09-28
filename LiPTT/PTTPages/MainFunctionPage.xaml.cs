@@ -40,25 +40,6 @@ namespace LiPTT
             BoardGridView.Items.Add(new MyKeyValuePair("C# 程式設計", "C_Sharp"));
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            LiPTT.IsExit = false;
-            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
-        }
-
-        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
-        {
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-        }
-
-        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
-        {
-            if (args.VirtualKey == VirtualKey.Escape || args.VirtualKey == VirtualKey.Left)
-            {
-                Exit();
-            }
-        }
-
         List<string> RelatedTable = new List<string>();
 
         private bool searching = false;
@@ -241,22 +222,6 @@ namespace LiPTT
             {
                 LiPTT.PttEventEchoed += GoToBoard;
                 LiPTT.SendMessage('s', kv.Value, 0x0D);
-            }
-        }
-
-        private void Exit()
-        {
-            if (LiPTT.IsExit == false)
-            {
-                LiPTT.IsExit = true;
-                LiPTT.TestConnectionTimer.Stop();
-                LiPTT.KeepAliveTimer.Stop();
-                LiPTT.SendMessage('g', 0x0D, 'y', 0x0D, 0x20);
-
-                //隨便再送一個byte觸發Disconnect
-                LiPTT.PressAnyKey();
-
-                LiPTT.Frame.Navigate(typeof(LoginPage));
             }
         }
     }

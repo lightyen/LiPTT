@@ -16,7 +16,7 @@
                         <TextBlock Text="主功能表" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>
-                <Frame />
+                <Frame x:Name="MainFuncFrame" />
             </PivotItem>
             <PivotItem>
                 <PivotItem.Header>
@@ -25,7 +25,7 @@
                         <TextBlock Text="我的最愛" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>
-                <Frame />
+                <Frame x:Name="FavoriteFrame" />
             </PivotItem>
             <PivotItem>
                 <PivotItem.Header>
@@ -34,20 +34,15 @@
                         <TextBlock Text="設定" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>
-                <Frame />
+                <Frame x:Name="SettingFrame" />
             </PivotItem>
-            <PivotItem>
+            <PivotItem x:Name="symbolPivotItem">
                 <PivotItem.Header>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
                         <SymbolIcon Symbol="Bookmarks" Margin="10,10,10,8" />
                         <TextBlock Text="內建圖標清單" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>
-                <Page Loaded="Page_Loaded">
-                    <ScrollViewer>
-                        <StackPanel x:Name="Panel" />
-                    </ScrollViewer>
-                </Page>
             </PivotItem>
         </Pivot>
     </Grid>

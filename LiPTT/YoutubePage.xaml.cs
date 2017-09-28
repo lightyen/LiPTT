@@ -17,7 +17,7 @@ using Windows.UI.Xaml.Navigation;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.UI.ViewManagement;
-
+using Windows.UI.Xaml.Media.Imaging;
 using System.Text;
 
 //https://developers.google.com/youtube/player_parameters
@@ -35,7 +35,7 @@ namespace LiPTT
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             //PaneThemeTransition
-
+            SvgImageSource source = new SvgImageSource();
         }
 
         private void WebView_ContainsFullScreenElementChanged(WebView sender, object args)

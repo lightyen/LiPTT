@@ -9,11 +9,11 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Pivot x:Name="pivot" SelectionChanged="Pivot_SelectionChanged" HorizontalContentAlignment="Center">
-            
             <PivotItem>
                 <PivotItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <SymbolIcon Symbol="Home" Margin="0,10,10,8" />
+                        <!--<SymbolIcon Symbol="AllApps" Margin="0,10,10,8" />-->
+                        <Image Source="ms-appx:///Icons/view-list-button.svg" Width="27" Height="27" Opacity="0.5" />
                         <TextBlock Text="主功能表" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>
@@ -22,7 +22,8 @@
             <PivotItem>
                 <PivotItem.Header>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
-                        <SymbolIcon Symbol="Favorite" Margin="0,10,10,8" />
+                        <!--<SymbolIcon Symbol="Favorite" Margin="0,10,10,8" />-->
+                        <Image Source="ms-appx:///Icons/favorite-heart-button.svg" Width="27" Height="27" Opacity="0.5" />
                         <TextBlock Text="我的最愛" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>
@@ -31,7 +32,17 @@
             <PivotItem>
                 <PivotItem.Header>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
-                        <SymbolIcon Symbol="Setting" Margin="0,10,10,8" />
+                        <Image Source="ms-appx:///Icons/burn-button.svg" Width="27" Height="27" Opacity="0.5" />
+                        <TextBlock Text="熱門看板" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
+                    </StackPanel>
+                </PivotItem.Header>
+                <Frame x:Name="HotFrame" />
+            </PivotItem>
+            <PivotItem>
+                <PivotItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
+                        <!--<SymbolIcon Symbol="Setting" Margin="0,10,10,8" />-->
+                        <Image Source="ms-appx:///Icons/settings-cogwheel-inside-black-square.svg" Width="27" Height="27" Opacity="0.5" />
                         <TextBlock Text="設定" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>

@@ -23,8 +23,15 @@ using System.Runtime.CompilerServices;
 
 namespace LiPTT
 {
-    public sealed partial class MainFunctionPage : Page
+    public sealed partial class MainFunctionPage : Page, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         public MainFunctionPage()
         {
             this.InitializeComponent();
@@ -38,11 +45,48 @@ namespace LiPTT
             BoardGridView.Items.Add(new MyKeyValuePair("電蝦", "PC_Shopping"));
             BoardGridView.Items.Add(new MyKeyValuePair("少女前線", "GirlsFront"));
             BoardGridView.Items.Add(new MyKeyValuePair("C# 程式設計", "C_Sharp"));
+
+            this.DataContext = this;
         }
 
         List<string> RelatedTable = new List<string>();
 
         private bool searching = false;
+
+        private bool control_visible;
+
+        public Visibility ControlVisible
+        {
+            get
+            {
+                if (control_visible)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+            set
+            {
+                if (value == Visibility.Visible)
+                    control_visible = true;
+                else
+                    control_visible = false;
+                NotifyPropertyChanged("ControlVisible");
+                NotifyPropertyChanged("RingActive");
+            }
+        }
+
+        public bool RingActive
+        {
+            get
+            {
+                return !control_visible;
+            }
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            ControlVisible = Visibility.Visible;
+        }
 
         private void BoardAutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
@@ -218,6 +262,9 @@ namespace LiPTT
 
         private void GridView_ItemClick(object sender, ItemClickEventArgs e)
         {
+            ControlVisible = Visibility.Collapsed;
+
+
             if (e.ClickedItem is MyKeyValuePair kv)
             {
                 LiPTT.PttEventEchoed += GoToBoard;

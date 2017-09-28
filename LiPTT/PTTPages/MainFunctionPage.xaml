@@ -40,8 +40,8 @@
             </Grid>
         </Grid>
         <Grid Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="5">
-            <GridView x:Name="BoardGridView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsItemClickEnabled="True" ItemClick="GridView_ItemClick">
-
+            <ProgressRing x:Name="ring" Width="100" Height="100" IsActive="{x:Bind RingActive}"/>
+            <GridView x:Name="BoardGridView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsItemClickEnabled="True" ItemClick="GridView_ItemClick" Visibility="{x:Bind ControlVisible}">
                 <GridView.ItemContainerStyle>
                     <Style TargetType="GridViewItem">
                         <Setter Property="HorizontalContentAlignment" Value="Center"/>

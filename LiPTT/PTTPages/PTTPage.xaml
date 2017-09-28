@@ -9,10 +9,11 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Pivot x:Name="pivot" SelectionChanged="Pivot_SelectionChanged" HorizontalContentAlignment="Center">
+            
             <PivotItem>
                 <PivotItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <SymbolIcon Symbol="Home" Margin="10,10,10,8" />
+                        <SymbolIcon Symbol="Home" Margin="0,10,10,8" />
                         <TextBlock Text="主功能表" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>
@@ -21,7 +22,7 @@
             <PivotItem>
                 <PivotItem.Header>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
-                        <SymbolIcon Symbol="Favorite" Margin="10,10,10,8" />
+                        <SymbolIcon Symbol="Favorite" Margin="0,10,10,8" />
                         <TextBlock Text="我的最愛" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>
@@ -30,7 +31,7 @@
             <PivotItem>
                 <PivotItem.Header>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
-                        <SymbolIcon Symbol="Setting" Margin="10,10,10,8" />
+                        <SymbolIcon Symbol="Setting" Margin="0,10,10,8" />
                         <TextBlock Text="設定" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>
@@ -39,8 +40,8 @@
             <PivotItem x:Name="symbolPivotItem">
                 <PivotItem.Header>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
-                        <SymbolIcon Symbol="Bookmarks" Margin="10,10,10,8" />
-                        <TextBlock Text="內建圖標清單" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
+                        <SymbolIcon Symbol="Bookmarks" Margin="0,10,10,8" />
+                        <TextBlock Text="Windows內建圖標" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>
             </PivotItem>

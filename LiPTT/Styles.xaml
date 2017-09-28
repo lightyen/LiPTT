@@ -16,7 +16,7 @@
         <Setter Property="Foreground"
                 Value="{ThemeResource PivotHeaderItemForegroundUnselected}" />
         <Setter Property="Padding"
-                Value="{ThemeResource PivotHeaderItemMargin}" />
+                Value="50, 0, 50, 0" />
         <Setter Property="Height"
                 Value="48" />
         <Setter Property="VerticalContentAlignment"

@@ -285,10 +285,10 @@ namespace LiPTT
 
         private void PttEventEchoed_UpdateArticleTag(PTTClient sender, LiPttEventArgs e)
         {
-            LiPTT.PttEventEchoed -= PttEventEchoed_UpdateArticleTag;
-
             if (e.State == PttState.Board)
             {
+                LiPTT.PttEventEchoed -= PttEventEchoed_UpdateArticleTag;
+
                 ReLoadArticleTag(e.Screen);
                 LiPTT.PageEnd();
                 //LiPTT.SendMessage(LiPTT.ArticleCollection.CurrentIndex.ToString(), 0x0D);

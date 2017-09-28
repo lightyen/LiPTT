@@ -51,19 +51,23 @@ namespace LiPTT
 
         private async void Updated(PTTClient sender, LiPttEventArgs e)
         {
+
             switch(e.State)
             {
                 case PttState.MainPage:
                     await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                        MainFuncFrame.Navigate(typeof(MainFunctionPage));
+                        if (pivot_index != pivot.SelectedIndex) MainFuncFrame.Navigate(typeof(MainFunctionPage));
                     });
                     break;
                 case PttState.Favorite:
                     await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                        FavoriteFrame.Navigate(typeof(FavoritePage));
+                        if (pivot_index != pivot.SelectedIndex) FavoriteFrame.Navigate(typeof(FavoritePage));
                     });
                     break;
             }
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                pivot_index = pivot.SelectedIndex;
+            });
         }
 
         private void Exit()
@@ -106,20 +110,21 @@ namespace LiPTT
             }
         }
 
+        private int pivot_index = -1;
+
         private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {       
+        {
             if (pivot.SelectedIndex == 1)
             {
                 LiPTT.GoToFavorite();
             }
             else
             {
-                LiPTT.Left();
+                if (pivot_index == 1) LiPTT.Left();
 
                 switch (pivot.SelectedIndex)
                 {
                     case 2:
-                        LiPTT.Left();
                         SettingFrame.Navigate(typeof(SettingPage));
                         break;
                     case 3:
@@ -135,12 +140,19 @@ namespace LiPTT
 
             foreach (Symbol bol in Enum.GetValues(typeof(Symbol)))
             {
-                
-                AppBarButton button = new AppBarButton() { Icon = new SymbolIcon(bol), Label = bol.ToString(), Foreground = new SolidColorBrush(Windows.UI.Colors.AntiqueWhite) };
+                StackPanel sp = new StackPanel { Width = 100, Height = 100 };
+                sp.Children.Add(new SymbolIcon(bol) {
+                    Foreground = new SolidColorBrush(Windows.UI.Colors.AntiqueWhite),
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    VerticalAlignment = VerticalAlignment.Stretch, Margin = new Thickness(0, 33, 0, 0) });
+                sp.Children.Add(new TextBlock{ Text = bol.ToString(), Foreground = new SolidColorBrush(Windows.UI.Colors.AntiqueWhite), TextAlignment = TextAlignment.Center , HorizontalAlignment = HorizontalAlignment.Stretch});
                 GridViewItem item = new GridViewItem
                 {
-                    Content = button
+                    Content = sp
                 };
+
+
+
                 gridView.Items.Add(item);
             }
 

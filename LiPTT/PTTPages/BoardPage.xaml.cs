@@ -257,22 +257,25 @@ namespace LiPTT
             {
                 GoBack();
             }
-            else if (args.VirtualKey >= VirtualKey.Number0 && args.VirtualKey <= VirtualKey.Number9)
+            else if (args.VirtualKey >= VirtualKey.Number0 && args.VirtualKey <= VirtualKey.Number9 || args.VirtualKey >= VirtualKey.NumberPad0 && args.VirtualKey <= VirtualKey.NumberPad9)
             {
                 if (Shift_Down)
                 {
-                    if (args.VirtualKey == VirtualKey.Number3)
+                    if (args.VirtualKey == VirtualKey.Number3 && SearchIDTextBox != FocusManager.GetFocusedElement())
                     {
                         Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
                         SearchIDTextBox.Text = '#'.ToString();
                         SearchIDTextBox.SelectionStart = 1;
                         SearchIDTextBox.Focus(FocusState.Programmatic);
-                    } 
+                    }
                 }
                 else
                 {
                     Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-                    SearchIDTextBox.Text = ((char)args.VirtualKey).ToString();
+                    if (args.VirtualKey >= VirtualKey.Number0 && args.VirtualKey <= VirtualKey.Number9)
+                        SearchIDTextBox.Text = ((char)args.VirtualKey).ToString();
+                    else
+                        SearchIDTextBox.Text = ((char)(args.VirtualKey - VirtualKey.NumberPad0 + VirtualKey.Number0)).ToString();
                     SearchIDTextBox.SelectionStart = 1;
                     SearchIDTextBox.Focus(FocusState.Programmatic);
                 }

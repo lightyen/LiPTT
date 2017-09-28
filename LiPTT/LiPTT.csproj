@@ -118,7 +118,6 @@
     <Compile Include="Compoments\ImageCache.cs" />
     <Compile Include="Compoments\LiPTT.cs" />
     <Compile Include="Compoments\ColorHelper.cs" />
-    <Compile Include="Compoments\PTTProvider.cs" />
     <Compile Include="Compoments\TSF.cs" />
     <Compile Include="Compoments\ViewModel.cs" />
     <Compile Include="Encoding\Encoding.cs" />
@@ -232,6 +231,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Converters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Page>
     <Page Include="CustomSwapChainPanel.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -265,6 +269,11 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="SplitViewStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Page>
+    <Page Include="Styles.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

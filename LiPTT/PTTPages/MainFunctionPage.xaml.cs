@@ -88,7 +88,7 @@ namespace LiPTT
             }
         }
 
-        private void SearchBoard(PTTProvider sender, LiPttEventArgs e)
+        private void SearchBoard(PTTClient sender, LiPttEventArgs e)
         {
             Regex regex = new Regex(@"([\w-_]+)");
             Match match;
@@ -213,7 +213,7 @@ namespace LiPTT
 
         private bool pressAny = false;
 
-        private void GoToBoard(PTTProvider sender, LiPttEventArgs e)
+        private void GoToBoard(PTTClient sender, LiPttEventArgs e)
         {
             switch (e.State)
             {

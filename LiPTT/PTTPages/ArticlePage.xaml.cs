@@ -177,7 +177,7 @@ namespace LiPTT
 
         private bool pressAny;
 
-        private void ReadAIDandExtra(PTTProvider sender, LiPttEventArgs e)
+        private void ReadAIDandExtra(PTTClient sender, LiPttEventArgs e)
         {
             if (e.State == PttState.Article && !LoadingExtraData)
             {
@@ -198,7 +198,7 @@ namespace LiPTT
             }
         }
 
-        private void BrowseArticle(PTTProvider sender, LiPttEventArgs e)
+        private void BrowseArticle(PTTClient sender, LiPttEventArgs e)
         {
             switch (e.State)
             {
@@ -283,7 +283,7 @@ namespace LiPTT
             LiPTT.Left();
         }
 
-        private void PttEventEchoed_UpdateArticleTag(PTTProvider sender, LiPttEventArgs e)
+        private void PttEventEchoed_UpdateArticleTag(PTTClient sender, LiPttEventArgs e)
         {
             LiPTT.PttEventEchoed -= PttEventEchoed_UpdateArticleTag;
 

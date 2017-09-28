@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -49,7 +50,9 @@ namespace LiPTT
     /// </summary>
     public static class LiPTT
     {
-        private static PTTProvider pTTProvider;
+        private static PTTClient pttClient;
+
+        private static SemaphoreSlim ScreenSemaphore;
 
         public static DispatcherTimer TestConnectionTimer { get; set; }
 
@@ -68,11 +71,11 @@ namespace LiPTT
         /// <summary>
         /// 當前連線物件
         /// </summary>
-        private static PTTProvider Current
+        private static PTTClient Current
         {
             get
             {
-                return pTTProvider;
+                return pttClient;
             }
         }
 
@@ -80,7 +83,7 @@ namespace LiPTT
         {
             get
             {
-                return pTTProvider.Screen;
+                return pttClient.Screen;
             }
         }
 
@@ -88,11 +91,11 @@ namespace LiPTT
         {
             add
             {
-                pTTProvider.Connected += value;
+                pttClient.Connected += value;
             }
             remove
             {
-                pTTProvider.Connected -= value;
+                pttClient.Connected -= value;
             }
         }
 
@@ -100,11 +103,11 @@ namespace LiPTT
         {
             add
             {
-                pTTProvider.Belled += value;
+                pttClient.Belled += value;
             }
             remove
             {
-                pTTProvider.Belled -= value;
+                pttClient.Belled -= value;
             }
         }
 
@@ -112,18 +115,24 @@ namespace LiPTT
         {
             add
             {
-                pTTProvider.ScreenDrawn += value;
+                pttClient.ScreenDrawn += value;
             }
             remove
             {
-                pTTProvider.ScreenDrawn -= value;
+                pttClient.ScreenDrawn -= value;
             }
         }
 
         /// <summary>
         /// 是否連線
         /// </summary>
-        public static bool IsConnected => Current.IsConnected;
+        public static bool IsConnected
+        {
+            get
+            {
+                return pttClient.IsConnectionAlright();
+            }
+        }
 
         public static PttState State { get; set; }
 
@@ -176,10 +185,10 @@ namespace LiPTT
         /// </summary>
         public static void TryConnect()
         {
-            pTTProvider.SSH = false;
+            pttClient.SSH = false;
             if (IsConnected) Current.Disconnect();
             State = PttState.Connecting;
-            OnPttEventEchoed(State, pTTProvider.Screen);
+            OnPttEventEchoed(State, pttClient.Screen);
             Current.ConnectionFailed += HandleConnectionFailed;
             Current.Connected += AddEventHandler;
             Current.Connect();
@@ -189,7 +198,7 @@ namespace LiPTT
         {
             Current.Connected -= AddEventHandler;
             State = PttState.ConnectFailed;
-            OnPttEventEchoed(State, pTTProvider.Screen);
+            OnPttEventEchoed(State, pttClient.Screen);
         }
 
         private static void AddEventHandler(object o, EventArgs e)
@@ -206,28 +215,38 @@ namespace LiPTT
             Current.Kicked -= PTTKicked;
             Current.ScreenUpdated -= Current_ScreenUpdated;
             CurrentArticle = null;
-            OnPttEventEchoed(State, pTTProvider.Screen);
+            OnPttEventEchoed(State, pttClient.Screen);
+        }
+
+        /// <summary>
+        /// 判斷螢幕狀態
+        /// </summary>
+        /// <param name="regex">關鍵字</param>
+        /// <param name="row">從0開始</param>
+        private static bool Match(string regex, int row)
+        {
+            return new Regex(regex).Match(Screen.ToString(row)).Success;
         }
 
         private static void Current_ScreenUpdated(object sender, ScreenEventArgs e)
         {
             Current.ScreenLocker.Wait();
 
-            if (Current.MatchPattern(@"瀏覽", 23))
+            if (Match(@"瀏覽", 23))
             {
                 Debug.WriteLine("瀏覽文章");
                 State = PttState.Article;
-                OnPttEventEchoed(State, pTTProvider.Screen);
+                OnPttEventEchoed(State, pttClient.Screen);
             }
-            else if (Current.MatchPattern(@"您確定要離開", 22))
+            else if (Match(@"您確定要離開", 22))
             {
                 if (State != PttState.Exit)
                 {
                     State = PttState.Exit;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"主功能表", 0))
+            else if (Match(@"主功能表", 0))
             {
                 if (State != PttState.MainPage)
                 {
@@ -242,133 +261,133 @@ namespace LiPTT
 
                     Debug.WriteLine("主功能表");
                     State = PttState.MainPage;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"相關資訊一覽表", 2))
+            else if (Match(@"相關資訊一覽表", 2))
             {
                 Debug.WriteLine("搜尋相關看板");
                 State = PttState.RelatedBoard;
-                OnPttEventEchoed(State, pTTProvider.Screen);
+                OnPttEventEchoed(State, pttClient.Screen);
             }
-            else if (Current.MatchPattern(@"選擇看板", 0))
+            else if (Match(@"選擇看板", 0))
             {
                 Debug.WriteLine("搜尋看板");
                 State = PttState.SearchBoard;
-                OnPttEventEchoed(State, pTTProvider.Screen);
+                OnPttEventEchoed(State, pttClient.Screen);
             }
-            else if (Current.MatchPattern(@"看板設定", 3))
+            else if (Match(@"看板設定", 3))
             {
                 if (State != PttState.BoardInfomation)
                 {
                     Debug.WriteLine("看板資訊");
                     State = PttState.BoardInfomation;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"【板主", 0))
+            else if (Match(@"【板主", 0))
             {
                 Debug.WriteLine("看板");
                 State = PttState.Board;
-                OnPttEventEchoed(State, pTTProvider.Screen);
+                OnPttEventEchoed(State, pttClient.Screen);
             }
-            else if (Current.MatchPattern(@"您想刪除其他重複登入的連線嗎", 22))
+            else if (Match(@"您想刪除其他重複登入的連線嗎", 22))
             {
                 if (State != PttState.AlreadyLogin)
                 {
                     State = PttState.AlreadyLogin;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
 
-            else if (Current.MatchPattern(@"密碼不對或無此帳號", 21))
+            else if (Match(@"密碼不對或無此帳號", 21))
             {
                 if (State != PttState.WrongPassword)
                 {
                     State = PttState.WrongPassword;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
 
             }
-            else if (Current.MatchPattern(@"系統過載", 13))
+            else if (Match(@"系統過載", 13))
             {
                 if (State == PttState.OverLoading)
                 {
                     Debug.WriteLine("系統過載");
                     State = PttState.OverLoading;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"密碼正確", 21))
+            else if (Match(@"密碼正確", 21))
             {
                 if (State != PttState.Accept)
                 {
                     Debug.WriteLine("密碼正確");
                     State = PttState.Accept;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"登入中", 22))
+            else if (Match(@"登入中", 22))
             {
                 if (State != PttState.Loginning)
                 {
                     Debug.WriteLine("登入中");
                     State = PttState.Loginning;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"任意鍵繼續", 23))
+            else if (Match(@"任意鍵繼續", 23))
             {
                 if (State != PttState.PressAny)
                 {
                     Debug.WriteLine("請按任意鍵繼續");
                     State = PttState.PressAny;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"登入太頻繁", 23))
+            else if (Match(@"登入太頻繁", 23))
             {
                 if (State != PttState.LoginSoMany)
                 {
                     Debug.WriteLine("登入太頻繁 請稍後在試");
                     State = PttState.LoginSoMany;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"更新與同步", 22))
+            else if (Match(@"更新與同步", 22))
             {
                 if (State != PttState.Synchronizing)
                 {
                     Debug.WriteLine("更新與同步中...");
                     State = PttState.Synchronizing;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"請輸入您的密碼", 21))
+            else if (Match(@"請輸入您的密碼", 21))
             {
                 if (State != PttState.Password)
                 {
                     Debug.WriteLine("請輸入您的密碼");
                     State = PttState.Password;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"您要刪除以上錯誤嘗試的記錄嗎", 23))
+            else if (Match(@"您要刪除以上錯誤嘗試的記錄嗎", 23))
             {
                 if (State != PttState.WrongLog)
                 {
                     Debug.WriteLine("您要刪除以上錯誤嘗試的記錄嗎");
                     State = PttState.WrongLog;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
-            else if (Current.MatchPattern(@"請輸入代號", 20))
+            else if (Match(@"請輸入代號", 20))
             {
                 Debug.WriteLine("請輸入代號");
                 if (State != PttState.Login)
                 {
                     State = PttState.Login;
-                    OnPttEventEchoed(State, pTTProvider.Screen);
+                    OnPttEventEchoed(State, pttClient.Screen);
                 }
             }
             else
@@ -392,11 +411,11 @@ namespace LiPTT
         {
             get
             {
-                return pTTProvider.SSH;
+                return pttClient.SSH;
             }
             set
             {
-                pTTProvider.SSH = value;
+                pttClient.SSH = value;
             }
         }
 
@@ -404,18 +423,18 @@ namespace LiPTT
         {
             get
             {
-                return pTTProvider.IsExit;
+                return pttClient.IsExit;
             }
             set
             {
-                pTTProvider.IsExit = value;
+                pttClient.IsExit = value;
             }
         }
 
         private static void Current_Disconnected(object sender, EventArgs e)
         {
             State = PttState.Disconnected;
-            OnPttEventEchoed(State, pTTProvider.Screen);
+            OnPttEventEchoed(State, pttClient.Screen);
             Current.ScreenUpdated -= Current_ScreenUpdated;
             Current.Disconnected -= Current_Disconnected;
         }
@@ -423,7 +442,7 @@ namespace LiPTT
         public static void TryDisconnect()
         {
             State = PttState.Disconnecting;
-            OnPttEventEchoed(State, pTTProvider.Screen);
+            OnPttEventEchoed(State, pttClient.Screen);
             Current.Disconnect();
         }
 
@@ -557,20 +576,25 @@ namespace LiPTT
 
         private static void WaitEcho()
         {
-            Current.ScreenSemaphore.Wait();
+            ScreenSemaphore.Wait();
         }
 
         public static void CreateInstance()
         {
-            pTTProvider = new PTTProvider();
+            pttClient = new PTTClient();
+            ScreenSemaphore = new SemaphoreSlim(0, 1);
+            pttClient.ScreenUpdated += (o, e) =>
+            {
+                if (ScreenSemaphore.CurrentCount == 0) ScreenSemaphore.Release();
+            };
         }
 
         public static void ReleaseInstance()
         {
-            pTTProvider.IsExit = true;
+            pttClient.IsExit = true;
             State = PttState.Disconnected;
-            OnPttEventEchoed(State, pTTProvider.Screen);
-            pTTProvider.Dispose();
+            OnPttEventEchoed(State, pttClient.Screen);
+            pttClient.Dispose();
             var task = Task.Run(async () => { await ImageCache.ClearAllCache(); });
             task.Wait();
         }
@@ -662,7 +686,7 @@ namespace LiPTT
             return b;
         }
 
-        public delegate void LiPttEventHandler(PTTProvider sender, LiPttEventArgs e);
+        public delegate void LiPttEventHandler(PTTClient sender, LiPttEventArgs e);
 
         /// <summary>
         /// non-UI Thread介面
@@ -676,7 +700,7 @@ namespace LiPTT
 
         private static void OnPttEventEchoed(PttState state, ScreenBuffer screen)
         {
-            PttEventEchoed?.Invoke(pTTProvider, new LiPttEventArgs(state, screen));
+            PttEventEchoed?.Invoke(pttClient, new LiPttEventArgs(state, screen));
         }
 
         public static Windows.Foundation.IAsyncAction RunInUIThread(Windows.UI.Core.DispatchedHandler callback)

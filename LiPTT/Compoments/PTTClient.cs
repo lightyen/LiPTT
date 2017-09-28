@@ -370,7 +370,7 @@ namespace LiPTT
             }
         }
 
-        protected bool IsConnectionAlright()
+        public bool IsConnectionAlright()
         {
             if (isConnected)
             {

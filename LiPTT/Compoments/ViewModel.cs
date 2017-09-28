@@ -18,7 +18,7 @@ namespace LiPTT
 
         private bool overloading = false;
 
-        private void LiPTT_PttEventEchoed(PTTProvider sender, LiPttEventArgs e)
+        private void LiPTT_PttEventEchoed(PTTClient sender, LiPttEventArgs e)
         {
             switch (e.State)
             {

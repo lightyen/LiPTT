@@ -278,7 +278,7 @@ namespace LiPTT
             }
         }
 
-        private void PttUpdated(PTTProvider sender, LiPttEventArgs e)
+        private void PttUpdated(PTTClient sender, LiPttEventArgs e)
         {
             LiPTT.PttEventEchoed -= PttUpdated;
 

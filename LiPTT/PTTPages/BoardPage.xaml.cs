@@ -102,7 +102,7 @@ namespace LiPTT
             LiPTT.PressI();
         }
 
-        private void ReadBoardInfo(PTTProvider sender, LiPttEventArgs e)
+        private void ReadBoardInfo(PTTClient sender, LiPttEventArgs e)
         {
             if (e.State == PttState.BoardInfomation)
             {
@@ -162,7 +162,7 @@ namespace LiPTT
             }
         }
 
-        private void InitBoard(PTTProvider sender, LiPttEventArgs e)
+        private void InitBoard(PTTClient sender, LiPttEventArgs e)
         {
             if (e.State == PttState.Board)
             {
@@ -475,7 +475,7 @@ namespace LiPTT
             }
         }
 
-        private void SearchIDEnter(PTTProvider sender, LiPttEventArgs e)
+        private void SearchIDEnter(PTTClient sender, LiPttEventArgs e)
         {
             Match match;
 

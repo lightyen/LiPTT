@@ -55,7 +55,10 @@ namespace LiPTT
                 UserText.IsEnabled = true;
                 PasswordText.IsEnabled = true;
                 MemoAcount.IsEnabled = true;
-                if (MemoAcount.IsChecked == true) AutoLogin.IsEnabled = true;
+                if (MemoAcount.IsChecked == true)
+                    AutoLogin.IsEnabled = true;
+                else
+                    AutoLogin.IsEnabled = false;
             }
 
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
@@ -118,7 +121,7 @@ namespace LiPTT
         private bool enterWrongLog;
         private bool enterAlreadyLogin;
 
-        private void EnterAccount(PTTProvider sender, LiPttEventArgs e)
+        private void EnterAccount(PTTClient sender, LiPttEventArgs e)
         {
             switch (e.State)
             {

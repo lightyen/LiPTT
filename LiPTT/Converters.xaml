@@ -1,0 +1,20 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:LiPTT">
+    <local:ArticleIDStringFormatConverter x:Key="MyArticleIDStringFormatConverter" />
+    <local:LikeStringFormatConverter x:Key="MyLikeStringFormatConverter"/>
+    <local:TitleColorConverter x:Key="MyTitleColorConverter"/>
+    <local:ReadStateStringFormatConverter x:Key="MyReadStateStringFormatConverter" />
+    <local:LikeColorStringFormatConverter x:Key="MyLikeColorStringFormatConverter" />
+    <local:DateTimeOffsetStringFormatConverter x:Key="MyDateTimeOffsetStringFormatConverter" />
+    <local:ArticleTypeColorConverter x:Key="MyArticleTypeColorConverter" />
+    <local:ArticleTypeStringFormatConverter x:Key="MyArticleTypeStringFormatConverter" />
+    <local:EchoEvaluationStringFormatConverter x:Key="MyEchoEvaluationStringFormatConverter" />
+    <local:EchoDateStringFormatConverter x:Key="MyEchoDateStringFormatConverter" />
+    <local:EchoEvaluationColorConverter x:Key="MyEchoEvaluationColorConverter" />
+    <local:EchoContentConverter x:Key="MyEchoContentConverter"/>
+    <local:PopularityColorConverter x:Key="MyPopularityColorConverter" />
+    <local:RatioConverter x:Key="MyRatioConverter" />
+    <local:RingRatioConverter x:Key="MyRingRatioConverter" />
+</ResourceDictionary>

@@ -21,14 +21,14 @@ namespace LiPTT
         Disconnecting, //斷線中
         Kicked, //被踢惹
         OverLoading, //PTT爆炸惹
-        Login, // PTT歡迎畫面(輸入帳號名稱：)
+        Login, // PTT歡迎畫面(輸入帳號)
         Password, //輸入密碼
         WrongPassword, //密碼錯誤
         Accept, //密碼正確
         Loginning, //登入中
         Synchronizing, //同步處理中
         LoginSoMany, //登入太頻繁
-        AlreadyLogin, //重複登入?
+        AlreadyLogin, //重複登入
         MainPage, //(全站分類)
         Popular, //熱門看板列表
         PressAny, //按任意鍵喔

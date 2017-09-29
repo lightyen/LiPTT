@@ -8,7 +8,6 @@ using System.Net.Sockets;
 using System.IO;
 using System.Diagnostics;
 using Windows.System.Threading;
-using Windows.UI.Core;
 
 //Websocket
 using Windows.Networking.Sockets;
@@ -63,7 +62,7 @@ namespace LiPTT
 
         protected void OnPTTConnected()
         {
-            Debug.WriteLine("PTT 已連線");
+            Debug.WriteLine("PTT Event 已連線");
             Connected?.Invoke(this, new EventArgs());
         }
 
@@ -74,7 +73,7 @@ namespace LiPTT
 
         protected void OnPTTDisconnected()
         {
-            Debug.WriteLine("PTT 已中斷連接");
+            Debug.WriteLine("PTT Event  已中斷連接");
             Disconnected?.Invoke(this, new EventArgs());
         }
 
@@ -85,7 +84,7 @@ namespace LiPTT
 
         protected void OnPTTKicked()
         {
-            Debug.WriteLine("PTT 被踢下線");
+            Debug.WriteLine("PTT Event  被踢下線");
             Kicked?.Invoke(this, new EventArgs());
         }
 
@@ -96,7 +95,7 @@ namespace LiPTT
 
         protected void OnPTTConnectionFailed()
         {
-            Debug.WriteLine("PTT 連線失敗");
+            Debug.WriteLine("PTT Event  連線失敗");
             ConnectionFailed?.Invoke(this, new EventArgs());
         }
 
@@ -139,6 +138,8 @@ namespace LiPTT
         {
             get; set;
         }
+
+        public bool LoginToMany { set; get; }
         #endregion 各種屬性
 
         private int port;
@@ -153,7 +154,6 @@ namespace LiPTT
         private bool ConnectionSecurity;
         protected bool isConnected;
         //public SemaphoreSlim ScreenLocker;
-
         const int ConnectTimeout = 5 * 1000;
         const int AliveTimeout = 30 * 60 * 1000;
 
@@ -205,6 +205,7 @@ namespace LiPTT
             Task.Run(() =>
             {
                 DefaultState();
+                LoginToMany = false;
                 ConnectPTT();
             });
         }
@@ -231,12 +232,16 @@ namespace LiPTT
                 {
                     TestKickTimer = ThreadPoolTimer.CreatePeriodicTimer((source) => {
 
-                        
                         if (tcpClient?.Client.Poll(10, SelectMode.SelectRead) == true)
                         {
                             TestKickTimer?.Cancel();
                             TestKickTimer = null;
 
+                            if (LoginToMany)
+                            {
+                                Debug.WriteLine("TCP: 登入太頻繁");
+                                Dispose();
+                            }
                             if (IsExit)
                             {
                                 Disconnect();
@@ -252,10 +257,9 @@ namespace LiPTT
 
                     isConnected = true;
                     OnPTTConnected();
+                    Debug.WriteLine("TCP: 已連線");
                     tcpClient.ReceiveTimeout = AliveTimeout;
                     tcpClient.SendTimeout = AliveTimeout;
-                    
-                    //ScreenLocker = new SemaphoreSlim(1, 1);
                     stream = tcpClient.GetStream();
                     StartRecv();
                 }
@@ -275,15 +279,19 @@ namespace LiPTT
 
             WebSocket.Closed += (a, e) =>
             {
-                Debug.WriteLine("WebSocket Closed");
-                if (!IsExit)
+                if (LoginToMany)
+                {
+                    Debug.WriteLine("WebSocket: 登入太頻繁");
+                    Dispose();
+                }
+                else if (!IsExit)
                 {
                     Dispose();
                     OnPTTKicked();
                 }
                 else
                 {
-                    Debug.WriteLine("WebSocket: 掰掰~");
+                    Debug.WriteLine("WebSocket: 連線關閉");
                     Disconnect();
                 }
             };
@@ -294,6 +302,7 @@ namespace LiPTT
                 await WebSocket.ConnectAsync(host);
                 isConnected = true;
                 OnPTTConnected();
+                Debug.WriteLine("WebSocket: 已連線");
             }
             catch (Exception ex)
             {
@@ -309,27 +318,35 @@ namespace LiPTT
 
         private async void WebSocket_MessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
         {
-            var buf = await args.GetDataStream().ReadAsync(testbuffer, testbuffer.Capacity, InputStreamOptions.None);
+            IBuffer buf;
 
-            if (buf.Length > 0)
+            try
             {
-                var bbb = buf.ToArray();
-                await ms.WriteAsync(bbb, 0, bbb.Length);
+                buf = await args.GetDataStream().ReadAsync(testbuffer, testbuffer.Capacity, InputStreamOptions.None);
+                if (buf.Length > 0)
+                {
+                    var bbb = buf.ToArray();
+                    await ms.WriteAsync(bbb, 0, bbb.Length);
 
-                if (buf.Length != 1024)
-                {
-                    TestWebSocketRecvTimer?.Cancel();
-                    byte[] www = ms.ToArray();
-                    ms = new MemoryStream();
-                    Parse(www);
-                    OnScreenDrawn(screenBuffer);
-                    OnScreenUpdated(screenBuffer);
+                    if (buf.Length != 1024)
+                    {
+                        TestWebSocketRecvTimer?.Cancel();
+                        byte[] www = ms.ToArray();
+                        ms = new MemoryStream();
+                        Parse(www);
+                        OnScreenDrawn(screenBuffer);
+                        OnScreenUpdated(screenBuffer);
+                    }
+                    else
+                    {
+                        TestWebSocketRecvTimer?.Cancel();
+                        TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer(TestWebsocket, WebSocketPeriod);
+                    }
                 }
-                else
-                {
-                    TestWebSocketRecvTimer?.Cancel();
-                    TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer(TestWebsocket, WebSocketPeriod);
-                }
+            }
+            catch(Exception e)
+            {
+                Debug.WriteLine(e.ToString());
             }
         }
 
@@ -396,18 +413,18 @@ namespace LiPTT
                 {
                     if (IsExit)
                     {
-                        Debug.WriteLine("StartRecv():掰掰囉~");
+                        Debug.WriteLine("TCP: 連線關閉");
                         Disconnect();
                     }
                     else
                     {
-                        Debug.WriteLine("StartRecv():怎麼惹?");
+                        Debug.WriteLine("TCP: 怎麼惹?");
                     }
                     break;
                 }
                 catch (IOException)
                 {
-                    Debug.WriteLine("StartRecv():掰掰~");
+                    Debug.WriteLine("TCP: 連線關閉");
                     Disconnect();
                     break;
                 }
@@ -887,7 +904,7 @@ namespace LiPTT
                 }
             }
 #if DEBUG
-            Debug.WriteLine(RAW_Message.ToString());
+            //Debug.WriteLine(RAW_Message.ToString());
 #endif
         }
 

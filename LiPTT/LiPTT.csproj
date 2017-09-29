@@ -797,9 +797,6 @@
     <PackageReference Include="SharpDX.XInput">
       <Version>4.0.1</Version>
     </PackageReference>
-    <PackageReference Include="SSH.NET">
-      <Version>2016.0.0</Version>
-    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="LiPTT_TemporaryKey.pfx" />

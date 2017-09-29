@@ -340,6 +340,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("登入太頻繁 請稍後在試");
                     State = PttState.LoginSoMany;
+                    Client.LoginToMany = true;
                     OnPttEventEchoed(State);
                 }
             }

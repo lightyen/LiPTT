@@ -84,7 +84,7 @@ namespace LiPTT
                     State = "主功能表";
                     break;
                 case PttState.PressAny:
-                    State = "請按任意鍵繼續...";
+                    State = "(請按任意鍵繼續...)";
                     break;
                 default:
                     State = "未定義狀態";

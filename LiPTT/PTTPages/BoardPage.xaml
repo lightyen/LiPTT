@@ -33,7 +33,7 @@
                     <ColumnDefinition Width="1*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="{Binding Source={StaticResource BoardContentCollection}, Mode=OneWay, Path=Board.Description}" IsTextSelectionEnabled="True" IsRightTapEnabled="False" FontSize="28" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
-                <TextBlock Grid.Column="1" Text="{Binding Source={StaticResource BoardContentCollection}, Mode=OneWay, Path=Board.Popularity}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{Binding Source={StaticResource BoardContentCollection}, Converter={StaticResource MyPopularityColorConverter}, Mode=OneWay, Path=Board.Popularity}" />
+                <TextBlock Grid.Column="1" Text="{Binding Source={StaticResource BoardContentCollection}, Mode=OneWay, Path=Board.Popularity}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTipService.ToolTip="人氣" Foreground="{Binding Source={StaticResource BoardContentCollection}, Converter={StaticResource MyPopularityColorConverter}, Mode=OneWay, Path=Board.Popularity}" />
             </Grid>
             <TextBox Grid.Column="1" x:Name="SearchIDTextBox" BorderThickness="0" GotFocus="SearchIDTextBox_GotFocus" LostFocus="SearchIDTextBox_LostFocus" KeyDown="SearchIDTextBox_KeyDown" VerticalAlignment="Center" FontSize="21"/>
         </Grid>

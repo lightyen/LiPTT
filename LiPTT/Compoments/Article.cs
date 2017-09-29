@@ -188,9 +188,7 @@ namespace LiPTT
                 action = LiPTT.RunInUIThread(() =>
                 {
                     Parse();
-                    if (RichTextBlock != null)
-                        Add(RichTextBlock);
-                    RichTextBlock = null;
+                    AddNewTextBlock();
                     sem.Release();
                 });
 
@@ -308,9 +306,7 @@ namespace LiPTT
                 action = LiPTT.RunInUIThread(() => 
                 {
                     Parse();
-                    if (RichTextBlock != null)
-                        Add(RichTextBlock);
-                    RichTextBlock = null;
+                    AddNewTextBlock();
                     BeginLoaded?.Invoke(this, new EventArgs());
                 });
 
@@ -423,9 +419,7 @@ namespace LiPTT
 
             if (ViewUri.Count > 0)
             {
-                if (RichTextBlock != null)
-                    Add(RichTextBlock);
-                RichTextBlock = null;
+                AddNewTextBlock();
 
                 foreach (Uri view_uri in ViewUri)
                 {
@@ -438,12 +432,40 @@ namespace LiPTT
         {
             if (RichTextBlock == null)
             {
-                RichTextBlock = new RichTextBlock() { Margin = new Thickness(0), IsRightTapEnabled = false , HorizontalAlignment = HorizontalAlignment.Left};
-                Paragraph = new Paragraph();
+                RichTextBlock = new RichTextBlock()
+                {
+                    Margin = new Thickness(0),
+                    Padding = new Thickness(0),
+                    IsTextSelectionEnabled = true,
+                    IsRightTapEnabled = false,
+                };
+                Paragraph = new Paragraph
+                {
+                    Margin = new Thickness(0),
+                    IsTextScaleFactorEnabled = true,
+                    //LineHeight = ArticleFontSize,
+                    //LineStackingStrategy = LineStackingStrategy.BlockLineHeight
+                };
                 RichTextBlock.Blocks.Add(Paragraph);
                 //還不要加到Visual Tree
                 //Add(RichTextBlock);
             }
+        }
+
+        private void AddNewTextBlock()
+        {
+            if (RichTextBlock != null)
+            {
+                Border border = new Border
+                {
+                    //BorderThickness = new Thickness(1),
+                    //BorderBrush = new SolidColorBrush(Colors.Red),
+                };
+                border.Child = RichTextBlock;
+                Add(border);
+            }
+                
+            RichTextBlock = null;
         }
 
         private void AddText(Block[] blocks, int index, int count)
@@ -563,9 +585,7 @@ namespace LiPTT
             if (DividerLine)
                 Floor++;
 
-            if (RichTextBlock != null)
-                Add(RichTextBlock);
-            RichTextBlock = null;
+            AddNewTextBlock();
 
             Echo echo = new Echo() { Floor = Floor };
 

@@ -41,8 +41,34 @@
                     <RowDefinition Height="5*"/>
                     <RowDefinition Height="10*"/>
                 </Grid.RowDefinitions>
-                    
+                
                     <Grid x:Name="MyGrid" Grid.Row="0" Grid.RowSpan="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Gray">
+                    <StackPanel>
+                        <Border BorderThickness="1" BorderBrush="Red">
+                            <TextBlock Margin="0" Padding="0" FontSize="28" LineStackingStrategy="BlockLineHeight" LineHeight="28" >
+                                https://goo.gl/Yky35A <LineBreak />                                                           
+                                https://goo.gl/Yky35A <LineBreak />
+                                https://goo.gl/Yky35A <LineBreak />
+                                https://goo.gl/Yky35A <LineBreak />
+                                https://goo.gl/Yky35A <LineBreak />
+                                https://goo.gl/Yky35A <LineBreak />
+                                https://goo.gl/Yky35A <LineBreak />
+                                https://goo.gl/Yky35A <LineBreak />
+                                https://goo.gl/Yky35A <LineBreak />
+
+                            </TextBlock>
+                        </Border>
+                        
+                        <RichTextBlock Padding="0" Margin="0" TextDecorations="Underline">
+                            <Paragraph LineStackingStrategy="BlockLineHeight" LineHeight="28">
+                                <Run Text="Hello" FontSize="28"></Run>
+                                <LineBreak />
+                                <Run Text="WORLD" FontSize="28"></Run>
+                            </Paragraph>
+                        </RichTextBlock>
+                    </StackPanel>
+                        
+
                     <Image Source="ms-appx:///Icons/burn-button.svg" Width="100" Height="100"/>
                     <Grid.Resources>
                         <local:ActualSizePropertyProxy Element="{Binding ElementName=MyGrid}" x:Key="proxy" x:Name="proxy" />

@@ -222,6 +222,7 @@ namespace LiPTT
             {
                 if (State != PttState.Exit)
                 {
+                    Debug.WriteLine("您確定要離開?");
                     State = PttState.Exit;
                     OnPttEventEchoed(State);
                 }
@@ -579,14 +580,59 @@ namespace LiPTT
             };
         }
 
+        private static SemaphoreSlim exitSemaphore = new SemaphoreSlim(0, 1);
+        private static Task ClearCacheTask;
+
         public static void ReleaseInstance()
         {
-            Client.IsExit = true;
-            State = PttState.Disconnected;
-            OnPttEventEchoed(State);
-            Client.Dispose();
-            var task = Task.Run(async () => { await ImageCache.ClearAllCache(); });
-            task.Wait();
+            ClearCacheTask = Task.Run(async () => { await ImageCache.ClearAllCache(); });
+
+            if (Client.IsConnected)
+            {
+                PttEventEchoed = null;
+                PttEventEchoed += ExitPttEventEchoed;
+
+                if (State != PttState.MainPage)
+                { 
+                    Left();
+                }
+                else
+                {
+                    SendMessage('G', 0x0D);
+                }
+            }
+
+            exitSemaphore.Wait();
+        }
+
+        private static void ExitPttEventEchoed(PTTClient sender, LiPttEventArgs e)
+        {
+            if (State == PttState.Exit)
+            {
+                IsExit = true;
+                SendMessage('y', 0x0D);
+            }
+            else if (!IsExit)
+            {
+                if (State == PttState.MainPage)
+                    SendMessage('G', 0x0D);
+                else
+                    Left();
+            }
+            else if (State == PttState.PressAny)
+            {
+                PttEventEchoed -= ExitPttEventEchoed;
+                PressAnyKey();
+                PressAnyKey();
+                PressAnyKey();
+                if (ClearCacheTask.Status != TaskStatus.RanToCompletion) ClearCacheTask.Wait();
+                exitSemaphore.Release();
+            }
+        }
+
+        private static void Exit()
+        {
+
         }
 
         public static ReadState GetReadSate(char state)

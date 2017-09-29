@@ -136,7 +136,14 @@ namespace LiPTT
 
         public bool IsExit
         {
-            get; set;
+            get
+            {
+                return exit;
+            }
+            set
+            {
+                exit = value;
+            }
         }
 
         public bool LoginToMany { set; get; }
@@ -149,7 +156,7 @@ namespace LiPTT
         private MessageWebSocket WebSocket;
 
         ThreadPoolTimer TestKickTimer;
-
+        private bool exit;
         private Stream stream;
         private bool ConnectionSecurity;
         protected bool isConnected;
@@ -377,7 +384,6 @@ namespace LiPTT
             word = new byte[2];
             queue = false;
             number = 0;
-            IsExit = false;
             numbers = new Queue<int>();
             screenBuffer = new ScreenBuffer();
         }

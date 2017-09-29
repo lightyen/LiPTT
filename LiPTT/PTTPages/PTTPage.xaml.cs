@@ -100,9 +100,10 @@ namespace LiPTT
             }
             else if (e.State == PttState.PressAny)
             {
-                LiPTT.PressAnyKey();
-                LiPTT.PressAnyKey(); //再送一個byte觸發Exception
                 LiPTT.PttEventEchoed -= Exit_echoed;
+                LiPTT.PressAnyKey();
+                LiPTT.PressAnyKey();
+                LiPTT.PressAnyKey();
 
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                     LiPTT.Frame.Navigate(typeof(LoginPage));

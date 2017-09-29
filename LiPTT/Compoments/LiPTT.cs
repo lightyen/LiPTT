@@ -599,8 +599,13 @@ namespace LiPTT
                     SendMessage('G', 0x0D);
                 }
             }
+            else
+            {
+                exitSemaphore.Release();
+            }
 
             exitSemaphore.Wait();
+            Debug.WriteLine("Exit");
         }
 
         private static void ExitPttEventEchoed(PTTClient sender, LiPttEventArgs e)
@@ -622,15 +627,10 @@ namespace LiPTT
                 PttEventEchoed -= ExitPttEventEchoed;
                 PressAnyKey();
                 PressAnyKey();
-                PressAnyKey();
+                Client.Disconnect();
                 if (ClearCacheTask.Status != TaskStatus.RanToCompletion) ClearCacheTask.Wait();
                 exitSemaphore.Release();
             }
-        }
-
-        private static void Exit()
-        {
-
         }
 
         public static ReadState GetReadSate(char state)

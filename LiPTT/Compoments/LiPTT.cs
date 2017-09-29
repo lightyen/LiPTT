@@ -210,8 +210,6 @@ namespace LiPTT
 
         private static void Current_ScreenUpdated(object sender, ScreenEventArgs e)
         {
-            //pttClient.ScreenLocker.Wait();
-
             if (Match(@"瀏覽", 23))
             {
                 Debug.WriteLine("瀏覽文章");

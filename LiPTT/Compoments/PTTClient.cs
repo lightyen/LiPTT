@@ -279,6 +279,15 @@ namespace LiPTT
 
         private async void ConnectWithWebSocket()
         {
+            //pttbbs/daemon/wsproxy/
+            /**
+             * local origin_whitelist = {
+             *      ["http://www.ptt.cc"] = true,
+             *      ["https://www.ptt.cc"] = true,
+             *      ["https://robertabcd.github.io"] = true,
+             *      ["app://pcman"] = true,
+             *  }
+            /***/
             WebSocket = new MessageWebSocket();
             WebSocket.Control.MessageType = SocketMessageType.Binary;
             WebSocket.MessageReceived += WebSocket_MessageReceived;

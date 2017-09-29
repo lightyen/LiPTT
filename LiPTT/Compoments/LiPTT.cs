@@ -324,7 +324,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"任意鍵繼續", 23))
+            else if (Match(@"任意鍵", 23))
             {
                 if (State != PttState.PressAny)
                 {

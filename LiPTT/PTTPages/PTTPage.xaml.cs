@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.System;
+using Windows.System.Threading;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Core;
@@ -14,8 +15,8 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-
-// 空白頁項目範本已記錄在 https://go.microsoft.com/fwlink/?LinkId=234238
+using System.Diagnostics;
+using Windows.Gaming.Input;
 
 namespace LiPTT
 {
@@ -27,7 +28,24 @@ namespace LiPTT
         public PTTPage()
         {
             InitializeComponent();
+            //LiPTT.GamepadPollTimer = ThreadPoolTimer.CreatePeriodicTimer(GamepadUpdate, TimeSpan.FromMilliseconds(50));
         }
+
+        private static void GamepadUpdate(ThreadPoolTimer timer)
+        {
+            if (LiPTT.Gamepads.Count > 0)
+            {
+                var re = LiPTT.Gamepads[0].GetCurrentReading();
+
+                if (re.Buttons.HasFlag(GamepadButtons.A))
+                {
+                    Debug.WriteLine("A");
+                }
+            }
+        }
+
+
+        GamepadVibration vibration = new GamepadVibration { LeftMotor = 0.7, RightMotor = 0.7 };
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -77,7 +95,6 @@ namespace LiPTT
             if (LiPTT.IsExit == false)
             {
                 LiPTT.IsExit = true;
-                //LiPTT.TestConnectionTimer.Stop();
                 LiPTT.KeepAliveTimer.Stop();
                 LiPTT.PttEventEchoed += Exit_echoed;
 
@@ -101,7 +118,6 @@ namespace LiPTT
             else if (e.State == PttState.PressAny)
             {
                 LiPTT.PttEventEchoed -= Exit_echoed;
-                LiPTT.PressAnyKey();
                 LiPTT.PressAnyKey();
                 LiPTT.PressAnyKey();
 

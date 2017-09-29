@@ -12,12 +12,12 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-
+using Windows.System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.ViewManagement;
-
+using Windows.Gaming.Input;
 using System.Diagnostics;
 
 namespace LiPTT
@@ -35,10 +35,23 @@ namespace LiPTT
             InitializeComponent();
 
             Loaded += MainPage_Loaded;
-        }
 
+            Gamepad.GamepadAdded += (obj, gamepad) =>
+            {
+                LiPTT.Gamepads.Add(gamepad);
+                Debug.WriteLine(string.Format("XBOX手把 {0} 已連接 {1}", gamepad.User, LiPTT.Gamepads.Count));
+            };
+
+            Gamepad.GamepadRemoved += (obj, gamepad) =>
+            {
+                LiPTT.Gamepads.Remove(gamepad);
+                Debug.WriteLine(string.Format("XBOX手把 {0} 已斷開 {1}", gamepad.User, LiPTT.Gamepads.Count));
+            };
+
+        }
+        
         private void MainPage_Loaded(object sender, RoutedEventArgs e)
-        {
+        {           
             DisplayFrame.Navigate(typeof(PttMainPage));
             RatioPTT.IsChecked = true;
         }

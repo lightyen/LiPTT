@@ -14,9 +14,6 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Windows.System;
 
-
-// 空白頁項目範本已記錄在 https://go.microsoft.com/fwlink/?LinkId=234238
-
 namespace LiPTT
 {
     /// <summary>

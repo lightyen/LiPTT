@@ -6,11 +6,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Windows.System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.ApplicationModel.Core;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using Windows.Gaming.Input;
 
 namespace LiPTT
 {
@@ -54,6 +56,12 @@ namespace LiPTT
         public static PTTClient Client;
 
         public static DispatcherTimer KeepAliveTimer { get; set; }
+
+        /// <summary>
+        /// XBOX ONE 手把我有 希望無窮(來鬧的)
+        /// </summary>
+        public static List<Gamepad> Gamepads;
+        public static ThreadPoolTimer GamepadPollTimer;
 
         public static Frame Frame { get; set; }
 
@@ -568,6 +576,8 @@ namespace LiPTT
             Client.Send(msg);
         }
 
+        
+
         public static void CreateInstance()
         {
             ConnectionSecurity = true;
@@ -576,6 +586,8 @@ namespace LiPTT
             {
                 Security = security
             };
+
+            Gamepads = new List<Gamepad>();
         }
 
         private static SemaphoreSlim exitSemaphore = new SemaphoreSlim(0, 1);
@@ -583,6 +595,8 @@ namespace LiPTT
 
         public static void ReleaseInstance()
         {
+            Gamepads.Clear();
+
             ClearCacheTask = Task.Run(async () => { await ImageCache.ClearAllCache(); });
 
             if (Client.IsConnected)

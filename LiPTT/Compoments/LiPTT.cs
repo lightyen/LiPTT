@@ -57,6 +57,8 @@ namespace LiPTT
 
         public static Frame Frame { get; set; }
 
+        public static bool CacheBoard { get; set; } 
+
         //https://www.regexpal.com
         // '\w'會match到中文字，用[A-Za-z0-9_]替代
         public const string http_regex = @"(http|https)://([A-Za-z0-9_]+:??[A-Za-z0-9_]*@)?([A-Za-z0-9_#!:.?+=&%@!-/$^,;|*~'()]+)(/|/([A-Za-z0-9_#!:.?+=&%@!-/]))?";

@@ -1050,7 +1050,7 @@ namespace LiPTT
             }
             else if (IsYoutubeUri(uri))
                 view = true;
-            else if (uri.Host == "www.twitch.tv")
+            else if (IsTwitchUri(uri))
                 view = true;
 
             return view;
@@ -1106,7 +1106,7 @@ namespace LiPTT
 
         private bool IsTwitchUri(Uri uri)
         {
-            if (uri.Host == "www.twitch.tv")
+            if (uri.Host == "www.twitch.tv" || uri.Host == "go.twitch.tv")
                 return true;
             else
                 return false;

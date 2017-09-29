@@ -84,6 +84,7 @@ namespace LiPTT
             //冷靜一下，先喝杯咖啡
             await Task.Delay(50);
             article = LiPTT.CurrentArticle;
+            LiPTT.CacheBoard = true;
 
             ContentCollection.BeginLoaded += (a, b) => {
                 if (ListVW.Items.Count > 0) ListVW.ScrollIntoView(ListVW.Items[0]);

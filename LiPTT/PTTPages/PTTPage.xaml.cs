@@ -125,9 +125,12 @@ namespace LiPTT
                 switch (pivot.SelectedIndex)
                 {
                     case 2:
-                        SettingFrame.Navigate(typeof(SettingPage));
+                        HotFrame.Navigate(typeof(HotPage));
                         break;
                     case 3:
+                        SettingFrame.Navigate(typeof(SettingPage));
+                        break;
+                    case 4:
                         CreateSymbolList();
                         break;
                 }

@@ -167,7 +167,7 @@ namespace LiPTT
             }
         }
 
-        private void PttUpdated(PTTClient sender, LiPttEventArgs e)
+        private void PttUpdated(PTTClient client, LiPttEventArgs e)
         {
             LiPTT.PttEventEchoed -= PttUpdated;
 
@@ -175,14 +175,14 @@ namespace LiPTT
 
             if (e.State == PttState.Article)
             {
-                bound = ReadLineBound(e.Screen.ToString(23));
+                bound = ReadLineBound(client.Screen.ToString(23));
 
                 int o = header ? 1 : 0;
 
                 //有些文章bound.End - bound.Begin不等於23，而且也沒到100%，PTT的Bug嗎?
                 for (int i = line - bound.Begin + 1 + (bound.Begin < 5 ? o : 0); i < 23; i++, line++)
                 {
-                    RawLines.Add(LiPTT.Copy(e.Screen[i]));
+                    RawLines.Add(LiPTT.Copy(client.Screen[i]));
                 }
 
                 action = LiPTT.RunInUIThread(() =>

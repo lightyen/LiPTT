@@ -102,8 +102,10 @@ namespace LiPTT
             LiPTT.PressI();
         }
 
-        private void ReadBoardInfo(PTTClient sender, LiPttEventArgs e)
+        private void ReadBoardInfo(PTTClient client, LiPttEventArgs e)
         {
+            ScreenBuffer screen = client.Screen;
+
             if (e.State == PttState.BoardInfomation)
             {
                 LiPTT.PttEventEchoed -= ReadBoardInfo;
@@ -111,7 +113,7 @@ namespace LiPTT
                 var Board = new Board();
 
                 //看板名稱
-                string str = e.Screen.ToString(3);
+                string str = screen.ToString(3);
                 Match match = new Regex(LiPTT.bracket_regex).Match(str);
                 if (match.Success)
                 {
@@ -120,15 +122,15 @@ namespace LiPTT
                 }
 
                 //看板分類 中文敘述
-                Board.Category = e.Screen.ToString(5, 15, 4);
-                Board.Description = e.Screen.ToString(5, 22, e.Screen.Width - 22).Replace('\0', ' ').Trim();
+                Board.Category = screen.ToString(5, 15, 4);
+                Board.Description = client.Screen.ToString(5, 22, screen.Width - 22).Replace('\0', ' ').Trim();
 
                 //版主名單
-                str = e.Screen.ToString(6, 15, e.Screen.Width - 15).Replace('\0', ' ').Trim();
+                str = screen.ToString(6, 15, screen.Width - 15).Replace('\0', ' ').Trim();
                 Board.Leaders = str.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
                 //發文限制 - 登入次數
-                str = e.Screen.ToString(12);
+                str = screen.ToString(12);
                 match = new Regex(@"\d+").Match(str);
                 if (match.Success)
                 {
@@ -140,7 +142,7 @@ namespace LiPTT
                 }
 
                 //發文限制 - 退文篇數
-                str = e.Screen.ToString(13);
+                str = screen.ToString(13);
                 match = new Regex(@"\d+").Match(str);
                 if (match.Success)
                 {
@@ -492,7 +494,9 @@ namespace LiPTT
         {
             Match match;
 
-            if ((match = new Regex("請按任意鍵繼續").Match(e.Screen.ToString(23))).Success)
+            ScreenBuffer screen = sender.Screen;
+
+            if ((match = new Regex("請按任意鍵繼續").Match(screen.ToString(23))).Success)
             {
                 LiPTT.PressAnyKey();
             }
@@ -500,7 +504,7 @@ namespace LiPTT
             {
                 LiPTT.PttEventEchoed -= SearchIDEnter;
 
-                Article article = ParseArticleTag(e.Screen.CurrentBlocks);
+                Article article = ParseArticleTag(screen.CurrentBlocks);
 
                 if (article != null)
                 {

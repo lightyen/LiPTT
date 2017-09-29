@@ -51,11 +51,7 @@ namespace LiPTT
     /// </summary>
     public static class LiPTT
     {
-        private static PTTClient pttClient;
-
-        private static SemaphoreSlim ScreenSemaphore;
-
-        public static DispatcherTimer TestConnectionTimer { get; set; }
+        public static PTTClient Client;
 
         public static DispatcherTimer KeepAliveTimer { get; set; }
 
@@ -77,7 +73,7 @@ namespace LiPTT
         {
             get
             {
-                return pttClient.Screen;
+                return Client.Screen;
             }
         }
 
@@ -85,11 +81,11 @@ namespace LiPTT
         {
             add
             {
-                pttClient.Connected += value;
+                Client.Connected += value;
             }
             remove
             {
-                pttClient.Connected -= value;
+                Client.Connected -= value;
             }
         }
 
@@ -97,11 +93,11 @@ namespace LiPTT
         {
             add
             {
-                pttClient.Belled += value;
+                Client.Belled += value;
             }
             remove
             {
-                pttClient.Belled -= value;
+                Client.Belled -= value;
             }
         }
 
@@ -109,22 +105,11 @@ namespace LiPTT
         {
             add
             {
-                pttClient.ScreenDrawn += value;
+                Client.ScreenDrawn += value;
             }
             remove
             {
-                pttClient.ScreenDrawn -= value;
-            }
-        }
-
-        /// <summary>
-        /// 是否連線
-        /// </summary>
-        public static bool IsConnected
-        {
-            get
-            {
-                return pttClient.IsConnectionAlright();
+                Client.ScreenDrawn -= value;
             }
         }
 
@@ -179,37 +164,36 @@ namespace LiPTT
         /// </summary>
         public static void TryConnect()
         {
-            pttClient.SSH = false;
-            if (IsConnected) pttClient.Disconnect();
+            Client.Security = security;
             State = PttState.Connecting;
-            OnPttEventEchoed(State, pttClient.Screen);
-            pttClient.ConnectionFailed += HandleConnectionFailed;
-            pttClient.Connected += AddEventHandler;
-            pttClient.Connect();
+            OnPttEventEchoed(State);
+            Client.ConnectionFailed += HandleConnectionFailed;
+            Client.Connected += AddEventHandler;
+            Client.Connect();
         }
 
         private static void HandleConnectionFailed(object sender, EventArgs e)
         {
-            pttClient.Connected -= AddEventHandler;
+            Client.Connected -= AddEventHandler;
             State = PttState.ConnectFailed;
-            OnPttEventEchoed(State, pttClient.Screen);
+            OnPttEventEchoed(State);
         }
 
         private static void AddEventHandler(object o, EventArgs e)
         {
-            pttClient.ScreenUpdated += Current_ScreenUpdated;
-            pttClient.Disconnected += Current_Disconnected;
-            pttClient.Connected -= AddEventHandler;
-            pttClient.Kicked += PTTKicked;
+            Client.ScreenUpdated += Current_ScreenUpdated;
+            Client.Disconnected += Current_Disconnected;
+            Client.Connected -= AddEventHandler;
+            Client.Kicked += PTTKicked;
         }
 
         private static void PTTKicked(object sender, EventArgs e)
         {
             State = PttState.Kicked;
-            pttClient.Kicked -= PTTKicked;
-            pttClient.ScreenUpdated -= Current_ScreenUpdated;
+            Client.Kicked -= PTTKicked;
+            Client.ScreenUpdated -= Current_ScreenUpdated;
             CurrentArticle = null;
-            OnPttEventEchoed(State, pttClient.Screen);
+            OnPttEventEchoed(State);
         }
 
         /// <summary>
@@ -224,27 +208,27 @@ namespace LiPTT
 
         private static void Current_ScreenUpdated(object sender, ScreenEventArgs e)
         {
-            pttClient.ScreenLocker.Wait();
+            //pttClient.ScreenLocker.Wait();
 
             if (Match(@"瀏覽", 23))
             {
                 Debug.WriteLine("瀏覽文章");
                 State = PttState.Article;
-                OnPttEventEchoed(State, pttClient.Screen);
+                OnPttEventEchoed(State);
             }
             else if (Match(@"您確定要離開", 22))
             {
                 if (State != PttState.Exit)
                 {
                     State = PttState.Exit;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if (Match(@"主功能表", 0))
             {
                 if (State != PttState.MainPage)
                 {
-                    string s = pttClient.Screen.ToString(23);
+                    string s = Client.Screen.ToString(23);
                     Match match = new Regex(@"(線上[\d\s]+人)").Match(s);
                     if (match.Success)
                     {
@@ -255,7 +239,7 @@ namespace LiPTT
 
                     Debug.WriteLine("主功能表");
                     State = PttState.MainPage;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if(Match(@"看板列表", 0))
@@ -264,20 +248,20 @@ namespace LiPTT
                 {
                     Debug.WriteLine("我的最愛");
                     State = PttState.Favorite;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if (Match(@"相關資訊一覽表", 2))
             {
                 Debug.WriteLine("搜尋相關看板");
                 State = PttState.RelatedBoard;
-                OnPttEventEchoed(State, pttClient.Screen);
+                OnPttEventEchoed(State);
             }
             else if (Match(@"選擇看板", 0))
             {
                 Debug.WriteLine("搜尋看板");
                 State = PttState.SearchBoard;
-                OnPttEventEchoed(State, pttClient.Screen);
+                OnPttEventEchoed(State);
             }
             else if (Match(@"看板設定", 3))
             {
@@ -285,21 +269,21 @@ namespace LiPTT
                 {
                     Debug.WriteLine("看板資訊");
                     State = PttState.BoardInfomation;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if (Match(@"【板主", 0))
             {
                 Debug.WriteLine("看板");
                 State = PttState.Board;
-                OnPttEventEchoed(State, pttClient.Screen);
+                OnPttEventEchoed(State);
             }
             else if (Match(@"您想刪除其他重複登入的連線嗎", 22))
             {
                 if (State != PttState.AlreadyLogin)
                 {
                     State = PttState.AlreadyLogin;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
 
@@ -308,7 +292,7 @@ namespace LiPTT
                 if (State != PttState.WrongPassword)
                 {
                     State = PttState.WrongPassword;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
 
             }
@@ -318,7 +302,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("系統過載");
                     State = PttState.OverLoading;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if (Match(@"密碼正確", 21))
@@ -327,7 +311,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("密碼正確");
                     State = PttState.Accept;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if (Match(@"登入中", 22))
@@ -336,7 +320,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("登入中");
                     State = PttState.Loginning;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if (Match(@"任意鍵繼續", 23))
@@ -345,7 +329,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("請按任意鍵繼續");
                     State = PttState.PressAny;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if (Match(@"登入太頻繁", 23))
@@ -354,7 +338,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("登入太頻繁 請稍後在試");
                     State = PttState.LoginSoMany;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if (Match(@"更新與同步", 22))
@@ -363,7 +347,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("更新與同步中...");
                     State = PttState.Synchronizing;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if (Match(@"請輸入您的密碼", 21))
@@ -372,7 +356,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("請輸入您的密碼");
                     State = PttState.Password;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if (Match(@"您要刪除以上錯誤嘗試的記錄嗎", 23))
@@ -381,7 +365,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("您要刪除以上錯誤嘗試的記錄嗎");
                     State = PttState.WrongLog;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else if (Match(@"請輸入代號", 20))
@@ -390,7 +374,7 @@ namespace LiPTT
                 if (State != PttState.Login)
                 {
                     State = PttState.Login;
-                    OnPttEventEchoed(State, pttClient.Screen);
+                    OnPttEventEchoed(State);
                 }
             }
             else
@@ -398,7 +382,7 @@ namespace LiPTT
 #if DEBUG
                 StringBuilder sb = new StringBuilder();
                 sb.Append("這裡是哪裡?\n");
-                foreach (string s in pttClient.Screen.ToStringArray())
+                foreach (string s in Client.Screen.ToStringArray())
                 {
                     sb.AppendFormat("{0}\n", s);
                 }
@@ -406,19 +390,19 @@ namespace LiPTT
 #endif
                 State = PttState.Angel;
             }
-
-            pttClient.ScreenLocker.Release();
         }
 
-        public static bool SSH
+        private static bool security;
+
+        public static bool ConnectionSecurity
         {
             get
             {
-                return pttClient.SSH;
+                return security;
             }
             set
             {
-                pttClient.SSH = value;
+                security = value;
             }
         }
 
@@ -426,68 +410,68 @@ namespace LiPTT
         {
             get
             {
-                return pttClient.IsExit;
+                return Client.IsExit;
             }
             set
             {
-                pttClient.IsExit = value;
+                Client.IsExit = value;
             }
         }
 
         private static void Current_Disconnected(object sender, EventArgs e)
         {
             State = PttState.Disconnected;
-            OnPttEventEchoed(State, pttClient.Screen);
-            pttClient.ScreenUpdated -= Current_ScreenUpdated;
-            pttClient.Disconnected -= Current_Disconnected;
+            OnPttEventEchoed(State);
+            Client.ScreenUpdated -= Current_ScreenUpdated;
+            Client.Disconnected -= Current_Disconnected;
         }
 
         public static void TryDisconnect()
         {
             State = PttState.Disconnecting;
-            OnPttEventEchoed(State, pttClient.Screen);
-            pttClient.Disconnect();
+            OnPttEventEchoed(State);
+            Client.Disconnect();
         }
 
         public static void PressUpdateEcho()
         {
             //意同：左 右 PageEnd
-            pttClient.Send(new byte[] { 0x71, 0x72, 0x24 }); //qr$
+            Client.Send(new byte[] { 0x71, 0x72, 0x24 }); //qr$
         }
 
         public static void PressBackspace()
         {
-            pttClient.Send(0x08);
+            Client.Send(0x08);
         }
 
         public static void PressEnter()
         {
-            pttClient.Send(0x0D); // Carriage return
+            Client.Send(0x0D); // Carriage return
         }
 
         public static void EnterUserName()
         {
-            pttClient.Send(UserName, 0x0D);
+            Client.Send(UserName, 0x0D);
         }
 
         public static void EnterPassword()
         {
-            pttClient.Send(Password, 0x0D);
+            Client.Send(Password, 0x0D);
         }
 
         public static void Yes()
         {
-            pttClient.Send('y', 0x0D);
+            Client.Send('y', 0x0D);
         }
 
         public static void No()
         {
-            pttClient.Send('n', 0x0D);
+            Client.Send('n', 0x0D);
         }
 
         public static void PressSpace()
         {
-            pttClient.Send(0x20); // ' '
+            Client.Send(0x20); // ' '
         }
 
         public static void PressAnyKey()
@@ -497,112 +481,107 @@ namespace LiPTT
 
         public static void PressI()
         {
-            pttClient.Send(0x69);
+            Client.Send(0x69);
         }
 
         public static void PressKeepAlive()
         {
-            pttClient.Send(0x0C); //^L
+            Client.Send(0x0C); //^L
         }
 
         public static void Up()
         {
-            pttClient.Send(new byte[] { 0x1B, 0x5B, 0x41 }); //ESC[A
+            Client.Send(new byte[] { 0x1B, 0x5B, 0x41 }); //ESC[A
         }
 
         public static void Down()
         {
-            pttClient.Send(new byte[] { 0x1B, 0x5B, 0x42 }); //ESC[B
+            Client.Send(new byte[] { 0x1B, 0x5B, 0x42 }); //ESC[B
         }
 
         public static void Right()
         {
             //Current.Send(new byte[] { 0x1B, 0x5B, 0x43 }); //ESC[C
-            pttClient.Send(0x72); //r
+            Client.Send(0x72); //r
         }
 
         public static void Left()
         {
             //Current.Send(new byte[] { 0x1B, 0x5B, 0x44 }); //ESC[D
-            pttClient.Send(0x71); //q
+            Client.Send(0x71); //q
         }
 
         public static void PageDown()
         {
-            pttClient.Send(new byte[] { 0x06 });
+            Client.Send(new byte[] { 0x06 });
         }
 
         public static void PageUp()
         {
-            pttClient.Send(new byte[] { 0x02 });
+            Client.Send(new byte[] { 0x02 });
         }
 
         public static void PageHome()
         {
-            pttClient.Send(new byte[] { 0x30, 0x72 }); //0r
+            Client.Send(new byte[] { 0x30, 0x72 }); //0r
         }
 
         public static void PageEnd()
         {
-            pttClient.Send(new byte[] { 0x24 }); //'$'
+            Client.Send(new byte[] { 0x24 }); //'$'
         }
 
         public static void GoToFavorite()
         {
-            pttClient.Send(new byte[] { 0x46, 0x1B, 0x5B, 0x43 });
+            Client.Send(new byte[] { 0x46, 0x1B, 0x5B, 0x43 });
         }
 
         public static void SendMessage(string s)
         {
-            pttClient.Send(s);
+            Client.Send(s);
         }
 
         public static void SendMessage(params object[] args)
         {
-            pttClient.Send(args);
+            Client.Send(args);
         }
 
         public static void SendMessage(byte[] message)
         {
-            pttClient.Send(message);
+            Client.Send(message);
         }
 
         public static void SendMessage(byte b)
         {
-            pttClient.Send(b);
+            Client.Send(b);
         }
 
         public static void SendMessage(char c)
         {
-            pttClient.Send(c);
+            Client.Send(c);
         }
 
         public static void Send(byte[] msg)
         {
-            pttClient.Send(msg);
-        }
-
-        private static void WaitEcho()
-        {
-            ScreenSemaphore.Wait();
+            Client.Send(msg);
         }
 
         public static void CreateInstance()
         {
-            pttClient = new PTTClient();
-            ScreenSemaphore = new SemaphoreSlim(0, 1);
-            pttClient.ScreenUpdated += (o, e) =>
+            ConnectionSecurity = true;
+
+            Client = new PTTClient
             {
-                if (ScreenSemaphore.CurrentCount == 0) ScreenSemaphore.Release();
+                Security = security
             };
         }
 
         public static void ReleaseInstance()
         {
-            pttClient.IsExit = true;
+            Client.IsExit = true;
             State = PttState.Disconnected;
-            OnPttEventEchoed(State, pttClient.Screen);
-            pttClient.Dispose();
+            OnPttEventEchoed(State);
+            Client.Dispose();
             var task = Task.Run(async () => { await ImageCache.ClearAllCache(); });
             task.Wait();
         }
@@ -706,9 +685,9 @@ namespace LiPTT
             PttEventEchoed = null;
         }
 
-        private static void OnPttEventEchoed(PttState state, ScreenBuffer screen)
+        private static void OnPttEventEchoed(PttState state)
         {
-            PttEventEchoed?.Invoke(pttClient, new LiPttEventArgs(state, screen));
+            PttEventEchoed?.Invoke(Client, new LiPttEventArgs(state));
         }
 
         public static Windows.Foundation.IAsyncAction RunInUIThread(Windows.UI.Core.DispatchedHandler callback)
@@ -719,18 +698,12 @@ namespace LiPTT
 
     public class LiPttEventArgs : EventArgs
     {
-        public LiPttEventArgs(PttState state, ScreenBuffer screen)
+        public LiPttEventArgs(PttState state)
         {
             State = state;
-            Screen = screen;
         }
 
         public PttState State
-        {
-            get; set;
-        }
-
-        public ScreenBuffer Screen
         {
             get; set;
         }
@@ -748,6 +721,22 @@ namespace LiPTT
             {
                 space = value;
                 NotifyPropertyChanged("Space");
+            }
+        }
+
+        public bool? ConnectionSecurity
+        {
+            get
+            {
+                return LiPTT.ConnectionSecurity;
+            }
+            set
+            {
+                if (value is bool b)
+                {
+                    LiPTT.ConnectionSecurity = b;
+                    NotifyPropertyChanged("ConnectionSecurity");
+                }
             }
         }
 

@@ -6,11 +6,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.IO;
-using Renci.SshNet;
-using Renci.SshNet.Common;
 using System.Diagnostics;
-//https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_servers
-//https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications
+using Windows.System.Threading;
+using Windows.UI.Core;
+
+//Websocket
+using Windows.Networking.Sockets;
+using Windows.Storage.Streams;
+using System.Runtime.InteropServices.WindowsRuntime;
+
 //https://docs.microsoft.com/zh-tw/windows/uwp/networking/websockets
 namespace LiPTT
 {
@@ -106,36 +110,16 @@ namespace LiPTT
         #endregion 事件一堆堆
 
         #region 各種屬性
-        public bool SSH
+        public bool Security
         {
-            get { return modeSSH; }
+            get
+            {
+                return ConnectionSecurity;
+            }
             set
             {
-                if (modeSSH != value)
-                {
-                    if (isConnected)
-                    {
-                        Disconnect();
-                        modeSSH = value;
-                        if (modeSSH)
-                        {
-                            var t = Task.Delay(TimeSpan.FromMilliseconds(50));
-                            t.Wait();
-                        }
-                        Connect();
-                    }
-                    else
-                    {
-                        modeSSH = value;
-                        Connect(); 
-                    }
-                }
+                ConnectionSecurity = value;
             }
-        }
-
-        public string Host
-        {
-            get { return host; }
         }
 
         public int Port
@@ -157,25 +141,25 @@ namespace LiPTT
         }
         #endregion 各種屬性
 
-        private string host;
         private int port;
+
         private ScreenBuffer screenBuffer;      
         private TcpClient tcpClient;
-        private SshClient sshClient;
+        private MessageWebSocket WebSocket;
+
+        ThreadPoolTimer TestKickTimer;
+
         private Stream stream;
-        private bool modeSSH;
+        private bool ConnectionSecurity;
         protected bool isConnected;
-        public SemaphoreSlim ScreenLocker;
+        //public SemaphoreSlim ScreenLocker;
 
         const int ConnectTimeout = 5 * 1000;
         const int AliveTimeout = 30 * 60 * 1000;
 
         public PTTClient()
         {
-            host = "ptt.cc";
             port = 443;
-            modeSSH = false;
-            isConnected = false;
             DefaultState();
         }
 
@@ -192,11 +176,12 @@ namespace LiPTT
                 tcpClient = null;
             }
 
-            if (sshClient != null)
+            if (WebSocket != null)
             {
-                sshClient.Dispose();
-                sshClient = null;
+                WebSocket.Dispose();
+                WebSocket = null;
             }
+
             isConnected = false;
             DefaultState();
         }
@@ -205,6 +190,7 @@ namespace LiPTT
         {
             if (isConnected)
             {
+                TestWebSocketRecvTimer?.Cancel();
                 isConnected = false;
                 Dispose();
                 DefaultState();
@@ -225,13 +211,13 @@ namespace LiPTT
 
         private void ConnectPTT()
         {
-            if (modeSSH)
-                ConnectWithSSH();
+            if (ConnectionSecurity)
+                ConnectWithWebSocket();
             else
                 ConnectWithTCP();
         }
 
-        private void ConnectWithTCP()
+        private async void ConnectWithTCP()
         {
             if (tcpClient != null) Disconnect();
 
@@ -239,18 +225,39 @@ namespace LiPTT
 
             try
             {
-                var task = tcpClient.ConnectAsync(this.host, this.port);
-                task.Wait();
+                await tcpClient.ConnectAsync("ptt.cc", port);
 
                 if (tcpClient.Connected)
                 {
+                    TestKickTimer = ThreadPoolTimer.CreatePeriodicTimer((source) => {
+
+                        
+                        if (tcpClient?.Client.Poll(10, SelectMode.SelectRead) == true)
+                        {
+                            TestKickTimer?.Cancel();
+                            TestKickTimer = null;
+
+                            if (IsExit)
+                            {
+                                Disconnect();
+                            }
+                            else
+                            {
+                                Dispose();
+                                OnPTTKicked();
+                            }                              
+                        }
+
+                    }, TimeSpan.FromSeconds(1));
+
+                    isConnected = true;
                     OnPTTConnected();
                     tcpClient.ReceiveTimeout = AliveTimeout;
                     tcpClient.SendTimeout = AliveTimeout;
-                    isConnected = true;
-                    ScreenLocker = new SemaphoreSlim(1, 1);
+                    
+                    //ScreenLocker = new SemaphoreSlim(1, 1);
                     stream = tcpClient.GetStream();
-                    Task.Run(() => { StartRecv(); });
+                    StartRecv();
                 }
             }
             catch (AggregateException)
@@ -259,44 +266,80 @@ namespace LiPTT
             }
         }
 
-        private void ConnectWithSSH()
+        private async void ConnectWithWebSocket()
         {
-            if (sshClient != null) Disconnect();
+            WebSocket = new MessageWebSocket();
+            WebSocket.Control.MessageType = SocketMessageType.Binary;
+            WebSocket.MessageReceived += WebSocket_MessageReceived;
+            WebSocket.SetRequestHeader("Origin", "https://www.ptt.cc");
 
-            string username = "bbs";
-            string password = "";
-            //似乎只有22有開
-            int port = 22;
-
-            ConnectionInfo conInfo = new ConnectionInfo(this.host, port, username, new AuthenticationMethod[]{
-                    new PasswordAuthenticationMethod(username, password)
-                    })
+            WebSocket.Closed += (a, e) =>
             {
-                Timeout = TimeSpan.FromMilliseconds(ConnectTimeout)
+                Debug.WriteLine("WebSocket Closed");
+                if (!IsExit)
+                {
+                    Dispose();
+                    OnPTTKicked();
+                }
+                else
+                {
+                    Debug.WriteLine("WebSocket: 掰掰~");
+                    Disconnect();
+                }
             };
 
             try
             {
-                sshClient = new SshClient(conInfo);
-                sshClient.Connect();
-                
-                if (sshClient.IsConnected)
-                {
-                    isConnected = true;
-                    //sshClient.KeepAliveInterval = TimeSpan.FromMilliseconds(1);
-                    stream = sshClient.CreateShellStream("ptt_console", 80, 24, 800, 800, 10240);
-                    StartRecv();
-                }              
-            }
-            catch (SshOperationTimeoutException)
-            {
-                OnPTTConnectionFailed();
+                Uri host = new Uri("wss://ws.ptt.cc/bbs");
+                await WebSocket.ConnectAsync(host);
+                isConnected = true;
+                OnPTTConnected();
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.ToString());
                 OnPTTConnectionFailed();
             }
+        }
+
+        Windows.Storage.Streams.Buffer testbuffer = new Windows.Storage.Streams.Buffer(4096);
+        ThreadPoolTimer TestWebSocketRecvTimer;
+        TimeSpan WebSocketPeriod = TimeSpan.FromSeconds(2);
+        MemoryStream ms = new MemoryStream();
+
+        private async void WebSocket_MessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
+        {
+            var buf = await args.GetDataStream().ReadAsync(testbuffer, testbuffer.Capacity, InputStreamOptions.None);
+
+            if (buf.Length > 0)
+            {
+                var bbb = buf.ToArray();
+                await ms.WriteAsync(bbb, 0, bbb.Length);
+
+                if (buf.Length != 1024)
+                {
+                    TestWebSocketRecvTimer?.Cancel();
+                    byte[] www = ms.ToArray();
+                    ms = new MemoryStream();
+                    Parse(www);
+                    OnScreenDrawn(screenBuffer);
+                    OnScreenUpdated(screenBuffer);
+                }
+                else
+                {
+                    TestWebSocketRecvTimer?.Cancel();
+                    TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer(TestWebsocket, WebSocketPeriod);
+                }
+            }
+        }
+
+        private void TestWebsocket(ThreadPoolTimer timer)
+        {
+            byte[] msg = ms.ToArray();
+            ms = new MemoryStream();
+            Parse(msg);
+            OnScreenDrawn(screenBuffer);
+            OnScreenUpdated(screenBuffer);
         }
 
         bool hasNumber;
@@ -334,26 +377,27 @@ namespace LiPTT
             {
                 try
                 {
-                    ScreenLocker.Wait();
+                   // ScreenLocker.Wait();
                     r = stream.Read(buffer, 0, buffer.Length);
                     if (r > 0)
                     {
                         Parse(buffer, 0, r);
-                        ScreenLocker.Release();
+                        //ScreenLocker.Release();
                         OnScreenDrawn(screenBuffer);
                         OnScreenUpdated(screenBuffer);
                     }
                     else
                     {
-                        ScreenLocker.Release();
+                        //ScreenLocker.Release();
                     }
-                    
+
                 }
                 catch (ObjectDisposedException)
                 {
                     if (IsExit)
                     {
                         Debug.WriteLine("StartRecv():掰掰囉~");
+                        Disconnect();
                     }
                     else
                     {
@@ -370,22 +414,20 @@ namespace LiPTT
             }
         }
 
-        public bool IsConnectionAlright()
+        public bool IsConnected
         {
-            if (isConnected)
+            get
             {
-                if (tcpClient.Client.Poll(10, SelectMode.SelectRead) == true)
-                {
-                    Dispose();
-                    OnPTTKicked();
-                    return false;
-                }
-                return true;
+                return isConnected;
             }
-            return false;
         }
 
-        private void Parse(byte[] data, int index, int count)
+        private void Parse(byte[] message)
+        {
+            Parse(message, 0, message.Length);
+        }
+
+        private void Parse(byte[] message, int index, int count)
         {
             if (count <= 0) return;
 #if DEBUG
@@ -395,7 +437,7 @@ namespace LiPTT
 
             for (int i = index; i < index + count; i++)
             {
-                byte b = data[i];
+                byte b = message[i];
 
                 if (ESC)
                 {
@@ -845,29 +887,22 @@ namespace LiPTT
                 }
             }
 #if DEBUG
-            //Debug.WriteLine(RAW_Message.ToString());
+            Debug.WriteLine(RAW_Message.ToString());
 #endif
         }
 
-        public void Send(byte[] message)
+        public async void Send(byte[] message)
         {
-            if (isConnected == false || stream == null) return;
-
             try
             {
                 for (int i = 0; i < message.Length; i++) Debug.WriteLine("==>0x{0:X2}", message[i]);
 
-
-
-                if (modeSSH)
+                if (ConnectionSecurity)
                 {
-                    ShellStream ss = stream as ShellStream;
-                    
-                    ss.Write(message, 0, message.Length);
-                    ss.FlushAsync();
+                    await WebSocket.OutputStream.WriteAsync(message.AsBuffer());
                 }
                 else
-                    stream.WriteAsync(message, 0, message.Length);
+                    await stream.WriteAsync(message, 0, message.Length);
             }
             catch (ObjectDisposedException)
             {
@@ -886,25 +921,21 @@ namespace LiPTT
             Send(msg);
         }
 
-        public void Send(char c)
+        public async void Send(char c)
         {
-            if (isConnected == false || stream == null) return;
-
             try
             {
                 bufOneChar[0] = c;
-                var msg = LiPTT_Encoding.GetEncoding().GetBytes(bufOneChar, 0, 1);
+                byte[] msg = LiPTT_Encoding.GetEncoding().GetBytes(bufOneChar, 0, 1);
 
                 Debug.WriteLine("==>" + c);
 
-                if (modeSSH)
+                if (ConnectionSecurity)
                 {
-                    ShellStream ss = stream as ShellStream;
-                    ss.Write(msg, 0, msg.Length);
-                    ss.FlushAsync();
+                    await WebSocket.OutputStream.WriteAsync(msg.AsBuffer());
                 }
                 else
-                    stream.WriteAsync(msg, 0, msg.Length);
+                    await stream.WriteAsync(msg, 0, msg.Length);
             }
             catch (ObjectDisposedException)
             {
@@ -916,23 +947,19 @@ namespace LiPTT
             }
         }
 
-        public void Send(byte b)
+        public async void Send(byte b)
         {
-            if (isConnected == false || stream == null) return;
-
             try
             {
                 bufOneByte[0] = b;
                 Debug.WriteLine("==>0x{0:X2}", b);
 
-                if (modeSSH)
+                if (ConnectionSecurity)
                 {
-                    ShellStream ss = stream as ShellStream;
-                    ss.Write(bufOneByte, 0, 1);
-                    ss.FlushAsync();
+                    await WebSocket.OutputStream.WriteAsync(bufOneByte.AsBuffer());
                 }
                 else
-                    stream.WriteAsync(bufOneByte, 0, 1);
+                    await stream.WriteAsync(bufOneByte, 0, 1);
             }
             catch (ObjectDisposedException)
             {
@@ -944,10 +971,8 @@ namespace LiPTT
             }
         }
 
-        public void Send(params object[] list)
+        public async void Send(params object[] list)
         {
-            if (isConnected == false || stream == null) return;
-
             List<byte> msg = new List<byte>();
 
             foreach (var o in list)
@@ -972,18 +997,17 @@ namespace LiPTT
                 }
             }
 
+            byte[] message = msg.ToArray();
+
             try
             {
-                byte[] message = msg.ToArray();
-
-                if (modeSSH)
+                if (ConnectionSecurity)
                 {
-                    ShellStream ss = stream as ShellStream;
-                    ss.Write(message, 0, message.Length);
-                    ss.FlushAsync();
+                    var os = WebSocket.OutputStream;
+                    await os.WriteAsync(message.AsBuffer());
                 }
                 else
-                    stream.WriteAsync(message, 0, message.Length);
+                    await stream.WriteAsync(message, 0, message.Length);
             }
             catch (ObjectDisposedException)
             {

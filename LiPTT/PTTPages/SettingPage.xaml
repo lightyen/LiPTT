@@ -9,8 +9,9 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel>
-            <TextBlock Text="還在施工中..." />
-            <Slider Header="Space%" Width="500" HorizontalAlignment="Left" Value="" />
+            <TextBlock Text="還在施工中..." Margin="10,10,10,60"/>
+            <CheckBox Content="安全連線" Margin="10,10,10,10" IsChecked="{Binding ConnectionSecurity, Source={StaticResource GlobalProperty}, Mode=TwoWay}" />
+            <Slider Header="Space%" Width="500" HorizontalAlignment="Left" />
         </StackPanel>
     </Grid>
 </Page>

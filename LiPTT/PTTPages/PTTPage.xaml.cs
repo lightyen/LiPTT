@@ -77,7 +77,7 @@ namespace LiPTT
             if (LiPTT.IsExit == false)
             {
                 LiPTT.IsExit = true;
-                LiPTT.TestConnectionTimer.Stop();
+                //LiPTT.TestConnectionTimer.Stop();
                 LiPTT.KeepAliveTimer.Stop();
                 LiPTT.PttEventEchoed += Exit_echoed;
 

@@ -289,12 +289,12 @@ namespace LiPTT
 
         private void RadioButtonTCP_Click(object sender, RoutedEventArgs e)
         {
-            LiPTT.SSH = false;
+            LiPTT.ConnectionSecurity = false;
         }
 
         private void RadioButtonSSH_Click(object sender, RoutedEventArgs e)
         {
-            LiPTT.SSH = true;
+            LiPTT.ConnectionSecurity = true;
         }
 
         private void Reconnect_Click(object sender, RoutedEventArgs e)

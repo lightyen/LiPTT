@@ -117,12 +117,13 @@ namespace LiPTT
         {
             Regex regex = new Regex(@"([\w-_]+)");
             Match match;
+            ScreenBuffer screen = sender.Screen;
 
             switch (e.State)
             {
                 case PttState.SearchBoard:
                     LiPTT.PttEventEchoed -= SearchBoard;
-                    var msg = e.Screen.ToString(1, 34, 20).Trim();
+                    var msg = screen.ToString(1, 34, 20).Trim();
 
                     match = regex.Match(msg);
 
@@ -150,7 +151,7 @@ namespace LiPTT
 
                     for (int i = 3; i < 23; i++)
                     {
-                        string k = e.Screen.ToString(i).Replace('\0', ' ');
+                        string k = screen.ToString(i).Replace('\0', ' ');
 
                         match = regex.Match(k, 0);
                         if (match.Success) RelatedTable.Add(k.Substring(match.Index, match.Length));
@@ -163,7 +164,7 @@ namespace LiPTT
 
                     }
 
-                    if (new Regex("按空白鍵可列出更多項目").Match(e.Screen.ToString(23)).Success)
+                    if (new Regex("按空白鍵可列出更多項目").Match(screen.ToString(23)).Success)
                     {
                         LiPTT.PressSpace();
                     }

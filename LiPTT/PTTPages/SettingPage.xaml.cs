@@ -24,7 +24,7 @@ namespace LiPTT
     {
         public SettingPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
     }
 }

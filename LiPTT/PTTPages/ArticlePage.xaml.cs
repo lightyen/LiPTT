@@ -177,7 +177,7 @@ namespace LiPTT
 
         private bool pressAny;
 
-        private void ReadAIDandExtra(PTTClient sender, LiPttEventArgs e)
+        private void ReadAIDandExtra(PTTClient client, LiPttEventArgs e)
         {
             if (e.State == PttState.Article && !LoadingExtraData)
             {
@@ -187,7 +187,7 @@ namespace LiPTT
             else if (!pressAny && e.State == PttState.PressAny && LoadingExtraData)
             {
                 pressAny = true;
-                ReadExtraData(e.Screen);
+                ReadExtraData(client.Screen);
                 LiPTT.PressAnyKey();
             }
             else if (e.State == PttState.Board && LoadingExtraData)
@@ -283,13 +283,13 @@ namespace LiPTT
             LiPTT.Left();
         }
 
-        private void PttEventEchoed_UpdateArticleTag(PTTClient sender, LiPttEventArgs e)
+        private void PttEventEchoed_UpdateArticleTag(PTTClient client, LiPttEventArgs e)
         {
             if (e.State == PttState.Board)
             {
                 LiPTT.PttEventEchoed -= PttEventEchoed_UpdateArticleTag;
 
-                ReLoadArticleTag(e.Screen);
+                ReLoadArticleTag(client.Screen);
                 LiPTT.PageEnd();
                 //LiPTT.SendMessage(LiPTT.ArticleCollection.CurrentIndex.ToString(), 0x0D);
                 var action = LiPTT.RunInUIThread(() =>

@@ -120,11 +120,16 @@ namespace LiPTT
                 LiPTT.PttEventEchoed -= Exit_echoed;
                 LiPTT.RemoveHandlerStateChecker();
                 LiPTT.PressAnyKey();
-
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                    LiPTT.Frame.Navigate(typeof(LoginPage));
-                });
+                LiPTT.Client.Disconnected += GoToLogin;
             }
+        }
+
+        private async void GoToLogin(object o, EventArgs e)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                LiPTT.Frame.Navigate(typeof(LoginPage));
+                LiPTT.Client.Disconnected -= GoToLogin;
+            });
         }
 
         private int pivot_index = -1;

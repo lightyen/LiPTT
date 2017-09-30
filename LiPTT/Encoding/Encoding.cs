@@ -54,13 +54,14 @@ namespace LiPTT
             {
                 b2u_table = new Hashtable();
                 u2b_table = new Hashtable();
-                Task task = new Task(LoadEncoding);
-                task.Start();
+                
+                Task task = LoadEncoding();
                 task.Wait();
+                Debug.WriteLine("Load Encoding Completed");
             }
         }
 
-        private async void LoadEncoding()
+        private async Task LoadEncoding()
         {
             try
             {

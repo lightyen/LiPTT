@@ -44,7 +44,6 @@ namespace LiPTT
         public async Task ClearAllCache()
         {
             var cache_folder = ApplicationData.Current.LocalCacheFolder;
-            Debug.WriteLine("Clear Cache");
             IReadOnlyList<StorageFile> files = await cache_folder.GetFilesAsync();
 
             foreach (var f in files)

@@ -221,8 +221,6 @@ namespace LiPTT
                 LiPTT.SendMessage(m.ToArray()); 
             }
 
-            searchEnter = false;
-
             LiPTT.Frame.Navigate(typeof(ArticlePage));
         }
 
@@ -466,8 +464,6 @@ namespace LiPTT
             return article;
         }
 
-        private bool searchEnter = false;
-
         private void SearchIDTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == VirtualKey.Escape)
@@ -521,8 +517,6 @@ namespace LiPTT
                 if (article != null)
                 {
                     LiPTT.CurrentArticle = article;
-
-                    searchEnter = true;
 
                     var b = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {

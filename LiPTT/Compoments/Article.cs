@@ -676,14 +676,15 @@ namespace LiPTT
             
             //推文ID////高亮五樓/////高亮原PO/////////////////////
             SolidColorBrush authorColor = new SolidColorBrush(Colors.LightSalmon);
+
             if (Floor == 5)
             {
                 FiveFloor = echo.Author;
-                authorColor = new SolidColorBrush(Colors.LightPink);
+                //authorColor = new SolidColorBrush(Colors.LightPink);
             }
             else if (FiveFloor == echo.Author)
             {
-                authorColor = new SolidColorBrush(Colors.LightPink);
+                //authorColor = new SolidColorBrush(Colors.LightPink);
             }
             else if (ArticleTag.Author == echo.Author)
             {
@@ -698,7 +699,7 @@ namespace LiPTT
             };
             g1.Children.Add(tb);
 
-            //把五樓以前的五樓也高亮起來
+            //並把五樓以前的五樓也高亮起來
             if (Floor <= 5)
                 tempEchoes.Add(echo, tb);
 
@@ -709,9 +710,10 @@ namespace LiPTT
                     if (FiveFloor == kv.Key.Author)
                     {
                         if (FiveFloor != ArticleTag.Author)
-                            kv.Value.Foreground = new SolidColorBrush(Colors.LightPink);
-                    }
-                        
+                        {
+                            //kv.Value.Foreground = new SolidColorBrush(Colors.LightPink);
+                        }   
+                    }                     
                 }
                 tempEchoes.Clear();
             }
@@ -880,7 +882,7 @@ namespace LiPTT
                             Uri new_uri = new Uri("http://i.imgur.com/" + ID + ".png");
 
                             ProgressRing ring = new ProgressRing() { IsActive = true, Width = 55, Height = 55 };
-                            Grid grid = new Grid() { Width = ViewWidth * (1 - Space), Height = 0.5625 * ViewWidth * (1 - Space), Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
+                            Grid grid = new Grid() { Width = ViewWidth * (1 - Space) * 0.5, Height = 0.5625 * ViewWidth * (1 - Space) * 0.5, Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
                             grid.Children.Add(ring);
                             Add(grid);
                             DownloadImageTasks.Add(DownloadImage(Count - 1, new_uri));

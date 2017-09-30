@@ -34,19 +34,19 @@ namespace LiPTT
         Synchronizing, //同步處理中
         LoginSoMany, //登入太頻繁
         AlreadyLogin, //重複登入
-        MainPage, //(全站分類)
+        MainPage, //主功能表
         Popular, //熱門看板列表
         PressAny, //按任意鍵喔
         WrongLog, //登入錯誤資訊
         Exit, //離開嗎?
         Favorite, //最愛看板列表
-        BoardArt, //進版畫面
-        RelatedBoard, //相關資訊一覽表
         SearchBoard, //搜尋看板
+        RelatedBoard, //相關資訊一覽表
         Board, //文章列表
         BoardInfomation, //看板資訊
         Article, //閱覽文章
         Angel, //小天使廣告
+        BoardArt, //進版畫面
     }
 
     /// <summary>
@@ -612,7 +612,7 @@ namespace LiPTT
         public static void ReleaseInstance()
         {
             Gamepads.Clear();
-
+            Debug.WriteLine("Clear Cache");
             ClearCacheTask = Task.Run(async () => { await ImageCache.ClearAllCache(); });
 
             if (Client.IsConnected)
@@ -638,7 +638,7 @@ namespace LiPTT
             Debug.WriteLine("Exit");
         }
 
-        private static void ExitPttEventEchoed(PTTClient sender, LiPttEventArgs e)
+        private async static void ExitPttEventEchoed(PTTClient sender, LiPttEventArgs e)
         {
             if (State == PttState.Exit)
             {
@@ -656,10 +656,9 @@ namespace LiPTT
             {
                 PttEventEchoed -= ExitPttEventEchoed;
                 Client.ScreenUpdated -= Current_ScreenUpdated;
-                PressAnyKey();
-                
+                PressAnyKey();                
                 Client.Disconnect();
-                if (ClearCacheTask.Status != TaskStatus.RanToCompletion) ClearCacheTask.Wait();
+                await ClearCacheTask;
                 exitSemaphore.Release();
             }
         }

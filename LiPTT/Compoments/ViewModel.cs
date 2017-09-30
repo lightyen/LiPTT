@@ -26,8 +26,11 @@ namespace LiPTT
                 case PttState.Connecting:
                     State = "連線中...";
                     break;
-                case PttState.ConnectFailed:
-                    State = "連線失敗";
+                case PttState.ConnectFailedTCP:
+                    State = "TCP 連線失敗";
+                    break;
+                case PttState.ConnectFailedWebSocket:
+                    State = "WebSocket 連線失敗";
                     break;
                 case PttState.Board:
                     State = "看板";

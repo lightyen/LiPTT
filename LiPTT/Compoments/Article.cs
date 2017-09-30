@@ -380,12 +380,12 @@ namespace LiPTT
                 if (index < match.Index)
                 {
                     string text = str.Substring(index, match.Index - index);
-                    int _count = LiPTT_Encoding.GetEncoding().GetByteCount(text);
+                    int _count = PTTEncoding.GetEncoding().GetByteCount(text);
                     AddText(blocks, i, _count);
                     i += _count;
                 }
 
-                int count = LiPTT_Encoding.GetEncoding().GetByteCount(match.ToString());
+                int count = PTTEncoding.GetEncoding().GetByteCount(match.ToString());
 
                 try
                 {
@@ -410,7 +410,7 @@ namespace LiPTT
             if (index < str.Length)
             {
                 string text = str.Substring(index, str.Length - index);
-                int _count = LiPTT_Encoding.GetEncoding().GetByteCount(text);
+                int _count = PTTEncoding.GetEncoding().GetByteCount(text);
                 AddText(blocks, i, _count);
                 i += _count;
             }

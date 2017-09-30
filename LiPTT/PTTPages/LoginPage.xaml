@@ -18,7 +18,7 @@
                 </StackPanel>
                 <StackPanel Width ="400" Height="100">
                     <TextBlock Text="密碼：" FontSize="20"/>
-                    <PasswordBox x:Name="PasswordText" FontSize="30" KeyDown="PasswordText_KeyDown" IsPasswordRevealButtonEnabled="True"/>
+                    <PasswordBox x:Name="PasswordText" FontSize="30" KeyDown="PasswordText_KeyDown" PasswordRevealMode="Peek"/>
                 </StackPanel>
                 <Grid>
                     <CheckBox Content="記住帳號密碼" x:Name ="MemoAcount" Padding="20,5" KeyDown="MemoAcount_KeyDown" HorizontalAlignment="Left" Checked="MemoAcount_Checked" Unchecked="MemoAcount_Unchecked"/>

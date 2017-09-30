@@ -118,7 +118,7 @@ namespace LiPTT
             else if (e.State == PttState.PressAny)
             {
                 LiPTT.PttEventEchoed -= Exit_echoed;
-                LiPTT.PressAnyKey();
+                LiPTT.RemoveHandlerStateChecker();
                 LiPTT.PressAnyKey();
 
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {

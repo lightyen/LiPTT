@@ -30,14 +30,32 @@ namespace LiPTT
         }
     }
 
+    public enum ConnectionType
+    {
+        TCP,
+        WebSocket,
+    }
+
+    public class ConnectionFailedEventArgs : EventArgs
+    {
+        public ConnectionFailedEventArgs(ConnectionType e)
+        {
+            ConnectionType = e;
+        }
+
+        public ConnectionType ConnectionType
+        {
+            get; set;
+        }
+    }
+
     public class PTTClient
     {
         #region 事件一堆堆
         public delegate void ScreenEventHandler(object sender, ScreenEventArgs e);
 
-        /// <summary>
-        /// 注意 non-UI thread
-        /// </summary>
+        public delegate void ConnectionFailedEventHandler(object sender, ConnectionFailedEventArgs e);
+
         public event ScreenEventHandler ScreenUpdated;
 
         protected void OnScreenUpdated(ScreenBuffer e)
@@ -45,9 +63,6 @@ namespace LiPTT
             ScreenUpdated?.Invoke(this, new ScreenEventArgs(e));
         }
 
-        /// <summary>
-        /// 注意 non-UI thread
-        /// </summary>
         public event ScreenEventHandler ScreenDrawn;
 
         protected void OnScreenDrawn(ScreenBuffer e)
@@ -55,48 +70,33 @@ namespace LiPTT
             ScreenDrawn?.Invoke(this, new ScreenEventArgs(e));
         }
 
-        /// <summary>
-        /// 注意 non-UI thread
-        /// </summary>
         public event EventHandler Connected;
 
         protected void OnPTTConnected()
         {
-            Debug.WriteLine("PTT Event 已連線");
             Connected?.Invoke(this, new EventArgs());
         }
 
-        /// <summary>
-        /// 注意 non-UI thread
-        /// </summary>
         public event EventHandler Disconnected;
 
         protected void OnPTTDisconnected()
         {
-            Debug.WriteLine("PTT Event  已中斷連接");
             Disconnected?.Invoke(this, new EventArgs());
         }
 
-        /// <summary>
-        /// 注意 non-UI thread
-        /// </summary>
         public event EventHandler Kicked;
 
         protected void OnPTTKicked()
         {
-            Debug.WriteLine("PTT Event  被踢下線");
             Kicked?.Invoke(this, new EventArgs());
         }
 
-        /// <summary>
-        /// 注意 non-UI thread
-        /// </summary>
-        public event EventHandler ConnectionFailed;
+        public event ConnectionFailedEventHandler ConnectionFailed;
 
-        protected void OnPTTConnectionFailed()
+        protected void OnPTTConnectionFailed(ConnectionType e)
         {
             Debug.WriteLine("PTT Event  連線失敗");
-            ConnectionFailed?.Invoke(this, new EventArgs());
+            ConnectionFailed?.Invoke(this, new ConnectionFailedEventArgs(e));
         }
 
         public event EventHandler Belled;
@@ -121,9 +121,20 @@ namespace LiPTT
             }
         }
 
+        public string Host
+        {
+            get
+            {
+                return "ptt.cc";
+            }
+        }
+
         public int Port
         {
-            get { return port; }
+            get
+            {
+                return 443;
+            }
         }
 
         public ScreenBuffer Screen
@@ -147,9 +158,15 @@ namespace LiPTT
         }
 
         public bool PTTWrongResponse { set; get; }
-        #endregion 各種屬性
 
-        private int port;
+        public string WebSocketHost
+        {
+            get
+            {
+                return "wss://ws.ptt.cc/bbs";
+            }
+        }
+        #endregion 各種屬性
 
         private ScreenBuffer screenBuffer;      
         private TcpClient tcpClient;
@@ -160,13 +177,11 @@ namespace LiPTT
         private Stream stream;
         private bool ConnectionSecurity;
         protected bool isConnected;
-        //public SemaphoreSlim ScreenLocker;
-        const int ConnectTimeout = 5 * 1000;
-        const int AliveTimeout = 30 * 60 * 1000;
+
+        private TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(3);
 
         public PTTClient()
         {
-            port = 443;
             DefaultState();
         }
 
@@ -223,7 +238,7 @@ namespace LiPTT
                 ConnectWithTCP();
         }
 
-        private async void ConnectWithTCP()
+        private void ConnectWithTCP()
         {
             if (tcpClient != null) Disconnect();
 
@@ -231,9 +246,12 @@ namespace LiPTT
 
             try
             {
-                await tcpClient.ConnectAsync("ptt.cc", port);
-
-                if (tcpClient.Connected)
+                if (!tcpClient.ConnectAsync(Host, Port).Wait(ConnectionTimeout))
+                {
+                    Debug.WriteLine("TCP: 連線失敗");
+                    OnPTTConnectionFailed(ConnectionType.TCP);
+                }
+                else if (tcpClient.Connected)
                 {
                     TestKickTimer = ThreadPoolTimer.CreatePeriodicTimer((source) => {
 
@@ -247,15 +265,17 @@ namespace LiPTT
                                 Debug.WriteLine("TCP: 有錯誤訊息");
                                 Dispose();
                             }
-                            if (IsExit)
+                            else if (!IsExit)
                             {
-                                Disconnect();
+                                Debug.WriteLine("TCP: 被踢下線");
+                                OnPTTKicked();
+                                Dispose();
                             }
                             else
                             {
-                                Dispose();
-                                OnPTTKicked();
-                            }                              
+                                Debug.WriteLine("TCP: 連線關閉");
+                                Disconnect();
+                            }                       
                         }
 
                     }, TimeSpan.FromSeconds(1));
@@ -263,19 +283,18 @@ namespace LiPTT
                     isConnected = true;
                     OnPTTConnected();
                     Debug.WriteLine("TCP: 已連線");
-                    tcpClient.ReceiveTimeout = AliveTimeout;
-                    tcpClient.SendTimeout = AliveTimeout;
                     stream = tcpClient.GetStream();
                     StartRecv();
                 }
             }
-            catch (AggregateException)
+            catch (Exception)
             {
-                OnPTTConnectionFailed();
+                Debug.WriteLine("TCP: 連線失敗");
+                OnPTTConnectionFailed(ConnectionType.TCP);
             }
         }
 
-        private async void ConnectWithWebSocket()
+        private void ConnectWithWebSocket()
         {
             //pttbbs/daemon/wsproxy/
             /**
@@ -300,8 +319,9 @@ namespace LiPTT
                 }
                 else if (!IsExit)
                 {
-                    Dispose();
+                    Debug.WriteLine("WebSocket: 被踢下線");
                     OnPTTKicked();
+                    Dispose();
                 }
                 else
                 {
@@ -312,16 +332,22 @@ namespace LiPTT
 
             try
             {
-                Uri host = new Uri("wss://ws.ptt.cc/bbs");
-                await WebSocket.ConnectAsync(host);
-                isConnected = true;
-                OnPTTConnected();
-                Debug.WriteLine("WebSocket: 已連線");
+                if (!WebSocket.ConnectAsync(new Uri(WebSocketHost)).AsTask().Wait(ConnectionTimeout))
+                {
+                    Debug.WriteLine("WebSocket: 連線失敗");
+                    OnPTTConnectionFailed(ConnectionType.WebSocket);
+                }
+                else
+                {
+                    isConnected = true;
+                    OnPTTConnected();
+                    Debug.WriteLine("WebSocket: 已連線");
+                }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Debug.WriteLine(ex.ToString());
-                OnPTTConnectionFailed();
+                Debug.WriteLine("WebSocket: 連線失敗");
+                OnPTTConnectionFailed(ConnectionType.WebSocket);
             }
         }
 
@@ -342,7 +368,7 @@ namespace LiPTT
                     var bbb = buf.ToArray();
                     await ms.WriteAsync(bbb, 0, bbb.Length);
 
-                    if (buf.Length != 1024)
+                    if (buf.Length != 1024) //似乎一次訊息最多送1024byte
                     {
                         TestWebSocketRecvTimer?.Cancel();
                         byte[] www = ms.ToArray();
@@ -361,7 +387,7 @@ namespace LiPTT
             catch(Exception e)
             {
                 Debug.WriteLine(e.ToString());
-                Disconnect();
+                if (isConnected) Disconnect();
             }
         }
 
@@ -408,38 +434,29 @@ namespace LiPTT
             {
                 try
                 {
-                   // ScreenLocker.Wait();
                     r = stream.Read(buffer, 0, buffer.Length);
                     if (r > 0)
                     {
                         Parse(buffer, 0, r);
-                        //ScreenLocker.Release();
                         OnScreenDrawn(screenBuffer);
                         OnScreenUpdated(screenBuffer);
                     }
-                    else
-                    {
-                        //ScreenLocker.Release();
-                    }
-
                 }
                 catch (ObjectDisposedException)
                 {
                     if (IsExit)
                     {
                         Debug.WriteLine("TCP: 連線關閉");
-                        Disconnect();
                     }
                     else
                     {
-                        Debug.WriteLine("TCP: 怎麼惹?");
+                        
                     }
                     break;
                 }
                 catch (IOException)
                 {
                     Debug.WriteLine("TCP: 連線關閉");
-                    Disconnect();
                     break;
                 }
             }
@@ -884,7 +901,7 @@ namespace LiPTT
                                     //沒被切，畫整個
                                     word[1] = b;
 #if DEBUG
-                                    RAW_Message.Append(LiPTT_Encoding.GetEncoding().GetString(word));
+                                    RAW_Message.Append(PTTEncoding.GetEncoding().GetString(word));
 #endif
                                     queue = false;
                                     screenBuffer.DrawData(word);
@@ -947,7 +964,7 @@ namespace LiPTT
 
         public void Send(string message)
         {
-            byte[] msg = LiPTT_Encoding.GetEncoding().GetBytes(message);
+            byte[] msg = PTTEncoding.GetEncoding().GetBytes(message);
             Debug.WriteLine("==>" + message);
             Send(msg);
         }
@@ -957,7 +974,7 @@ namespace LiPTT
             try
             {
                 bufOneChar[0] = c;
-                byte[] msg = LiPTT_Encoding.GetEncoding().GetBytes(bufOneChar, 0, 1);
+                byte[] msg = PTTEncoding.GetEncoding().GetBytes(bufOneChar, 0, 1);
 
                 Debug.WriteLine("==>" + c);
 
@@ -1011,14 +1028,14 @@ namespace LiPTT
                 if (o.GetType().Equals(typeof(string)))
                 {
                     Debug.WriteLine("==>{0}", o);
-                    byte[] m = LiPTT_Encoding.GetEncoding().GetBytes((string)o);
+                    byte[] m = PTTEncoding.GetEncoding().GetBytes((string)o);
                     foreach (var b in m) msg.Add(b);
                 }
                 else if (o.GetType().Equals(typeof(char)))
                 {
                     bufOneChar[0] = (char)o;
                     Debug.WriteLine("==>{0}", o);
-                    byte[] m = LiPTT_Encoding.GetEncoding().GetBytes(bufOneChar, 0, 1);
+                    byte[] m = PTTEncoding.GetEncoding().GetBytes(bufOneChar, 0, 1);
                     foreach (var b in m) msg.Add(b);
                 }
                 else if (o.GetType().Equals(typeof(int)) || o.GetType().Equals(typeof(short)) || o.GetType().Equals(typeof(byte)))
@@ -1278,7 +1295,7 @@ namespace LiPTT
             if (row < 0 || row >= Height) return "";
             byte[] mssage = new byte[Width];
             for (int j = 0; j < Width; j++) mssage[j] = Screen[row][j].Content;
-            return LiPTT_Encoding.GetEncoding().GetString(mssage);
+            return PTTEncoding.GetEncoding().GetString(mssage);
         }
 
         /// <summary>
@@ -1294,7 +1311,7 @@ namespace LiPTT
             if (begin_x < 0 || begin_x + length - 1 >= Width) return "";
             byte[] mssage = new byte[length];
             for (int j = 0; j < length; j++) mssage[j] = Screen[row][j+ begin_x].Content;
-            return LiPTT_Encoding.GetEncoding().GetString(mssage);
+            return PTTEncoding.GetEncoding().GetString(mssage);
         }
 
         public string ToStringCurrent()
@@ -1318,7 +1335,7 @@ namespace LiPTT
                 mssage[k++] = 0x0A;
             }
  
-            return LiPTT_Encoding.GetEncoding().GetString(mssage);
+            return PTTEncoding.GetEncoding().GetString(mssage);
         }
 
         /// <summary>
@@ -1332,7 +1349,7 @@ namespace LiPTT
             for (int i = 0; i < Height; i++)
             {
                 for (int j = 0; j < Width; j++) mssage[j] = Screen[i][j].Content;
-                list.Add(LiPTT_Encoding.GetEncoding().GetString(mssage));
+                list.Add(PTTEncoding.GetEncoding().GetString(mssage));
             }
 
             return list.ToArray();

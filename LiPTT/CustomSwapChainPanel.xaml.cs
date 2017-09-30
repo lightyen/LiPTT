@@ -324,7 +324,7 @@ namespace LiPTT
 
                                 if (j + 1 >= Buffer.Width) break;
 
-                                string word = LiPTT_Encoding.GetEncoding().GetString(new byte[] { Buffer[i][j].Content, Buffer[i][++j].Content });
+                                string word = PTTEncoding.GetEncoding().GetString(new byte[] { Buffer[i][j].Content, Buffer[i][++j].Content });
                                 d2d1DC.DrawText(word, LeftFormat, layoutRect, Forebrush, option);
                                 layoutRect.X += dx;
 
@@ -352,7 +352,7 @@ namespace LiPTT
                             if (Buffer[i][j].Content != 0) sb.Add(Buffer[i][j].Content);
                             else sb.Add((byte)' ');
                         }
-                        String msg = LiPTT_Encoding.GetEncoding().GetString(sb.ToArray());
+                        String msg = PTTEncoding.GetEncoding().GetString(sb.ToArray());
                         TextLayout tl = new TextLayout(DirectXFactory.DWFactory, msg, LeftFormat, (float)this.ActualWidth, LeftFormat.FontSize);
 
                         RectangleF rect = new RectangleF(o.X, o.Y, tl.MaxWidth, tl.MaxHeight);

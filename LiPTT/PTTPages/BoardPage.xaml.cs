@@ -135,7 +135,7 @@ namespace LiPTT
 
                 //版主名單
                 str = screen.ToString(6, 15, screen.Width - 15).Replace('\0', ' ').Trim();
-                if (!new Regex(LiPTT.bound_regex).Match(str).Success)
+                if (!new Regex(LiPTT.bound_regex).Match(str).Success) //(無)
                 {
                     Board.Leaders = str.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                 }
@@ -197,6 +197,7 @@ namespace LiPTT
             if (article.Deleted) return;
 
             LiPTT.CurrentArticle = article;
+            
 
             if (article.ID != uint.MaxValue)
             {

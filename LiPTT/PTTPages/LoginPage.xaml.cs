@@ -202,7 +202,8 @@ namespace LiPTT
                         action.AsTask().Wait();
                     }
                     break;
-                case PttState.ConnectFailed:
+                case PttState.ConnectFailedTCP:
+                case PttState.ConnectFailedWebSocket:
                     {
                         var action = LiPTT.RunInUIThread(() => {
                             if (LiPTT.ConnectionSecurity) LiPTT.KeepAliveTimer.Stop();
@@ -211,7 +212,6 @@ namespace LiPTT
                             MemoAcount.IsEnabled = true;
                             AutoLogin.IsEnabled = true;
                         });
-                        action.AsTask().Wait();
                     }
                     break;
                 case PttState.PressAny:

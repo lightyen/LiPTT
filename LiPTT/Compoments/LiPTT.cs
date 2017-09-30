@@ -21,7 +21,8 @@ namespace LiPTT
         None,
         Disconnected, //未連線
         Connecting, //連線中...
-        ConnectFailed, //連線失敗
+        ConnectFailedTCP, //連線失敗 TCP
+        ConnectFailedWebSocket, //連線失敗 WebSocket
         Disconnecting, //斷線中
         Kicked, //被踢惹
         OverLoading, //PTT爆炸惹
@@ -182,10 +183,18 @@ namespace LiPTT
             Client.Connect();
         }
 
-        private static void HandleConnectionFailed(object sender, EventArgs e)
+        private static void HandleConnectionFailed(object sender, ConnectionFailedEventArgs e)
         {
             Client.Connected -= AddEventHandler;
-            State = PttState.ConnectFailed;
+            switch (e.ConnectionType)
+            {
+                case ConnectionType.WebSocket:
+                    State = PttState.ConnectFailedWebSocket;
+                    break;
+                default:
+                    State = PttState.ConnectFailedTCP;
+                    break;
+            }
             OnPttEventEchoed(State);
         }
 
@@ -202,8 +211,12 @@ namespace LiPTT
             State = PttState.Kicked;
             Client.Kicked -= PTTKicked;
             Client.ScreenUpdated -= Current_ScreenUpdated;
-            CurrentArticle = null;
             OnPttEventEchoed(State);
+        }
+
+        public static void RemoveHandlerStateChecker()
+        {
+            Client.ScreenUpdated -= Current_ScreenUpdated;
         }
 
         /// <summary>
@@ -251,7 +264,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if(Match(@"看板列表", 0))
+            else if(Match(@"\[←\]\[q\]回上層", 1))
             {
                 if (State != PttState.Favorite)
                 {
@@ -266,9 +279,9 @@ namespace LiPTT
                 State = PttState.RelatedBoard;
                 OnPttEventEchoed(State);
             }
-            else if (Match(@"選擇看板", 0))
+            else if (Match(@"請輸入看板名稱", 1))
             {
-                Debug.WriteLine("搜尋看板");
+                Debug.WriteLine("請輸入看板名稱");
                 State = PttState.SearchBoard;
                 OnPttEventEchoed(State);
             }
@@ -394,7 +407,8 @@ namespace LiPTT
 #if DEBUG
                 StringBuilder sb = new StringBuilder();
                 sb.Append("這裡是哪裡?\n");
-                foreach (string s in Client.Screen.ToStringArray())
+                var x = Client.Screen.ToStringArray();
+                foreach (string s in x)
                 {
                     sb.AppendFormat("{0}\n", s);
                 }
@@ -641,8 +655,9 @@ namespace LiPTT
             else if (State == PttState.PressAny)
             {
                 PttEventEchoed -= ExitPttEventEchoed;
+                Client.ScreenUpdated -= Current_ScreenUpdated;
                 PressAnyKey();
-                PressAnyKey();
+                
                 Client.Disconnect();
                 if (ClearCacheTask.Status != TaskStatus.RanToCompletion) ClearCacheTask.Wait();
                 exitSemaphore.Release();
@@ -707,7 +722,7 @@ namespace LiPTT
         {
             byte[] mssage = new byte[blocks.Length];
             for (int j = 0; j < blocks.Length; j++) mssage[j] = blocks[j].Content;
-            return LiPTT_Encoding.GetEncoding().GetString(mssage);
+            return PTTEncoding.GetEncoding().GetString(mssage);
         }
 
         public static string GetString(Block[] blocks, int index, int length)
@@ -715,7 +730,7 @@ namespace LiPTT
             if (index < 0 || index + length > blocks.Length) return "";
             byte[] mssage = new byte[length];
             for (int j = 0; j < length; j++) mssage[j] = blocks[index + j].Content;
-            return LiPTT_Encoding.GetEncoding().GetString(mssage);
+            return PTTEncoding.GetEncoding().GetString(mssage);
         }
 
 

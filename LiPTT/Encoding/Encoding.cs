@@ -9,13 +9,8 @@ using System.Diagnostics;
 
 namespace LiPTT
 {
-    public class LiPTT_Encoding
+    public class PTTEncoding
     {
-        public static string PreferEncoding
-        {
-            get; set;
-        }
-
         private static Encoding big5_uao;
 
         public static Encoding GetEncoding(string name)
@@ -23,7 +18,9 @@ namespace LiPTT
             string ln = name.ToLower();
             if (ln == "big5-uao" || ln == "big5_uao" || ln == "big5 uao")
             {
-                if (big5_uao == null) big5_uao = new Big5_UAO();
+                if (big5_uao == null)
+                    big5_uao = new Big5_UAO();
+
                 return big5_uao;
             }
             else
@@ -34,15 +31,22 @@ namespace LiPTT
 
         public static Encoding GetEncoding()
         {
-            if (PreferEncoding == null) PreferEncoding = "Big5-UAO";
-            return GetEncoding(PreferEncoding);
+            return GetEncoding("big5-uao");
         }
     }
     
     public class Big5_UAO : Encoding
     {
-        static Hashtable b2u_table;
-        static Hashtable u2b_table;
+        private static Hashtable b2u_table;
+        private static Hashtable u2b_table;
+
+        public override string EncodingName
+        {
+            get
+            {
+                return "Big5-UAO";
+            }
+        }
 
         public Big5_UAO()
         {

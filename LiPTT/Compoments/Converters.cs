@@ -530,6 +530,26 @@ namespace LiPTT
         }
     }
 
+    public class SpaceConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double val)
+            {
+                return val * 100.0;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            return (double)value / 100.0;
+        }
+    }
+
     public class GridLengthSideConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
@@ -539,20 +559,21 @@ namespace LiPTT
             if (value is double ViewWidth && parameter is Windows.Graphics.Imaging.BitmapSize ImageSize)
             {
                 double ratio = ImageSize.Width / (double)ImageSize.Height;
+                double space = (Application.Current.Resources["GlobalProperty"] as GlobalProperty).Space;
 
-                if (ImageSize.Width < ViewWidth * (1 - LiPTT.ImageSpace))
+                if (ImageSize.Width < ViewWidth * (1 - space))
                 {
                     return new GridLength(1, GridUnitType.Star);
                 }
-                else if (ratio >= 1.0)
+                else if (ratio > 1.0)
                 {
-                    return new GridLength(LiPTT.ImageSpace / 2.0, GridUnitType.Star);
+                    return new GridLength(space / 2.0, GridUnitType.Star);
 
                 }
                 else
                 {
-                    double x = ratio * (1 - LiPTT.ImageSpace) / 2.0;
-                    return new GridLength(LiPTT.ImageSpace / 2.0 + x, GridUnitType.Star);
+                    double x = ratio * (1 - space) / 2.0;
+                    return new GridLength(space / 2.0 + x, GridUnitType.Star);
                 }
             }
 
@@ -573,18 +594,19 @@ namespace LiPTT
             if (value is double ViewWidth && parameter is Windows.Graphics.Imaging.BitmapSize ImageSize)
             {
                 double ratio = ImageSize.Width / (double)ImageSize.Height;
+                double space = (Application.Current.Resources["GlobalProperty"] as GlobalProperty).Space;
 
-                if (ImageSize.Width < ViewWidth * (1 - LiPTT.ImageSpace))
+                if (ImageSize.Width < ViewWidth * (1 - space))
                 {
                     return new GridLength(ImageSize.Width, GridUnitType.Pixel);
                 }
-                else if (ratio >= 1.0)
+                else if (ratio > 1.0)
                 {
-                    return new GridLength((1 - LiPTT.ImageSpace), GridUnitType.Star);
+                    return new GridLength((1 - space), GridUnitType.Star);
                 }
                 else
                 {
-                    return new GridLength((1 - LiPTT.ImageSpace) * ratio, GridUnitType.Star);
+                    return new GridLength((1 - space) * ratio, GridUnitType.Star);
                 }
             }
 

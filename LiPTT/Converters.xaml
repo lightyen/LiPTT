@@ -19,4 +19,5 @@
     <local:RingRatioConverter x:Key="MyRingRatioConverter" />
     <local:GridLengthCenterConverter x:Key="GridLengthCenterConverter" />
     <local:GridLengthSideConverter x:Key="GridLengthSideConverter" />
+    <local:SpaceConverter x:Key="SpaceConverter" />
 </ResourceDictionary>

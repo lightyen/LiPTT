@@ -281,7 +281,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"【板主", 0))
+            else if (Match(@"\[←\]離開 \[→\]閱讀", 1))
             {
                 Debug.WriteLine("看板");
                 State = PttState.Board;
@@ -301,6 +301,7 @@ namespace LiPTT
                 if (State != PttState.WrongPassword)
                 {
                     State = PttState.WrongPassword;
+                    Client.PTTWrongResponse = true;
                     OnPttEventEchoed(State);
                 }
 
@@ -311,6 +312,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("系統過載");
                     State = PttState.OverLoading;
+                    Client.PTTWrongResponse = true;
                     OnPttEventEchoed(State);
                 }
             }
@@ -347,7 +349,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("登入太頻繁 請稍後在試");
                     State = PttState.LoginSoMany;
-                    Client.LoginToMany = true;
+                    Client.PTTWrongResponse = true;
                     OnPttEventEchoed(State);
                 }
             }

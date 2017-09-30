@@ -16,14 +16,12 @@ namespace LiPTT
             LiPTT.PttEventEchoed += LiPTT_PttEventEchoed;
         }
 
-        private bool overloading = false;
-
         private void LiPTT_PttEventEchoed(PTTClient sender, LiPttEventArgs e)
         {
             switch (e.State)
             {
                 case PttState.Disconnected:
-                    if (!overloading) State = "未連線";
+                    if (!LiPTT.Client.PTTWrongResponse) State = "未連線";
                     break;
                 case PttState.Connecting:
                     State = "連線中...";
@@ -38,10 +36,9 @@ namespace LiPTT
                     State = "搜尋看板";
                     break;
                 case PttState.Disconnecting:
-                    if (!overloading) State = "斷線中...";
+                    if (!LiPTT.Client.PTTWrongResponse) State = "斷線中...";
                     break;
                 case PttState.Login:
-                    overloading = false;
                     State = "請輸入帳號";
                     break;
                 case PttState.Password:
@@ -60,15 +57,12 @@ namespace LiPTT
                     State = "有重複登入，踢掉中...";
                     break;
                 case PttState.OverLoading:
-                    overloading = true;
                     State = "PTT被你玩壞惹?";
                     break;
                 case PttState.LoginSoMany:
-                    overloading = true;
                     State = "登入太頻繁 請稍後在試";
                     break;
                 case PttState.Kicked:
-                    overloading = true;
                     State = "誰踢我?";
                     break;
                 case PttState.WrongPassword:

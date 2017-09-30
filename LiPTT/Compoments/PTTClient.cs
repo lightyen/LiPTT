@@ -146,7 +146,7 @@ namespace LiPTT
             }
         }
 
-        public bool LoginToMany { set; get; }
+        public bool PTTWrongResponse { set; get; }
         #endregion 各種屬性
 
         private int port;
@@ -190,7 +190,9 @@ namespace LiPTT
             }
 
             isConnected = false;
-            DefaultState();
+            DefaultState();         
+            OnScreenUpdated(screenBuffer);
+            OnScreenDrawn(screenBuffer);
         }
 
         public void Disconnect()
@@ -198,12 +200,8 @@ namespace LiPTT
             if (isConnected)
             {
                 TestWebSocketRecvTimer?.Cancel();
-                isConnected = false;
                 Dispose();
-                DefaultState();
                 OnPTTDisconnected();
-                OnScreenUpdated(screenBuffer);
-                OnScreenDrawn(screenBuffer);
             }
         }
 
@@ -212,7 +210,7 @@ namespace LiPTT
             Task.Run(() =>
             {
                 DefaultState();
-                LoginToMany = false;
+                PTTWrongResponse = false;
                 ConnectPTT();
             });
         }
@@ -244,9 +242,9 @@ namespace LiPTT
                             TestKickTimer?.Cancel();
                             TestKickTimer = null;
 
-                            if (LoginToMany)
+                            if (PTTWrongResponse)
                             {
-                                Debug.WriteLine("TCP: 登入太頻繁");
+                                Debug.WriteLine("TCP: 有錯誤訊息");
                                 Dispose();
                             }
                             if (IsExit)
@@ -295,9 +293,9 @@ namespace LiPTT
 
             WebSocket.Closed += (a, e) =>
             {
-                if (LoginToMany)
+                if (PTTWrongResponse)
                 {
-                    Debug.WriteLine("WebSocket: 登入太頻繁");
+                    Debug.WriteLine("WebSocket: 有錯誤訊息");
                     Dispose();
                 }
                 else if (!IsExit)
@@ -363,6 +361,7 @@ namespace LiPTT
             catch(Exception e)
             {
                 Debug.WriteLine(e.ToString());
+                Disconnect();
             }
         }
 

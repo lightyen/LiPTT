@@ -135,7 +135,10 @@ namespace LiPTT
 
                 //版主名單
                 str = screen.ToString(6, 15, screen.Width - 15).Replace('\0', ' ').Trim();
-                Board.Leaders = str.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                if (!new Regex(LiPTT.bound_regex).Match(str).Success)
+                {
+                    Board.Leaders = str.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                }
 
                 //發文限制 - 登入次數
                 str = screen.ToString(12);

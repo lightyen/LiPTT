@@ -151,6 +151,17 @@ namespace LiPTT
                     
                     break;
                 case PttState.WrongPassword:
+                    {
+                        LiPTT.Client.Dispose();
+                        var action = LiPTT.RunInUIThread(() => {
+
+                            if (LiPTT.ConnectionSecurity) LiPTT.KeepAliveTimer.Stop();
+                            UserText.IsEnabled = true;
+                            PasswordText.IsEnabled = true;
+                            MemoAcount.IsEnabled = true;
+                            AutoLogin.IsEnabled = true;
+                        });
+                    }
                     break;
                 case PttState.AlreadyLogin:
                     if (!enterAlreadyLogin)
@@ -179,9 +190,7 @@ namespace LiPTT
                 case PttState.LoginSoMany:
                     {
                         var action = LiPTT.RunInUIThread(() => {
-
-                            //LiPTT.TestConnectionTimer.Stop();
-                            LiPTT.KeepAliveTimer.Stop();
+                            if (LiPTT.ConnectionSecurity) LiPTT.KeepAliveTimer.Stop();
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
@@ -196,9 +205,7 @@ namespace LiPTT
                 case PttState.ConnectFailed:
                     {
                         var action = LiPTT.RunInUIThread(() => {
-
-                            //LiPTT.TestConnectionTimer.Stop();
-                            LiPTT.KeepAliveTimer.Stop();
+                            if (LiPTT.ConnectionSecurity) LiPTT.KeepAliveTimer.Stop();
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;

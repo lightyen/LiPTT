@@ -97,6 +97,7 @@ namespace LiPTT
                 cache_file_uri.Add(uri);
                 guid_table[uri] = Guid.NewGuid();
                 //用GUID當檔名了，我就不信你會衝突
+                Debug.WriteLine(string.Format("Create GUID: {0}", guid_table[uri]));
                 cache_task[uri] = DownloadAndGetFile(uri, guid_table[uri].ToString());
                 semaphoreSlim.Release();
             }
@@ -108,7 +109,9 @@ namespace LiPTT
         private async Task<StorageFile> DownloadAndGetFile(Uri uri, string name)
         {
             IBuffer buffer = await GetBufferAsync(uri);
+            Debug.WriteLine(string.Format("Downloaded: {0}", uri.OriginalString)); 
             await SaveFile(buffer, name);
+            Debug.WriteLine(string.Format("Save File: {0}", name));
             return await GetFileFromLocalCache(name);
         }
 
@@ -146,7 +149,6 @@ namespace LiPTT
         /// <summary>
         /// 把檔案存到LocalCache
         /// </summary>
-        /// <returns>存好的檔案</returns>
         private async Task SaveFile(IBuffer buffer, string filename)
         {
             var cache_folder = ApplicationData.Current.LocalCacheFolder;
@@ -195,6 +197,7 @@ namespace LiPTT
                 Stream stream = fras.AsStream();
                 MemoryStream memStream = new MemoryStream();
                 await stream.CopyToAsync(memStream);
+                stream.Dispose();
                 memStream.Position = 0;
                 bmp.SetSource(memStream.AsRandomAccessStream());
             }

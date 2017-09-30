@@ -109,7 +109,7 @@ namespace LiPTT
             }
         }
 
-        private async void Exit_echoed(PTTClient sender, LiPttEventArgs e)
+        private void Exit_echoed(PTTClient sender, LiPttEventArgs e)
         {
             if (e.State == PttState.Exit)
             {

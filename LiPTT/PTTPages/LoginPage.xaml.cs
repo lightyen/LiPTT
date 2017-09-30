@@ -43,7 +43,6 @@ namespace LiPTT
 
             if (start && AutoLogin.IsChecked == true)
             {
-                start = false;
                 Enter();
                 UserText.IsEnabled = false;
                 PasswordText.IsEnabled = false;
@@ -101,6 +100,7 @@ namespace LiPTT
 
         private void Enter()
         {
+            start = false;
             SaveUserAccount(UserText.Text, PasswordText.Password);
             enterAlreadyLogin = enterWrongLog = enteruser = enterpswd = false;
             LiPTT.PttEventEchoed += EnterAccount;

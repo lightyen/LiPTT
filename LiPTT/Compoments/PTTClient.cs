@@ -60,7 +60,6 @@ namespace LiPTT
 
         protected void OnScreenUpdated(ScreenBuffer e)
         {
-            Debug.WriteLine("Screen Updated");
             ScreenUpdated?.Invoke(this, new ScreenEventArgs(e));
         }
 

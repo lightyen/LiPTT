@@ -212,9 +212,9 @@ namespace LiPTT
 
         private void LoadArticle()
         {
-            var action = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                ContentCollection.ListViewProxy = ListVW.Resources["proxy"] as ActualSizePropertyProxy;
+                ContentCollection.ListViewProxy = HeaderProxy;
                 ContentCollection.BeginLoad(LiPTT.CurrentArticle);
                 ArticleHeader.DataContext = LiPTT.CurrentArticle;
                 ControlVisible = Visibility.Visible;

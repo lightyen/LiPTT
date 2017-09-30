@@ -28,7 +28,6 @@ namespace LiPTT
         {
             this.InitializeComponent();
             LiPTT.Connected += Client_Connected;
-            LiPTT.Belled += Client_BellPlayed;
         }
 
         private async void Client_BellPlayed(object sender, EventArgs e)

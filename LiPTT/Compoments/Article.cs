@@ -856,8 +856,7 @@ namespace LiPTT
                 uri = webResponse.ResponseUri;
             }
             /***/
-            double ViewWidth = ListViewProxy == null ? 0 : ListViewProxy.ActualWidthValue;
-
+            double ViewWidth = ListViewProxy.ActualWidthValue;
             if (IsPictureUri(uri))
             {
                 ProgressRing ring = new ProgressRing() { IsActive = true, Width = 55, Height = 55 };
@@ -944,35 +943,31 @@ namespace LiPTT
             BitmapImage bmp = await task;
 
             Image img = new Image() { Source = bmp, HorizontalAlignment = HorizontalAlignment.Stretch };
-
-            double ratio = (double)bmp.PixelWidth / bmp.PixelHeight;
-
-            double ViewWidth = ListViewProxy == null ? 0 : ListViewProxy.ActualWidthValue;
-
-            ColumnDefinition c1, c2, c3;
-
-            if (bmp.PixelWidth < ViewWidth * (1 - Space))
-            {
-                c1 = new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) };
-                c2 = new ColumnDefinition { Width = new GridLength(bmp.PixelWidth, GridUnitType.Pixel) };
-                c3 = new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) };
-            }
-            else if (ratio >= 1.0)
-            {
-                c1 = new ColumnDefinition { Width = new GridLength(Space / 2.0, GridUnitType.Star) };
-                c2 = new ColumnDefinition { Width = new GridLength((1 - Space), GridUnitType.Star) };
-                c3 = new ColumnDefinition { Width = new GridLength(Space / 2.0, GridUnitType.Star) };
-            }
-            else
-            {
-                double x = ratio * (1 - Space) / 2.0;
-                c1 = new ColumnDefinition { Width = new GridLength(Space / 2.0 + x, GridUnitType.Star) };
-                c2 = new ColumnDefinition { Width = new GridLength((1 - Space) * ratio, GridUnitType.Star) };
-                c3 = new ColumnDefinition { Width = new GridLength(Space / 2.0 + x, GridUnitType.Star) };
-            }
-
-
+            
+            Binding ringBinding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["MyRingRatioConverter"] as RingRatioConverter };
             Grid ImgGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
+
+            Windows.Graphics.Imaging.BitmapSize bitmapSize = new Windows.Graphics.Imaging.BitmapSize { Width = (uint)bmp.PixelWidth, Height = (uint)bmp.PixelHeight };
+            Binding bindingSide = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["GridLengthSideConverter"] as GridLengthSideConverter,
+                ConverterParameter = bitmapSize,
+            };
+
+            Binding bindingCenter = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["GridLengthCenterConverter"] as GridLengthCenterConverter,
+                ConverterParameter = bitmapSize,
+            };
+
+            ColumnDefinition c1 = new ColumnDefinition(), c2 = new ColumnDefinition(), c3 = new ColumnDefinition();
+            BindingOperations.SetBinding(c1, ColumnDefinition.WidthProperty, bindingSide);
+            BindingOperations.SetBinding(c2, ColumnDefinition.WidthProperty, bindingCenter);
+            BindingOperations.SetBinding(c3, ColumnDefinition.WidthProperty, bindingSide);
 
             ImgGrid.ColumnDefinitions.Add(c1);
             ImgGrid.ColumnDefinitions.Add(c2);
@@ -1000,7 +995,7 @@ namespace LiPTT
             c1 = new ColumnDefinition { Width = new GridLength(Space / 2.0, GridUnitType.Star) };
             c2 = new ColumnDefinition { Width = new GridLength((1 - Space), GridUnitType.Star) };
             c3 = new ColumnDefinition { Width = new GridLength(Space / 2.0, GridUnitType.Star) };
-
+            
             MainGrid.ColumnDefinitions.Add(c1);
             MainGrid.ColumnDefinitions.Add(c2);
             MainGrid.ColumnDefinitions.Add(c3);

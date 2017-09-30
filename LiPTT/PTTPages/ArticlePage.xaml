@@ -104,6 +104,9 @@
             </Grid>
             <Grid Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="ContentGrid"  Visibility="{Binding ControlVisible}">
                 <ListView x:Name="ListVW" ItemsSource="{Binding Source={StaticResource ContentCollection}}" SelectionMode="None" HorizontalAlignment="Stretch" IsTapEnabled="False">
+                    <ListView.Resources>
+                        <local:ActualSizePropertyProxy Element="{Binding ElementName=ListVW}" x:Name="proxy" />
+                    </ListView.Resources>
                     <!--[TextBlock] Text-->
                     <!--[Grid] Youtube or Image-->
                     <!--[ListViewItem] Echoes-->
@@ -118,9 +121,6 @@
                     <ListView.Footer>
                         <StackPanel Background="{ThemeResource SystemControlHighlightListLowBrush}" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章結尾" />
                     </ListView.Footer>
-                    <ListView.Resources>
-                        <local:ActualSizePropertyProxy Element="{Binding ElementName=ListVW}" x:Name="proxy" />
-                    </ListView.Resources>
                 </ListView>
             </Grid>
         </Grid>

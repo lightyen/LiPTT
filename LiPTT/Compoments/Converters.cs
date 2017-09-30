@@ -489,4 +489,112 @@ namespace LiPTT
             throw new NotImplementedException();
         }
     }
+
+    public class RatioConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double width)
+            {
+                return (1 - 0.2) * width * 0.5625;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class RingRatioConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double width)
+            {
+                return width * 0.075;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class GridLengthSideConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double ViewWidth && parameter is Windows.Graphics.Imaging.BitmapSize ImageSize)
+            {
+                double ratio = ImageSize.Width / (double)ImageSize.Height;
+
+                if (ImageSize.Width < ViewWidth * (1 - LiPTT.ImageSpace))
+                {
+                    return new GridLength(1, GridUnitType.Star);
+                }
+                else if (ratio >= 1.0)
+                {
+                    return new GridLength(LiPTT.ImageSpace / 2.0, GridUnitType.Star);
+
+                }
+                else
+                {
+                    double x = ratio * (1 - LiPTT.ImageSpace) / 2.0;
+                    return new GridLength(LiPTT.ImageSpace / 2.0 + x, GridUnitType.Star);
+                }
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            GridLength val = (GridLength)value;
+            return val.Value;
+        }
+    }
+
+    public class GridLengthCenterConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is double ViewWidth && parameter is Windows.Graphics.Imaging.BitmapSize ImageSize)
+            {
+                double ratio = ImageSize.Width / (double)ImageSize.Height;
+
+                if (ImageSize.Width < ViewWidth * (1 - LiPTT.ImageSpace))
+                {
+                    return new GridLength(ImageSize.Width, GridUnitType.Pixel);
+                }
+                else if (ratio >= 1.0)
+                {
+                    return new GridLength((1 - LiPTT.ImageSpace), GridUnitType.Star);
+                }
+                else
+                {
+                    return new GridLength((1 - LiPTT.ImageSpace) * ratio, GridUnitType.Star);
+                }
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            GridLength val = (GridLength)value;
+            return val.Value;
+        }
+    }
 }

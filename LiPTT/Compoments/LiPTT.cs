@@ -68,6 +68,8 @@ namespace LiPTT
 
         public static bool CacheBoard { get; set; } 
 
+        public static double ImageSpace { get; set; }
+
         //https://www.regexpal.com
         // '\w'會match到中文字，用[A-Za-z0-9_]替代
         public const string http_regex = @"(http|https)://([A-Za-z0-9_]+:??[A-Za-z0-9_]*@)?([A-Za-z0-9_#!:.?+=&%@!-/$^,;|*~'()]+)(/|/([A-Za-z0-9_#!:.?+=&%@!-/]))?";
@@ -603,6 +605,7 @@ namespace LiPTT
                 Security = security
             };
 
+            ImageSpace = 0.2;
             Gamepads = new List<Gamepad>();
         }
 

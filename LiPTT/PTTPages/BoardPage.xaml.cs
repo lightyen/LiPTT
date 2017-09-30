@@ -17,6 +17,7 @@ using System.Diagnostics;
 using Windows.ApplicationModel.DataTransfer;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace LiPTT
 {
@@ -29,7 +30,10 @@ namespace LiPTT
             InitializeComponent();
             DataContext = this;
             LiPTT.ArticleCollection = ContentCollection;
+            clipboardsem = new SemaphoreSlim(1, 1);
         }
+
+        SemaphoreSlim clipboardsem;
 
         private async void Clipboard_ContentChanged(object sender, object e)
         {
@@ -37,6 +41,7 @@ namespace LiPTT
             if (dataPackageView.Contains(StandardDataFormats.Text))
             {
                 string text = await dataPackageView.GetTextAsync();
+                Clipboard.Clear();
                 // To output the text from this example, you need a TextBlock control
                 Debug.WriteLine("Clipboard now contains: " + text);
             }
@@ -242,6 +247,7 @@ namespace LiPTT
             {               
                 if (args.VirtualKey == VirtualKey.V && SearchIDTextBox != FocusManager.GetFocusedElement())
                 {
+                    await clipboardsem.WaitAsync();
                     DataPackageView dataPackageView = Clipboard.GetContent();
                     if (dataPackageView.Contains(StandardDataFormats.Text))
                     {
@@ -264,6 +270,7 @@ namespace LiPTT
                             catch { }
                         }
                     }
+                    clipboardsem.Release();
                     return;
                 }
             }

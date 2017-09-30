@@ -95,7 +95,6 @@ namespace LiPTT
 
         protected void OnPTTConnectionFailed(ConnectionType e)
         {
-            Debug.WriteLine("PTT Event  連線失敗");
             ConnectionFailed?.Invoke(this, new ConnectionFailedEventArgs(e));
         }
 

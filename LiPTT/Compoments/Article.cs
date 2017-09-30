@@ -360,6 +360,8 @@ namespace LiPTT
                     var firstFinishedTask = await Task.WhenAny(DownloadImageTasks);
 
                     this[firstFinishedTask.Result.Index] = firstFinishedTask.Result.Item;
+                    //一次搞太多似乎會被Block，稍微緩一下
+                    Task.Delay(10).Wait();
                     DownloadImageTasks.Remove(firstFinishedTask);
                 }
             }
@@ -728,6 +730,7 @@ namespace LiPTT
                     string text = echo.Content.Substring(index, match.Index - index);
                     stackpanel.Children.Add(new TextBlock()
                     {
+                        IsTextSelectionEnabled = true,
                         HorizontalAlignment = HorizontalAlignment.Left,
                         VerticalAlignment = VerticalAlignment.Center,
                         FontSize = 22,
@@ -758,6 +761,7 @@ namespace LiPTT
                     string text = echo.Content.Substring(index, match.Index - index);
                     stackpanel.Children.Add(new TextBlock()
                     {
+                        IsTextSelectionEnabled = true,
                         HorizontalAlignment = HorizontalAlignment.Left,
                         VerticalAlignment = VerticalAlignment.Center,
                         FontSize = 22,
@@ -774,6 +778,7 @@ namespace LiPTT
                 string text = echo.Content.Substring(index, echo.Content.Length - index);
                 stackpanel.Children.Add(new TextBlock()
                 {
+                    IsTextSelectionEnabled = true,
                     HorizontalAlignment = HorizontalAlignment.Left,
                     VerticalAlignment = VerticalAlignment.Center,
                     FontSize = 22,
@@ -804,17 +809,29 @@ namespace LiPTT
             grid.Children.Add(g3);
 
             ToolTip toolTip = new ToolTip() { Content = string.Format("{0}樓", echo.Floor) };
-            ListView list = new ListView() { IsItemClickEnabled = true, HorizontalAlignment = HorizontalAlignment.Stretch };
-            ToolTipService.SetToolTip(list, toolTip);
+
+            Button button = new Button
+            {
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                BorderThickness = new Thickness(0),
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                VerticalContentAlignment = VerticalAlignment.Stretch,
+                Padding = new Thickness(0),
+                Background = new SolidColorBrush(Colors.Black),
+            };
+            button.Content = grid;
+            //ListView list = new ListView() { IsItemClickEnabled = true, HorizontalAlignment = HorizontalAlignment.Stretch, };
+            ToolTipService.SetToolTip(button, toolTip);
+            /***
             list.Items.Add(new ListViewItem()
             {
                 Content = grid,
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch,
                 AllowFocusOnInteraction = false,
-                
             });
-            Add(list);
+            /***/
+            Add(button);
 
             if (ViewUri.Count > 0)
             {

@@ -13,7 +13,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
-// 空白頁項目範本已記錄在 https://go.microsoft.com/fwlink/?LinkId=234238
+// https://channel9.msdn.com/Series/Windows-Phone-8-1-Development-for-Absolute-Beginners/Part-28-Working-with-Animations-in-XAML
 
 namespace LiPTT
 {

@@ -214,7 +214,6 @@ namespace LiPTT
         {
             var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                ContentCollection.ListViewProxy = HeaderProxy;
                 ContentCollection.BeginLoad(LiPTT.CurrentArticle);
                 ArticleHeader.DataContext = LiPTT.CurrentArticle;
                 ControlVisible = Visibility.Visible;

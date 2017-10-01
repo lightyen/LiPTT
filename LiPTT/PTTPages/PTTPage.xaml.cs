@@ -20,9 +20,6 @@ using Windows.Gaming.Input;
 
 namespace LiPTT
 {
-    /// <summary>
-    /// 可以在本身使用或巡覽至框架內的空白頁面。
-    /// </summary>
     public sealed partial class PTTPage : Page
     {
         public PTTPage()
@@ -150,9 +147,6 @@ namespace LiPTT
                         HotFrame.Navigate(typeof(HotPage));
                         break;
                     case 3:
-                        SettingFrame.Navigate(typeof(SettingPage));
-                        break;
-                    case 4:
                         CreateSymbolList();
                         break;
                 }

@@ -318,5 +318,14 @@ namespace LiPTT
             }
         }
 
+        private async void RatioSettingChecked(object sender, RoutedEventArgs e)
+        {
+            if (DisplayFrame.CurrentSourcePageType != typeof(SettingPage))
+            {
+                await StartDissolvingAsync();
+                DisplayFrame.Navigate(typeof(SettingPage));
+                SplitView1.DisplayMode = SplitViewDisplayMode.Overlay;
+            }
+        }
     }
 }

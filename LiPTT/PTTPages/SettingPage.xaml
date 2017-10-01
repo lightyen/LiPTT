@@ -10,8 +10,8 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel>
             <TextBlock Text="還在施工中..." Margin="10,10,10,60"/>
-            <CheckBox Content="安全連線" FontSize="28" Margin="100,10,10,50" VerticalContentAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding ConnectionSecurity, Source={StaticResource GlobalProperty}, Mode=TwoWay}" />
-            <Slider Header="圖片留白寬度(%)" FontSize="28" Width="500" Margin="100,10,10,50" HorizontalAlignment="Left" Minimum="0" Maximum="100" Value="{Binding Space, Source={StaticResource GlobalProperty}, Mode=TwoWay, Converter={StaticResource SpaceConverter}}" />
+            <CheckBox Content="安全連線" FontSize="28" Margin="200,10,10,50" VerticalContentAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding ConnectionSecurity, Source={StaticResource SettingProperty}, Mode=TwoWay}" />
+            <Slider Header="圖片大小%" FontSize="28" Width="500" Margin="200,10,10,50" HorizontalAlignment="Left" Minimum="0" Maximum="100" Value="{Binding Space, Source={StaticResource SettingProperty}, Mode=TwoWay, Converter={StaticResource SpaceConverter}}" />
         </StackPanel>
     </Grid>
 </Page>

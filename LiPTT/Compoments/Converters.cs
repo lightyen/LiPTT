@@ -530,6 +530,66 @@ namespace LiPTT
         }
     }
 
+    public class ImageRingRatioConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double width)
+            {
+                return width * 0.075 * 0.5;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class GridWidthConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double ViewWidth)
+            {
+                double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
+                return ViewWidth * space * 0.5;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class GridHeightConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is double ViewWidth)
+            {
+                double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
+                return 0.5625 * ViewWidth * space * 0.5;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class SpaceConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
@@ -559,21 +619,21 @@ namespace LiPTT
             if (value is double ViewWidth && parameter is Windows.Graphics.Imaging.BitmapSize ImageSize)
             {
                 double ratio = ImageSize.Width / (double)ImageSize.Height;
-                double space = (Application.Current.Resources["GlobalProperty"] as GlobalProperty).Space;
+                double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
 
-                if (ImageSize.Width < ViewWidth * (1 - space))
+                if (ImageSize.Width < ViewWidth * space)
                 {
                     return new GridLength(1, GridUnitType.Star);
                 }
                 else if (ratio > 1.0)
                 {
-                    return new GridLength(space / 2.0, GridUnitType.Star);
+                    return new GridLength((1 - space) / 2.0, GridUnitType.Star);
 
                 }
                 else
                 {
-                    double x = ratio * (1 - space) / 2.0;
-                    return new GridLength(space / 2.0 + x, GridUnitType.Star);
+                    double x = (1 - ratio) * (space) / 2.0;
+                    return new GridLength((1 - space) / 2.0 + x, GridUnitType.Star);
                 }
             }
 
@@ -591,22 +651,24 @@ namespace LiPTT
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
+            if (value == null) return null;
+
             if (value is double ViewWidth && parameter is Windows.Graphics.Imaging.BitmapSize ImageSize)
             {
                 double ratio = ImageSize.Width / (double)ImageSize.Height;
-                double space = (Application.Current.Resources["GlobalProperty"] as GlobalProperty).Space;
+                double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
 
-                if (ImageSize.Width < ViewWidth * (1 - space))
+                if (ImageSize.Width < ViewWidth * space)
                 {
                     return new GridLength(ImageSize.Width, GridUnitType.Pixel);
                 }
                 else if (ratio > 1.0)
                 {
-                    return new GridLength((1 - space), GridUnitType.Star);
+                    return new GridLength(space, GridUnitType.Star);
                 }
                 else
                 {
-                    return new GridLength((1 - space) * ratio, GridUnitType.Star);
+                    return new GridLength(space * ratio, GridUnitType.Star);
                 }
             }
 
@@ -617,6 +679,69 @@ namespace LiPTT
         {
             GridLength val = (GridLength)value;
             return val.Value;
+        }
+    }
+
+    public class YoutubeGridLengthSideConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double ViewWidth)
+            {
+                double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
+                return new GridLength((1 - space) / 2.0, GridUnitType.Star);
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class YoutubeGridLengthCenterConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double ViewWidth)
+            {
+                double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
+                return new GridLength(space, GridUnitType.Star);
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class YoutubeGridHeightConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double ViewWidth)
+            {
+                double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
+                return space * ViewWidth * 0.5625;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -24,26 +24,6 @@ namespace LiPTT
 
         public bool InitialLoaded { get; private set; }
 
-        /// <summary>
-        /// 圖片、影片左右留空白，左右各留10%，即0.2
-        /// </summary>
-        public double Space
-        {
-            get
-            {
-                return space;
-            }
-            set
-            {
-                space = value;
-                OnPropertyChanged(new PropertyChangedEventArgs("Space"));
-            }
-        }
-
-        private double space;
-
-        public ActualSizePropertyProxy ListViewProxy { get; set; }
-
         public Article ArticleTag
         {
             get; set;
@@ -108,7 +88,6 @@ namespace LiPTT
 
         public ArticleContentCollection()
         {
-            Space = 0.2;
             header = false;
             line = 0;
             RawLines = new List<Block[]>();
@@ -360,8 +339,7 @@ namespace LiPTT
                     var firstFinishedTask = await Task.WhenAny(DownloadImageTasks);
 
                     this[firstFinishedTask.Result.Index] = firstFinishedTask.Result.Item;
-                    //一次搞太多似乎會被Block，稍微緩一下
-                    Task.Delay(10).Wait();
+                    
                     DownloadImageTasks.Remove(firstFinishedTask);
                 }
             }
@@ -393,7 +371,7 @@ namespace LiPTT
                 {
                     Uri uri = new Uri(match.ToString());
 
-                    if (IsUriViewUriVisible(uri))
+                    if (IsUriVisible(uri))
                         AddHyperlink(uri);
 
                     if (IsUriView(uri))
@@ -856,11 +834,30 @@ namespace LiPTT
                 uri = webResponse.ResponseUri;
             }
             /***/
-            double ViewWidth = ListViewProxy.ActualWidthValue;
-            if (IsPictureUri(uri))
+            Binding bindingWidth = new Binding
             {
-                ProgressRing ring = new ProgressRing() { IsActive = true, Width = 55, Height = 55 };
-                Grid grid = new Grid() { Width = ViewWidth * (1 - Space), Height = 0.5625 * ViewWidth * (1 - Space), Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["GridWidthConverter"] as GridWidthConverter,
+            };
+
+            Binding bindingHeight = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["GridHeightConverter"] as GridHeightConverter,
+            };
+
+            Binding ringBinding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["ImageRingRatioConverter"] as ImageRingRatioConverter };
+
+            if (IsPictureUri(uri))
+            {       
+                ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Aquamarine) };
+                ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
+                ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
+                Grid grid = new Grid() { Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
+                grid.SetBinding(Grid.WidthProperty, bindingWidth);
+                grid.SetBinding(Grid.HeightProperty, bindingHeight);
                 grid.Children.Add(ring);
                 Add(grid);
 
@@ -880,8 +877,12 @@ namespace LiPTT
                         {
                             Uri new_uri = new Uri("http://i.imgur.com/" + ID + ".png");
 
-                            ProgressRing ring = new ProgressRing() { IsActive = true, Width = 55, Height = 55 };
-                            Grid grid = new Grid() { Width = ViewWidth * (1 - Space) * 0.5, Height = 0.5625 * ViewWidth * (1 - Space) * 0.5, Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
+                            ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Aquamarine) };
+                            ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
+                            ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
+                            Grid grid = new Grid() { Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
+                            grid.SetBinding(Grid.WidthProperty, bindingWidth);
+                            grid.SetBinding(Grid.HeightProperty, bindingHeight);
                             grid.Children.Add(ring);
                             Add(grid);
                             DownloadImageTasks.Add(DownloadImage(Count - 1, new_uri));
@@ -904,8 +905,12 @@ namespace LiPTT
                         {
                             Uri new_uri = new Uri("http://i.imgur.com/" + ID + ".png");
 
-                            ProgressRing ring = new ProgressRing() { IsActive = true, Width = 55, Height = 55 };
-                            Grid grid = new Grid() { Width = ViewWidth * (1 - Space), Height = 0.5625 * ViewWidth * (1 - Space), Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
+                            ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Aquamarine) };
+                            ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
+                            ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
+                            Grid grid = new Grid() { Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
+                            grid.SetBinding(Grid.WidthProperty, bindingWidth);
+                            grid.SetBinding(Grid.HeightProperty, bindingHeight);
                             grid.Children.Add(ring);
                             Add(grid);
                             DownloadImageTasks.Add(DownloadImage(Count - 1, new_uri));
@@ -944,10 +949,10 @@ namespace LiPTT
 
             Image img = new Image() { Source = bmp, HorizontalAlignment = HorizontalAlignment.Stretch };
             
-            Binding ringBinding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["MyRingRatioConverter"] as RingRatioConverter };
             Grid ImgGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
 
             Windows.Graphics.Imaging.BitmapSize bitmapSize = new Windows.Graphics.Imaging.BitmapSize { Width = (uint)bmp.PixelWidth, Height = (uint)bmp.PixelHeight };
+
             Binding bindingSide = new Binding
             {
                 ElementName = "proxy",
@@ -992,10 +997,27 @@ namespace LiPTT
 
             ColumnDefinition c1, c2, c3;
 
-            c1 = new ColumnDefinition { Width = new GridLength(Space / 2.0, GridUnitType.Star) };
-            c2 = new ColumnDefinition { Width = new GridLength((1 - Space), GridUnitType.Star) };
-            c3 = new ColumnDefinition { Width = new GridLength(Space / 2.0, GridUnitType.Star) };
-            
+            Binding bindingSide = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["YoutubeGridLengthSideConverter"] as YoutubeGridLengthSideConverter,
+            };
+
+            Binding bindingCenter = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["YoutubeGridLengthCenterConverter"] as YoutubeGridLengthCenterConverter,
+            };
+
+            c1 = new ColumnDefinition();
+            c2 = new ColumnDefinition();
+            c3 = new ColumnDefinition();
+            BindingOperations.SetBinding(c1, ColumnDefinition.WidthProperty, bindingSide);
+            BindingOperations.SetBinding(c2, ColumnDefinition.WidthProperty, bindingCenter);
+            BindingOperations.SetBinding(c3, ColumnDefinition.WidthProperty, bindingSide);
+
             MainGrid.ColumnDefinitions.Add(c1);
             MainGrid.ColumnDefinitions.Add(c2);
             MainGrid.ColumnDefinitions.Add(c3);
@@ -1005,12 +1027,12 @@ namespace LiPTT
             MainGrid.Children.Add(InnerGrid);
 
             Grid youtuGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
-            Binding binding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["MyRatioConverter"] as RatioConverter };
+            Binding binding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["YoutubeGridHeightConverter"] as YoutubeGridHeightConverter };
             youtuGrid.SetBinding(FrameworkElement.HeightProperty, binding);
             InnerGrid.Children.Add(youtuGrid);
 
             ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Orange) };
-            Binding ringBinding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["MyRingRatioConverter"] as RingRatioConverter };
+            Binding ringBinding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["RingRatioConverter"] as RingRatioConverter };
             ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
             ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
 
@@ -1090,18 +1112,18 @@ namespace LiPTT
             return view;
         }
 
-        private bool IsUriViewUriVisible(Uri uri)
+        private bool IsUriVisible(Uri uri)
         {
             if (IsUriView(uri))
             {
                 bool visible = true;
 
                 if (IsPictureUri(uri)) //.jpg,.png結尾 等等
-                    visible = false;
+                    visible = true;
                 else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a/") == -1)
-                    visible = false;
+                    visible = true;
                 else if (uri.Host == "i.imgur.com" && uri.OriginalString.IndexOf("i.imgur.com/a/") == -1)
-                    visible = false;
+                    visible = true;
                 else if (IsYoutubeUri(uri))
                     visible = false;
                 else if (uri.Host == "www.twitch.tv")

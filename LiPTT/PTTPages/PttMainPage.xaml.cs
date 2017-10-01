@@ -32,11 +32,6 @@ namespace LiPTT
                     PTTFrame.Navigate(typeof(LoginPage));
                 });   
             };
-
-            LiPTT.KeepAliveTimer = new DispatcherTimer() { Interval = TimeSpan.FromMinutes(5) };
-            LiPTT.KeepAliveTimer.Tick += (a, b) => {
-                LiPTT.PressKeepAlive();
-            };
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)

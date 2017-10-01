@@ -38,16 +38,17 @@
                 </PivotItem.Header>
                 <Frame x:Name="HotFrame" />
             </PivotItem>
+            <!--
             <PivotItem>
                 <PivotItem.Header>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">
-                        <!--<SymbolIcon Symbol="Setting" Margin="0,10,10,8" />-->
                         <Image Source="ms-appx:///Icons/settings-cogwheel-inside-black-square.svg" Width="27" Height="27" Opacity="0.5" />
                         <TextBlock Text="設定" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>
                 </PivotItem.Header>
                 <Frame x:Name="SettingFrame" />
             </PivotItem>
+            -->
             <PivotItem x:Name="symbolPivotItem">
                 <PivotItem.Header>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch">

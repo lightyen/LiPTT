@@ -13,6 +13,8 @@ using Windows.ApplicationModel.Core;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Windows.Gaming.Input;
+using Windows.Storage;
+using Newtonsoft.Json;
 
 namespace LiPTT
 {
@@ -592,17 +594,60 @@ namespace LiPTT
             Client.Send(msg);
         }
 
-        
+        private static void DefaultSetting()
+        {
+            var container = ApplicationData.Current.LocalSettings.CreateContainer(SettingPropertyName, ApplicationDataCreateDisposition.Always);
+
+            if (container != null)
+            {
+                SettingProperty Setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+                container.Values["Setting"] = JsonConvert.SerializeObject(Setting);
+            }
+        }
+
+        private static void LoadSetting()
+        {
+            var container = ApplicationData.Current.LocalSettings.Containers[SettingPropertyName].Values;
+
+            if (container != null && container["Setting"] is string json)
+            {
+                SettingProperty Setting = JsonConvert.DeserializeObject<SettingProperty>(json);
+                Application.Current.Resources["SettingProperty"] = Setting;
+            }
+        }
+
+        private static void SaveSetting()
+        {
+            var container = ApplicationData.Current.LocalSettings.CreateContainer(SettingPropertyName, ApplicationDataCreateDisposition.Always);
+
+            if (container != null)
+            {
+                SettingProperty Setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+                container.Values["Setting"] = JsonConvert.SerializeObject(Setting);
+            }
+        }
+
+        private const string SettingPropertyName = "SettingProperty";
 
         public static void CreateInstance()
         {
             ConnectionSecurity = true;
-
             Client = new PTTClient
             {
                 Security = security
             };
+            /////////
+            if (ApplicationData.Current.LocalSettings.Containers.ContainsKey(SettingPropertyName))
+            {
+                LoadSetting();
+            }
+            else
+            {
+                DefaultSetting();
+                LoadSetting();
+            }
 
+            /////////
             Gamepads = new List<Gamepad>();
         }
 
@@ -611,6 +656,8 @@ namespace LiPTT
 
         public static void ReleaseInstance()
         {
+            SaveSetting();
+
             Gamepads.Clear();
             Debug.WriteLine("Clear Cache");
             ClearCacheTask = Task.Run(async () => { await ImageCache.ClearAllCache(); });
@@ -786,13 +833,16 @@ namespace LiPTT
         }
     }
 
-    public class GlobalProperty : INotifyPropertyChanged
+    public class SettingProperty : INotifyPropertyChanged
     {
-        public GlobalProperty()
+        public SettingProperty()
         {
-            Space = 0.3;
+            Space = 0.7;
         }
 
+        /// <summary>
+        /// 圖片大小，預設70%
+        /// </summary>
         public double Space
         {
             get
@@ -823,8 +873,6 @@ namespace LiPTT
         }
 
         private double space;
-
-
 
         public event PropertyChangedEventHandler PropertyChanged;
 

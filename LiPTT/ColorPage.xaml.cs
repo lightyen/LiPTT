@@ -17,8 +17,6 @@ using Windows.Storage;
 using System.Runtime.Serialization;
 using System.Reflection;
 
-// 空白頁項目範本已記錄在 https://go.microsoft.com/fwlink/?LinkId=234238
-
 namespace LiPTT
 {
     /// <summary>

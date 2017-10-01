@@ -15,9 +15,14 @@
     <local:EchoEvaluationColorConverter x:Key="MyEchoEvaluationColorConverter" />
     <local:EchoContentConverter x:Key="MyEchoContentConverter"/>
     <local:PopularityColorConverter x:Key="MyPopularityColorConverter" />
-    <local:RatioConverter x:Key="MyRatioConverter" />
-    <local:RingRatioConverter x:Key="MyRingRatioConverter" />
+    <local:RingRatioConverter x:Key="RingRatioConverter" />
+    <local:ImageRingRatioConverter x:Key="ImageRingRatioConverter" />
     <local:GridLengthCenterConverter x:Key="GridLengthCenterConverter" />
     <local:GridLengthSideConverter x:Key="GridLengthSideConverter" />
     <local:SpaceConverter x:Key="SpaceConverter" />
+    <local:GridWidthConverter x:Key="GridWidthConverter" />
+    <local:GridHeightConverter x:Key="GridHeightConverter" />
+    <local:YoutubeGridLengthCenterConverter x:Key="YoutubeGridLengthCenterConverter" />
+    <local:YoutubeGridLengthSideConverter x:Key="YoutubeGridLengthSideConverter" />
+    <local:YoutubeGridHeightConverter x:Key="YoutubeGridHeightConverter" />
 </ResourceDictionary>

@@ -10,8 +10,8 @@
                 <ResourceDictionary Source="Styles.xaml" />
                 <ResourceDictionary Source="Converters.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            
-            <local:GlobalProperty x:Key="GlobalProperty" />
+
+            <local:SettingProperty x:Key="SettingProperty" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

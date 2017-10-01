@@ -57,7 +57,6 @@ namespace LiPTT
                 
                 Task task = LoadEncoding();
                 task.Wait();
-                Debug.WriteLine("Load Encoding Completed");
             }
         }
 

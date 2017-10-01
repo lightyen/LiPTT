@@ -20,6 +20,7 @@
                     </StackPanel>
                 </Slider.Header>
             </Slider>
+            <CheckBox Content="斷線或被踢時自動重新連線" FontSize="28" Margin="200,10,10,50" VerticalContentAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding AlwaysAlive, Source={StaticResource SettingProperty}, Mode=TwoWay}" />
         </StackPanel>
     </Grid>
 </Page>

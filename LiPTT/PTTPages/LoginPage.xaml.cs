@@ -27,13 +27,7 @@ namespace LiPTT
         public LoginPage()
         {
             this.InitializeComponent();
-            App.Current.Suspending += (a, b) => { SaveUserAccount(LiPTT.UserName, LiPTT.Password); };
-
-            LiPTT.KeepAliveTimer = new DispatcherTimer() { Interval = TimeSpan.FromMinutes(5) };
-
-            LiPTT.KeepAliveTimer.Tick += (a, b) => {
-                LiPTT.PressKeepAlive();
-            };
+            Application.Current.Suspending += (a, b) => { SaveUserAccount(LiPTT.UserName, LiPTT.Password); };
         }
 
         private const string AccountTableKey = "AccountTable";
@@ -55,6 +49,10 @@ namespace LiPTT
                 MemoAcount.IsEnabled = false;
                 AutoLogin.IsEnabled = false;
             }
+            else if (LiPTT.AlwaysAlive && LiPTT.State == PttState.Kicked || LiPTT.State == PttState.LoginSoMany)
+            {
+                DelayLogin(TimeSpan.FromSeconds(3));
+            }
             else
             {
                 UserText.IsEnabled = true;
@@ -69,8 +67,23 @@ namespace LiPTT
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         }
 
+        private void DelayLogin(TimeSpan delay)
+        {
+            Windows.System.Threading.ThreadPoolTimer.CreateTimer((source) => {
+
+                var ac = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                    UserText.IsEnabled = false;
+                    PasswordText.IsEnabled = false;
+                    MemoAcount.IsEnabled = false;
+                    AutoLogin.IsEnabled = false;
+                    Enter();
+                });
+            }, delay);
+        }
+
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
+                
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         }
 
@@ -138,7 +151,6 @@ namespace LiPTT
                         var action = LiPTT.RunInUIThread(() =>
                         {
                             LiPTT.UserName = UserText.Text;
-                            LiPTT.KeepAliveTimer.Start();
                             LiPTT.EnterUserName();
                         });
                     }
@@ -158,9 +170,8 @@ namespace LiPTT
                 case PttState.WrongPassword:
                     {
                         LiPTT.Client.Dispose();
-                        var action = LiPTT.RunInUIThread(() => {
 
-                            LiPTT.KeepAliveTimer.Stop();
+                        var action = LiPTT.RunInUIThread(() => {
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
@@ -191,27 +202,36 @@ namespace LiPTT
                     break;
                 case PttState.Synchronizing:
                     break;
-                case PttState.OverLoading:
                 case PttState.LoginSoMany:
                     {
+                        LiPTT.Client.Dispose();
+
                         var action = LiPTT.RunInUIThread(() => {
-                            LiPTT.KeepAliveTimer.Stop();
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
                             AutoLogin.IsEnabled = true;
                         });
 
-                        LiPTT.TryDisconnect();
+                        DelayLogin(TimeSpan.FromSeconds(1));
+                    }
+                    break;
+                case PttState.OverLoading:
+                    {
+                        LiPTT.Client.Dispose();
 
-                        action.AsTask().Wait();
+                        var action = LiPTT.RunInUIThread(() => {
+                            UserText.IsEnabled = true;
+                            PasswordText.IsEnabled = true;
+                            MemoAcount.IsEnabled = true;
+                            AutoLogin.IsEnabled = true;
+                        });
                     }
                     break;
                 case PttState.ConnectFailedTCP:
                 case PttState.ConnectFailedWebSocket:
                     {
                         var action = LiPTT.RunInUIThread(() => {
-                            LiPTT.KeepAliveTimer.Stop();
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;

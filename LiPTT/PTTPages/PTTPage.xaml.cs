@@ -92,7 +92,6 @@ namespace LiPTT
             if (LiPTT.IsExit == false)
             {
                 LiPTT.IsExit = true;
-                LiPTT.KeepAliveTimer.Stop();
                 LiPTT.PttEventEchoed += Exit_echoed;
 
                 if (pivot.SelectedIndex == 1)

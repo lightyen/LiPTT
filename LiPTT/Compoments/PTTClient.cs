@@ -165,19 +165,47 @@ namespace LiPTT
                 return "wss://ws.ptt.cc/bbs";
             }
         }
+
+        public bool IsConnected
+        {
+            get
+            {
+                return isConnected;
+            }
+        }
+
+        private TimeSpan KeepAlivePeriod
+        {
+            get
+            {
+                return keepAlivePeriod;
+            }
+            set
+            {
+                keepAlivePeriod = value;
+
+                if (isConnected)
+                {
+                    KeepAliveTimer?.Cancel();
+                    KeepAliveTimer = ThreadPoolTimer.CreatePeriodicTimer(KeepAlive, keepAlivePeriod);
+                }
+            }
+        }
         #endregion 各種屬性
 
-        private ScreenBuffer screenBuffer;      
+        private ScreenBuffer screenBuffer;
         private TcpClient tcpClient;
         private MessageWebSocket WebSocket;
 
         ThreadPoolTimer TestKickTimer;
+        ThreadPoolTimer KeepAliveTimer;
         private bool exit;
         private Stream stream;
         private bool ConnectionSecurity;
         protected bool isConnected;
 
         private TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(3);
+        private TimeSpan keepAlivePeriod = TimeSpan.FromMinutes(1);
 
         public PTTClient()
         {
@@ -204,7 +232,7 @@ namespace LiPTT
             }
 
             isConnected = false;
-            DefaultState();         
+            DefaultState();
             OnScreenUpdated(screenBuffer);
             OnScreenDrawn(screenBuffer);
         }
@@ -229,6 +257,11 @@ namespace LiPTT
             });
         }
 
+        private void KeepAlive(ThreadPoolTimer timer)
+        {
+            LiPTT.PressKeepAlive();
+        } 
+
         private void ConnectPTT()
         {
             if (ConnectionSecurity)
@@ -252,6 +285,10 @@ namespace LiPTT
                 }
                 else if (tcpClient.Connected)
                 {
+                    isConnected = true;
+                    OnPTTConnected();
+                    Debug.WriteLine("TCP: 已連線");
+
                     TestKickTimer = ThreadPoolTimer.CreatePeriodicTimer((source) => {
 
                         if (tcpClient?.Client.Poll(10, SelectMode.SelectRead) == true)
@@ -274,14 +311,13 @@ namespace LiPTT
                             {
                                 Debug.WriteLine("TCP: 連線關閉");
                                 Disconnect();
-                            }                       
+                            }
                         }
 
                     }, TimeSpan.FromSeconds(1));
 
-                    isConnected = true;
-                    OnPTTConnected();
-                    Debug.WriteLine("TCP: 已連線");
+                    KeepAliveTimer = ThreadPoolTimer.CreatePeriodicTimer(KeepAlive, KeepAlivePeriod);
+
                     stream = tcpClient.GetStream();
                     StartRecv();
                 }
@@ -319,8 +355,8 @@ namespace LiPTT
                 else if (!IsExit)
                 {
                     Debug.WriteLine("WebSocket: 被踢下線");
-                    OnPTTKicked();
                     Dispose();
+                    OnPTTKicked();
                 }
                 else
                 {
@@ -341,6 +377,7 @@ namespace LiPTT
                     isConnected = true;
                     OnPTTConnected();
                     Debug.WriteLine("WebSocket: 已連線");
+                    KeepAliveTimer = ThreadPoolTimer.CreatePeriodicTimer(KeepAlive, KeepAlivePeriod);
                 }
             }
             catch (Exception)
@@ -419,6 +456,7 @@ namespace LiPTT
             number = 0;
             numbers = new Queue<int>();
             screenBuffer = new ScreenBuffer();
+            KeepAliveTimer?.Cancel();
         }
 
         byte[] buffer = new byte[1024*16];
@@ -449,7 +487,7 @@ namespace LiPTT
                     }
                     else
                     {
-                        
+
                     }
                     break;
                 }
@@ -458,14 +496,6 @@ namespace LiPTT
                     Debug.WriteLine("TCP: 連線關閉");
                     break;
                 }
-            }
-        }
-
-        public bool IsConnected
-        {
-            get
-            {
-                return isConnected;
             }
         }
 

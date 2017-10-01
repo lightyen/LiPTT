@@ -41,14 +41,6 @@ namespace LiPTT
             base.ClearItems();
         }
 
-        private static HashSet<string> ShortCutUrlSet = new HashSet<string>()
-        {
-            "youtu.be",
-            //"goo.gl",
-            //"bit.ly",
-            //"ppt.cc",
-        };
-
         public List<Block[]> RawLines { get; set; } //文章生肉串
 
         public List<Task<DownloadResult>> DownloadImageTasks { get; set; }
@@ -82,8 +74,7 @@ namespace LiPTT
 
         private SemaphoreSlim sem = new SemaphoreSlim(0, 1);
 
-        private bool DividerLine = false;
-        private uint Floor = 0;
+        private uint Floor = 1;
         private string FiveFloor = "";
 
         public ArticleContentCollection()
@@ -323,8 +314,7 @@ namespace LiPTT
                     string eee = str.Trim(new char[] { '\0', ' ' });
                     if (eee.StartsWith("--"))
                     {
-                        DividerLine = true;
-                        Floor = 0;
+                        Floor = 1;
                     }
 
                     AddLine(RawLines[row], str);
@@ -374,11 +364,25 @@ namespace LiPTT
                 {
                     Uri uri = new Uri(match.ToString());
 
-                    if (IsUriVisible(uri))
-                        AddHyperlink(uri);
-
                     if (IsUriView(uri))
+                    {
+                        if (IsUriVisible(uri))
+                            AddHyperlink(uri);
                         ViewUri.Add(uri);
+                    }
+                    else
+                    {
+                        Uri u = GetUri(uri);
+                        if (u != null)
+                        {
+                            if (IsUriVisible(u))
+                                AddHyperlink(u);
+                            if (IsUriView(u))
+                                ViewUri.Add(u);
+                        }
+                        else
+                            AddHyperlink(uri);
+                    }
                 }
                 catch (UriFormatException)
                 {
@@ -565,12 +569,9 @@ namespace LiPTT
 
         private void AddEcho(Block[] block)
         {
-            if (DividerLine)
-                Floor++;
-
             AddNewTextBlock();
 
-            Echo echo = new Echo() { Floor = Floor };
+            Echo echo = new Echo() { Floor = Floor++ };
 
             string str = LiPTT.GetString(block, 0, block.Length - 13).Replace('\0', ' ').Trim();
 
@@ -658,7 +659,7 @@ namespace LiPTT
             //推文ID////高亮五樓/////高亮原PO/////////////////////
             SolidColorBrush authorColor = new SolidColorBrush(Colors.LightSalmon);
 
-            if (Floor == 5)
+            if (echo.Floor == 5)
             {
                 FiveFloor = echo.Author;
                 //authorColor = new SolidColorBrush(Colors.LightPink);
@@ -681,7 +682,7 @@ namespace LiPTT
             g1.Children.Add(tb);
 
             //並把五樓以前的五樓也高亮起來
-            if (Floor <= 5)
+            if (echo.Floor <= 5)
                 tempEchoes.Add(echo, tb);
 
             if (tempEchoes.Count >= 5)
@@ -737,7 +738,19 @@ namespace LiPTT
                     });
 
                     if (IsUriView(uri))
+                    {
+
                         ViewUri.Add(uri);
+                    }
+                    else
+                    {
+                        Uri u = GetUri(uri);
+                        if (u != null)
+                        {
+                            if (IsUriView(u))
+                                ViewUri.Add(u);
+                        }
+                    }
                 }
                 catch (UriFormatException)
                 {
@@ -778,6 +791,7 @@ namespace LiPTT
                 g3.Children.Add(new TextBlock()
                 {
                     FontSize = 22,
+                    Margin = new Thickness(0, 0, 20, 0),
                     HorizontalAlignment = HorizontalAlignment.Right,
                     VerticalAlignment = VerticalAlignment.Center,
                     Foreground = new SolidColorBrush(Colors.Wheat),
@@ -828,15 +842,7 @@ namespace LiPTT
         private void AddUriView(Uri uri)
         {
             Debug.WriteLine("request: " + uri.OriginalString);
-            //http://www.cnblogs.com/jesse2013/p/async-and-await.html
-            //***
-            if (IsShortCut(uri))
-            {
-                WebRequest webRequest = WebRequest.Create(uri);
-                WebResponse webResponse = webRequest.GetResponseAsync().Result;
-                uri = webResponse.ResponseUri;
-            }
-            /***/
+
             Binding bindingWidth = new Binding
             {
                 ElementName = "proxy",
@@ -941,6 +947,43 @@ namespace LiPTT
             {
                 string twitchID = uri.LocalPath.Substring(1);
                 AddVideoView("twitch", twitchID);
+            }
+        }
+
+        private Uri GetUri(Uri uri)
+        {
+            Debug.WriteLine(string.Format("Try Get: {0}", uri.OriginalString));
+            try
+            {
+                WebRequest webRequest = WebRequest.Create(uri);
+                Task<WebResponse> t = webRequest.GetResponseAsync();
+                if (t.Wait(30000))
+                    return t.Result.ResponseUri;
+                else
+                {
+                    Debug.WriteLine(string.Format("{0} - {1}", uri.OriginalString, "等太久了"));
+                    return null;
+                }
+            }
+            catch (UriFormatException e)
+            {
+                Debug.WriteLine(string.Format("{0} - {1}", uri.OriginalString, e.Message));
+                return null;
+            }
+            catch (WebException e)
+            {
+                Debug.WriteLine(string.Format("{0} - {1}", uri.OriginalString, e.Message));
+                return null;
+            }
+            catch (AggregateException e)
+            {
+                Debug.WriteLine(string.Format("{0} - {1}", uri.OriginalString, e.Message));
+                return null;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(string.Format("{0} - {1}", uri.OriginalString, e.Message));
+                return null;
             }
         }
 
@@ -1158,11 +1201,11 @@ namespace LiPTT
                 bool visible = true;
 
                 if (IsPictureUri(uri)) //.jpg,.png結尾 等等
-                    visible = true;
+                    visible = false;
                 else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a/") == -1)
-                    visible = true;
+                    visible = false;
                 else if (uri.Host == "i.imgur.com" && uri.OriginalString.IndexOf("i.imgur.com/a/") == -1)
-                    visible = true;
+                    visible = false;
                 else if (IsYoutubeUri(uri))
                     visible = false;
                 else if (uri.Host == "www.twitch.tv")
@@ -1193,7 +1236,7 @@ namespace LiPTT
 
         private bool IsYoutubeUri(Uri uri)
         {
-            if (uri.Host == "www.youtube.com" || uri.Host == "youtu.be")
+            if (uri.Host == "www.youtube.com")
                 return true;
             else
                 return false;
@@ -1205,12 +1248,6 @@ namespace LiPTT
                 return true;
             else
                 return false;
-        }
-
-        private bool IsShortCut(Uri uri)
-        {
-            if (ShortCutUrlSet.Contains(uri.Host)) return true;
-            else return false;
         }
 
         private bool IsEchoes(string msg)

@@ -230,11 +230,26 @@ namespace LiPTT
                 }
                 else if (article.Like > 29)
                 {
-                    color = Colors.Gold;
+                    if (article.State.HasFlag(ReadState.已讀))
+                    {
+                        color = Colors.DarkGoldenrod;
+                    }
+                    else
+                    {
+                        color = Colors.Gold;
+                    }
                 }
                 else if (article.Like < -29)
                 {
-                    color = Colors.Crimson;
+                    if (article.State.HasFlag(ReadState.已讀))
+                    {
+                        color = Color.FromArgb(0xff, 0x8b, 0x23, 0x23);
+                    }
+                    else
+                    {
+                        color = Color.FromArgb(0xff, 0xff, 0x40, 0x40);
+                    }
+                    
                 }
                 else if (article.State.HasFlag(ReadState.有推文))
                 {

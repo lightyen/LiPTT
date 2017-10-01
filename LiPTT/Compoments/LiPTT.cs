@@ -58,8 +58,6 @@ namespace LiPTT
     {
         public static PTTClient Client;
 
-        public static DispatcherTimer KeepAliveTimer { get; set; }
-
         /// <summary>
         /// XBOX ONE 手把我有 希望無窮(來鬧的)
         /// </summary>
@@ -434,6 +432,11 @@ namespace LiPTT
             }
         }
 
+        public static bool AlwaysAlive
+        {
+            get; set;
+        }
+
         public static bool IsExit
         {
             get
@@ -631,12 +634,6 @@ namespace LiPTT
 
         public static void CreateInstance()
         {
-            ConnectionSecurity = true;
-            Client = new PTTClient
-            {
-                Security = security
-            };
-            /////////
             if (ApplicationData.Current.LocalSettings.Containers.ContainsKey(SettingPropertyName))
             {
                 LoadSetting();
@@ -647,7 +644,8 @@ namespace LiPTT
                 LoadSetting();
             }
 
-            /////////
+            Client = new PTTClient { Security = security };
+
             Gamepads = new List<Gamepad>();
         }
 
@@ -837,7 +835,9 @@ namespace LiPTT
     {
         public SettingProperty()
         {
-            Space = 0.7;
+            ConnectionSecurity = true;
+            AlwaysAlive = false;
+            Space = 0.5;
         }
 
         /// <summary>
@@ -856,6 +856,9 @@ namespace LiPTT
             }
         }
 
+        /// <summary>
+        /// 是否安全連線
+        /// </summary>
         public bool? ConnectionSecurity
         {
             get
@@ -869,6 +872,22 @@ namespace LiPTT
                     LiPTT.ConnectionSecurity = b;
                     NotifyPropertyChanged("ConnectionSecurity");
                 }
+            }
+        }
+
+        /// <summary>
+        /// 總是自動重新連線
+        /// </summary>
+        public bool AlwaysAlive
+        {
+            get
+            {
+                return LiPTT.AlwaysAlive;
+            }
+            set
+            {
+                LiPTT.AlwaysAlive = value;
+                NotifyPropertyChanged("AlwaysAlive");
             }
         }
 

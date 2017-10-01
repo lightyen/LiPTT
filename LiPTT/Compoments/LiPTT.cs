@@ -891,7 +891,21 @@ namespace LiPTT
             }
         }
 
+        public bool FullScreen
+        {
+            get
+            {
+                return fullScreen;
+            }
+            set
+            {
+                fullScreen = value;
+                NotifyPropertyChanged("FullScreen");
+            }
+        }
+
         private double space;
+        private bool fullScreen;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

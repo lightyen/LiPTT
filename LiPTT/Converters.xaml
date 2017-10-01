@@ -25,4 +25,6 @@
     <local:YoutubeGridLengthCenterConverter x:Key="YoutubeGridLengthCenterConverter" />
     <local:YoutubeGridLengthSideConverter x:Key="YoutubeGridLengthSideConverter" />
     <local:YoutubeGridHeightConverter x:Key="YoutubeGridHeightConverter" />
+    <local:FullScreenArticleSideConverter x:Key="FullScreenArticleSideConverter" />
+    <local:FullScreenHeaderSideConverter x:Key="FullScreenHeaderSideConverter" />
 </ResourceDictionary>

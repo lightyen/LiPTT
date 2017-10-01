@@ -567,14 +567,14 @@ namespace LiPTT
                 oldElement.SizeChanged -= new SizeChangedEventHandler(Element_SizeChanged);
             }
 
-            NotifyPropertyChanged("ActualWidthValue");
-            NotifyPropertyChanged("ActualHeightValue");
+            if (ActualWidthValue > 0) NotifyPropertyChanged("ActualWidthValue");
+            if (ActualHeightValue > 0) NotifyPropertyChanged("ActualHeightValue");
         }
 
         private void Element_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            NotifyPropertyChanged("ActualWidthValue");
-            NotifyPropertyChanged("ActualHeightValue");
+            if (ActualWidthValue > 0) NotifyPropertyChanged("ActualWidthValue");
+            if (ActualHeightValue > 0) NotifyPropertyChanged("ActualHeightValue");
         }
 
         private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")

@@ -759,4 +759,58 @@ namespace LiPTT
             throw new NotImplementedException();
         }
     }
+
+    public class FullScreenHeaderSideConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is bool FullScreen)
+            {
+                if (FullScreen)
+                {
+                    return new GridLength(0, GridUnitType.Star);
+                }
+                else
+                {
+                    return new GridLength(0.8, GridUnitType.Star);
+                }
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class FullScreenArticleSideConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is bool FullScreen)
+            {
+                if (FullScreen)
+                {
+                    return new GridLength(0, GridUnitType.Star);
+                }
+                else
+                {
+                    return new GridLength(1, GridUnitType.Star);
+                }
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

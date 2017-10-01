@@ -15,6 +15,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml;
+using Windows.UI.ViewManagement;
 
 namespace LiPTT
 {
@@ -1119,6 +1120,30 @@ namespace LiPTT
             ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
 
             WebView webview = new WebView { DefaultBackgroundColor = Colors.Black };
+
+            webview.ContainsFullScreenElementChanged += (WebView, args) =>
+            {
+                var View = ApplicationView.GetForCurrentView();
+                SettingProperty Setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+
+                var act = LiPTT.RunInUIThread(() => {
+
+                    if (WebView.ContainsFullScreenElement)
+                    {
+                        Setting.FullScreen = true;
+                        View.TryEnterFullScreenMode();
+                    }
+                    else if (View.IsFullScreenMode)
+                    {
+                        Setting.FullScreen = false;
+                        View.ExitFullScreenMode();
+                    }
+                });
+
+
+                
+                
+            };
 
             webview.ContentLoading += (a, b) =>
             {

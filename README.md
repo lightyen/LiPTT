@@ -54,7 +54,7 @@ LiPTT取名並沒有什麼特別的含意，只是拿我的ID前兩個英文字�
 
 - [Newtonsoft.json](https://github.com/JamesNK/Newtonsoft.Json)
 
-  為了可以把CSharp物件存在應用程式的設定檔，用了SerializeObject和DeserializeObject的功能。但是後來發現我並沒有很常碰到要把物件存起來的情況，一般用基本的型別就能搞定一切，所以以後會不會用還是個未知數，先放著。
+  為了可以把CSharp物件存在應用程式的設定檔，用了SerializeObject和DeserializeObject的功能。
 
   ​
 

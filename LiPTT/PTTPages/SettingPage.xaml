@@ -11,7 +11,15 @@
         <StackPanel>
             <TextBlock Text="還在施工中..." Margin="10,10,10,60"/>
             <CheckBox Content="安全連線" FontSize="28" Margin="200,10,10,50" VerticalContentAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding ConnectionSecurity, Source={StaticResource SettingProperty}, Mode=TwoWay}" />
-            <Slider Header="圖片大小%" FontSize="28" Width="500" Margin="200,10,10,50" HorizontalAlignment="Left" Minimum="0" Maximum="100" Value="{Binding Space, Source={StaticResource SettingProperty}, Mode=TwoWay, Converter={StaticResource SpaceConverter}}" />
+            <Slider FontSize="28" Width="500" Margin="200,10,10,50" HorizontalAlignment="Left" Minimum="0" Maximum="100" Value="{Binding Space, Source={StaticResource SettingProperty}, Mode=TwoWay, Converter={StaticResource SpaceConverter}}">
+                <Slider.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="圖片大小" />
+                        <TextBlock Text="{Binding Space, Source={StaticResource SettingProperty}, Mode=OneWay, Converter={StaticResource SpaceConverter}}" Padding="7,0,7,0" />
+                        <TextBlock Text="%" />
+                    </StackPanel>
+                </Slider.Header>
+            </Slider>
         </StackPanel>
     </Grid>
 </Page>

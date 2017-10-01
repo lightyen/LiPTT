@@ -338,7 +338,10 @@ namespace LiPTT
                 {
                     var firstFinishedTask = await Task.WhenAny(DownloadImageTasks);
 
-                    this[firstFinishedTask.Result.Index] = firstFinishedTask.Result.Item;
+                    var item = firstFinishedTask.Result.Item;
+
+                    if (item != null)
+                        this[firstFinishedTask.Result.Index] = item;
                     
                     DownloadImageTasks.Remove(firstFinishedTask);
                 }
@@ -856,8 +859,8 @@ namespace LiPTT
                 ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
                 ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
                 Grid grid = new Grid() { Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
-                grid.SetBinding(Grid.WidthProperty, bindingWidth);
-                grid.SetBinding(Grid.HeightProperty, bindingHeight);
+                grid.SetBinding(FrameworkElement.WidthProperty, bindingWidth);
+                grid.SetBinding(FrameworkElement.HeightProperty, bindingHeight);
                 grid.Children.Add(ring);
                 Add(grid);
 
@@ -881,8 +884,8 @@ namespace LiPTT
                             ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
                             ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
                             Grid grid = new Grid() { Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
-                            grid.SetBinding(Grid.WidthProperty, bindingWidth);
-                            grid.SetBinding(Grid.HeightProperty, bindingHeight);
+                            grid.SetBinding(FrameworkElement.WidthProperty, bindingWidth);
+                            grid.SetBinding(FrameworkElement.HeightProperty, bindingHeight);
                             grid.Children.Add(ring);
                             Add(grid);
                             DownloadImageTasks.Add(DownloadImage(Count - 1, new_uri));
@@ -909,8 +912,8 @@ namespace LiPTT
                             ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
                             ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
                             Grid grid = new Grid() { Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
-                            grid.SetBinding(Grid.WidthProperty, bindingWidth);
-                            grid.SetBinding(Grid.HeightProperty, bindingHeight);
+                            grid.SetBinding(FrameworkElement.WidthProperty, bindingWidth);
+                            grid.SetBinding(FrameworkElement.HeightProperty, bindingHeight);
                             grid.Children.Add(ring);
                             Add(grid);
                             DownloadImageTasks.Add(DownloadImage(Count - 1, new_uri));
@@ -947,46 +950,82 @@ namespace LiPTT
 
             BitmapImage bmp = await task;
 
-            Image img = new Image() { Source = bmp, HorizontalAlignment = HorizontalAlignment.Stretch };
-            
+            Image img = new Image() { HorizontalAlignment = HorizontalAlignment.Stretch };
+
             Grid ImgGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
 
-            Windows.Graphics.Imaging.BitmapSize bitmapSize = new Windows.Graphics.Imaging.BitmapSize { Width = (uint)bmp.PixelWidth, Height = (uint)bmp.PixelHeight };
-
-            Binding bindingSide = new Binding
+            if (bmp != null)
             {
-                ElementName = "proxy",
-                Path = new PropertyPath("ActualWidthValue"),
-                Converter = Application.Current.Resources["GridLengthSideConverter"] as GridLengthSideConverter,
-                ConverterParameter = bitmapSize,
-            };
+                img.Source = bmp;
+                Windows.Graphics.Imaging.BitmapSize bitmapSize = new Windows.Graphics.Imaging.BitmapSize { Width = (uint)bmp.PixelWidth, Height = (uint)bmp.PixelHeight };
 
-            Binding bindingCenter = new Binding
+                Binding bindingSide = new Binding
+                {
+                    ElementName = "proxy",
+                    Path = new PropertyPath("ActualWidthValue"),
+                    Converter = Application.Current.Resources["GridLengthSideConverter"] as GridLengthSideConverter,
+                    ConverterParameter = bitmapSize,
+                };
+
+                Binding bindingCenter = new Binding
+                {
+                    ElementName = "proxy",
+                    Path = new PropertyPath("ActualWidthValue"),
+                    Converter = Application.Current.Resources["GridLengthCenterConverter"] as GridLengthCenterConverter,
+                    ConverterParameter = bitmapSize,
+                };
+
+                ColumnDefinition c1 = new ColumnDefinition(), c2 = new ColumnDefinition(), c3 = new ColumnDefinition();
+                BindingOperations.SetBinding(c1, ColumnDefinition.WidthProperty, bindingSide);
+                BindingOperations.SetBinding(c2, ColumnDefinition.WidthProperty, bindingCenter);
+                BindingOperations.SetBinding(c3, ColumnDefinition.WidthProperty, bindingSide);
+
+                ImgGrid.ColumnDefinitions.Add(c1);
+                ImgGrid.ColumnDefinitions.Add(c2);
+                ImgGrid.ColumnDefinitions.Add(c3);
+
+                HyperlinkButton button = new HyperlinkButton()
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Content = img,
+                    NavigateUri = uri,
+                };
+
+                button.SetValue(Grid.ColumnProperty, 1);
+                ImgGrid.Children.Add(button);
+            }
+            else
             {
-                ElementName = "proxy",
-                Path = new PropertyPath("ActualWidthValue"),
-                Converter = Application.Current.Resources["GridLengthCenterConverter"] as GridLengthCenterConverter,
-                ConverterParameter = bitmapSize,
-            };
+                Binding bindingWidth = new Binding
+                {
+                    ElementName = "proxy",
+                    Path = new PropertyPath("ActualWidthValue"),
+                    Converter = Application.Current.Resources["GridWidthConverter"] as GridWidthConverter,
+                };
 
-            ColumnDefinition c1 = new ColumnDefinition(), c2 = new ColumnDefinition(), c3 = new ColumnDefinition();
-            BindingOperations.SetBinding(c1, ColumnDefinition.WidthProperty, bindingSide);
-            BindingOperations.SetBinding(c2, ColumnDefinition.WidthProperty, bindingCenter);
-            BindingOperations.SetBinding(c3, ColumnDefinition.WidthProperty, bindingSide);
+                Binding bindingHeight = new Binding
+                {
+                    ElementName = "proxy",
+                    Path = new PropertyPath("ActualWidthValue"),
+                    Converter = Application.Current.Resources["GridHeightConverter"] as GridHeightConverter,
+                };
 
-            ImgGrid.ColumnDefinitions.Add(c1);
-            ImgGrid.ColumnDefinitions.Add(c2);
-            ImgGrid.ColumnDefinitions.Add(c3);
+                Border border = new Border() {
+                    Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)),
+                };
+                border.SetBinding(FrameworkElement.WidthProperty, bindingWidth);
+                border.SetBinding(FrameworkElement.HeightProperty, bindingHeight);
 
-            HyperlinkButton button = new HyperlinkButton()
-            {
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Content = img,
-                NavigateUri = uri,
-            };
+                border.Child = new TextBlock() {
+                    Text = "圖片下載失敗",
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TextAlignment = TextAlignment.Center,
+                    FontSize = ArticleFontSize,
+                };
 
-            button.SetValue(Grid.ColumnProperty, 1);
-            ImgGrid.Children.Add(button);
+                ImgGrid.Children.Add(border);
+            }
 
             return new DownloadResult() { Index = index, Item = ImgGrid };
         }

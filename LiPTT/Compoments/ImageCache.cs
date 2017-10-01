@@ -102,16 +102,24 @@ namespace LiPTT
             }
 
             var f = await cache_task[uri];
-            return await GetBitmapImage(f);
+
+            if (f != null)
+                return await GetBitmapImage(f);
+            else
+                return null;
         }
 
         private async Task<StorageFile> DownloadAndGetFile(Uri uri, string name)
         {
             IBuffer buffer = await GetBufferAsync(uri);
-            Debug.WriteLine(string.Format("Downloaded: {0}", uri.OriginalString)); 
-            await SaveFile(buffer, name);
-            Debug.WriteLine(string.Format("Save File: {0}", name));
-            return await GetFileFromLocalCache(name);
+            Debug.WriteLine(string.Format("Downloaded: {0}", uri.OriginalString));
+            if (buffer != null)
+            {
+                await SaveFile(buffer, name);
+                Debug.WriteLine(string.Format("Save File: {0}", name));
+                return await GetFileFromLocalCache(name);
+            }
+            else return null;
         }
 
         /// <summary>

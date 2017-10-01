@@ -623,7 +623,7 @@ namespace LiPTT
 
                 if (ImageSize.Width < ViewWidth * space)
                 {
-                    return new GridLength(1, GridUnitType.Star);
+                    return new GridLength((ViewWidth - ImageSize.Width) / 2.0, GridUnitType.Pixel);
                 }
                 else if (ratio > 1.0)
                 {

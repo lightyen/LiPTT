@@ -794,16 +794,10 @@
     <PackageReference Include="SharpDX.DirectInput">
       <Version>4.0.1</Version>
     </PackageReference>
-    <PackageReference Include="SharpDX.DirectSound">
-      <Version>4.0.1</Version>
-    </PackageReference>
     <PackageReference Include="SharpDX.DXGI">
       <Version>4.0.1</Version>
     </PackageReference>
     <PackageReference Include="SharpDX.Mathematics">
-      <Version>4.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="SharpDX.XInput">
       <Version>4.0.1</Version>
     </PackageReference>
   </ItemGroup>

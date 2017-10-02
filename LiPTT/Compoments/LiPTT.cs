@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using Windows.System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.ViewManagement;
 using Windows.ApplicationModel.Core;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -644,6 +645,10 @@ namespace LiPTT
                 LoadSetting();
             }
 
+            SettingProperty Setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+            ApplicationProperty app = Application.Current.Resources["ApplicationProperty"] as ApplicationProperty;
+            app.FullScreen = Setting.FullScreen;
+
             Client = new PTTClient { Security = security };
 
             Gamepads = new List<Gamepad>();
@@ -899,12 +904,46 @@ namespace LiPTT
             }
             set
             {
+                var app = Application.Current.Resources["ApplicationProperty"] as ApplicationProperty;
                 fullScreen = value;
+                app.FullScreen = fullScreen;
                 NotifyPropertyChanged("FullScreen");
             }
         }
 
         private double space;
+        private bool fullScreen;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+    public class ApplicationProperty : INotifyPropertyChanged
+    {
+        public bool FullScreen
+        {
+            get
+            {
+                return fullScreen;
+            }
+            set
+            {
+                if (fullScreen == value) return;
+
+                fullScreen = value;
+                var View = ApplicationView.GetForCurrentView();
+                if (fullScreen)
+                    View.TryEnterFullScreenMode();
+                else
+                    View.ExitFullScreenMode();
+                NotifyPropertyChanged("FullScreen");
+            }
+        }
+
         private bool fullScreen;
 
         public event PropertyChangedEventHandler PropertyChanged;

@@ -697,7 +697,7 @@ namespace LiPTT
         }
     }
 
-    public class YoutubeGridLengthSideConverter : IValueConverter
+    public class WebViewGridLengthSideConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -718,7 +718,7 @@ namespace LiPTT
         }
     }
 
-    public class YoutubeGridLengthCenterConverter : IValueConverter
+    public class WebViewGridLengthCenterConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

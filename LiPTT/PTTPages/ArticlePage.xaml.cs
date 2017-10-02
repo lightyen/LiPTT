@@ -86,12 +86,18 @@ namespace LiPTT
             article = LiPTT.CurrentArticle;
             LiPTT.CacheBoard = true;
 
-            ContentCollection.BeginLoaded += (a, b) => {
-                if (ListVW.Items.Count > 0) ListVW.ScrollIntoView(ListVW.Items[0]);
+            ContentCollection.MyListView = ListVW;
+            ContentCollection.VideoGrid = VideoGrid;
+            ContentCollection.BeginLoaded += (a, b) =>
+            {
+                if (ListVW.Items.Count > 0)
+                    ListVW.ScrollIntoView(ListVW.Items[0]);
                 Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
                 Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             };
 
+            ContentCollection.FullScreenEntered += RemoveEventHandler;
+            ContentCollection.FullScreenExited += AddEventHandler;
             LoadingExtraData = false;
             pressAny = false;
 
@@ -101,6 +107,8 @@ namespace LiPTT
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            ContentCollection.FullScreenEntered -= RemoveEventHandler;
+            ContentCollection.FullScreenExited -= AddEventHandler;
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed -= ArticlePage_PointerPressed;
         }
@@ -147,6 +155,18 @@ namespace LiPTT
                     }
                     break;
             }
+        }
+
+        private void AddEventHandler(object sender, EventArgs e)
+        {
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+            Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
+        }
+
+        private void RemoveEventHandler(object sender, EventArgs e)
+        {
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            Window.Current.CoreWindow.PointerPressed -= ArticlePage_PointerPressed;
         }
 
         private bool PressRight = false;

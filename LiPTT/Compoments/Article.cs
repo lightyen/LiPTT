@@ -15,7 +15,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml;
-using Windows.UI.ViewManagement;
 
 namespace LiPTT
 {
@@ -60,6 +59,14 @@ namespace LiPTT
 
         private const double ArticleFontSize = 24.0;
 
+        public ListView MyListView { get; set; }
+
+        public Grid VideoGrid { get; set; }
+
+        private bool VideoFullScreen { get; set; }
+
+        private double VerticalScrollOffset;
+
         private FontFamily ArticleFontFamily;
 
         private RichTextBlock RichTextBlock;
@@ -72,6 +79,10 @@ namespace LiPTT
         /// Load完成。(給ScrollViewer在Load完成後捲到頂部用)
         /// </summary>
         public event EventHandler BeginLoaded;
+
+        public event EventHandler FullScreenEntered;
+
+        public event EventHandler FullScreenExited;
 
         private SemaphoreSlim sem = new SemaphoreSlim(0, 1);
 
@@ -953,6 +964,8 @@ namespace LiPTT
 
         private Uri GetUri(Uri uri)
         {
+            if (!IsShortUri(uri)) return null;
+
             Debug.WriteLine(string.Format("Try Get: {0}", uri.OriginalString));
             try
             {
@@ -1084,14 +1097,14 @@ namespace LiPTT
             {
                 ElementName = "proxy",
                 Path = new PropertyPath("ActualWidthValue"),
-                Converter = Application.Current.Resources["YoutubeGridLengthSideConverter"] as YoutubeGridLengthSideConverter,
+                Converter = Application.Current.Resources["WebViewGridLengthSideConverter"] as WebViewGridLengthSideConverter,
             };
 
             Binding bindingCenter = new Binding
             {
                 ElementName = "proxy",
                 Path = new PropertyPath("ActualWidthValue"),
-                Converter = Application.Current.Resources["YoutubeGridLengthCenterConverter"] as YoutubeGridLengthCenterConverter,
+                Converter = Application.Current.Resources["WebViewGridLengthCenterConverter"] as WebViewGridLengthCenterConverter,
             };
 
             c1 = new ColumnDefinition();
@@ -1123,26 +1136,50 @@ namespace LiPTT
 
             webview.ContainsFullScreenElementChanged += (WebView, args) =>
             {
-                var View = ApplicationView.GetForCurrentView();
-                SettingProperty Setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+                var app = Application.Current.Resources["ApplicationProperty"] as ApplicationProperty;
+                var setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
 
                 var act = LiPTT.RunInUIThread(() => {
 
                     if (WebView.ContainsFullScreenElement)
                     {
-                        Setting.FullScreen = true;
-                        View.TryEnterFullScreenMode();
+                        FullScreenEntered?.Invoke(WebView, new EventArgs());
+                        var scrollviewer = GetScrollViewer(MyListView);
+                        if (scrollviewer != null)
+                        {
+                            scrollviewer.VerticalScrollMode = ScrollMode.Disabled;
+                            scrollviewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+                            VerticalScrollOffset = scrollviewer.VerticalOffset;
+                        }
+
+                        MyListView.Visibility = Visibility.Collapsed;
+                        VideoFullScreen = true;
+                        app.FullScreen = VideoFullScreen;
+
+                        youtuGrid.Children.Remove(WebView);
+                        VideoGrid.Children.Add(WebView);
+                        VideoGrid.Visibility = Visibility.Visible;
                     }
-                    else if (View.IsFullScreenMode)
+                    else
                     {
-                        Setting.FullScreen = false;
-                        View.ExitFullScreenMode();
+                        var scrollviewer = GetScrollViewer(MyListView);
+                        if (scrollviewer != null)
+                        {
+                            scrollviewer.VerticalScrollMode = ScrollMode.Auto;
+                            scrollviewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+                            scrollviewer.ChangeView(0, VerticalScrollOffset, null);
+                        }
+
+                        VideoGrid.Visibility = Visibility.Collapsed;
+                        VideoFullScreen = false;
+                        app.FullScreen = setting.FullScreen;
+
+                        VideoGrid.Children.Remove(WebView);
+                        youtuGrid.Children.Add(WebView);
+                        MyListView.Visibility = Visibility.Visible;
+                        FullScreenExited?.Invoke(WebView, new EventArgs());
                     }
                 });
-
-
-                
-                
             };
 
             webview.ContentLoading += (a, b) =>
@@ -1275,6 +1312,21 @@ namespace LiPTT
                 return false;
         }
 
+        private bool IsShortUri(Uri uri)
+        {
+            switch (uri.Host)
+            {
+                case "youtu.be":
+                    return true;
+                case "goo.gl":
+                    return true;
+                case "bit.ly":
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         private bool IsEchoes(string msg)
         {
             if (msg.StartsWith("推") || msg.StartsWith("噓") || msg.StartsWith("→"))
@@ -1391,6 +1443,33 @@ namespace LiPTT
                     return new SolidColorBrush(Color.FromArgb(0xFF, 0xC0, 0xC0, 0xC0));
                 default:
                     return new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00));
+            }
+        }
+
+        private ScrollViewer GetScrollViewer(DependencyObject depObj)
+        {
+            try
+            {
+                if (depObj is ScrollViewer)
+                {
+                    return depObj as ScrollViewer;
+                }
+
+                for (var i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    var child = VisualTreeHelper.GetChild(depObj, i);
+
+                    var result = GetScrollViewer(child);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
             }
         }
     }

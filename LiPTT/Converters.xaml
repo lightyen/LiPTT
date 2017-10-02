@@ -22,8 +22,8 @@
     <local:SpaceConverter x:Key="SpaceConverter" />
     <local:GridWidthConverter x:Key="GridWidthConverter" />
     <local:GridHeightConverter x:Key="GridHeightConverter" />
-    <local:YoutubeGridLengthCenterConverter x:Key="YoutubeGridLengthCenterConverter" />
-    <local:YoutubeGridLengthSideConverter x:Key="YoutubeGridLengthSideConverter" />
+    <local:WebViewGridLengthCenterConverter x:Key="WebViewGridLengthCenterConverter" />
+    <local:WebViewGridLengthSideConverter x:Key="WebViewGridLengthSideConverter" />
     <local:YoutubeGridHeightConverter x:Key="YoutubeGridHeightConverter" />
     <local:FullScreenArticleSideConverter x:Key="FullScreenArticleSideConverter" />
     <local:FullScreenHeaderSideConverter x:Key="FullScreenHeaderSideConverter" />

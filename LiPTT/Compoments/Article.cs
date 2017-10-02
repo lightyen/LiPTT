@@ -631,12 +631,50 @@ namespace LiPTT
             if (str.StartsWith("推")) echo.Evaluation = Evaluation.推;
             else if (str.StartsWith("噓")) echo.Evaluation = Evaluation.噓;
             else echo.Evaluation = Evaluation.箭頭;
+
             //////////////////////////////////////////////
+            Binding binding0 = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["EchoGridLengthConverter"] as EchoGridLengthConverter,
+                ConverterParameter = 0,
+            };
+
+            Binding binding1 = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["EchoGridLengthConverter"] as EchoGridLengthConverter,
+                ConverterParameter = 1,
+            };
+
+            Binding binding2 = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["EchoGridLengthConverter"] as EchoGridLengthConverter,
+                ConverterParameter = 2,
+            };
+
+            Binding binding3 = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["EchoGridLengthConverter"] as EchoGridLengthConverter,
+                ConverterParameter = 3,
+            };
+
             Grid grid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
-            ColumnDefinition c0 = new ColumnDefinition() { Width = new GridLength(3, GridUnitType.Star) };
-            ColumnDefinition c1 = new ColumnDefinition() { Width = new GridLength(15, GridUnitType.Star) };
-            ColumnDefinition c2 = new ColumnDefinition() { Width = new GridLength(42, GridUnitType.Star) };
-            ColumnDefinition c3 = new ColumnDefinition() { Width = new GridLength(16, GridUnitType.Star) };
+
+            ColumnDefinition c0 = new ColumnDefinition();
+            BindingOperations.SetBinding(c0, ColumnDefinition.WidthProperty, binding0);
+            ColumnDefinition c1 = new ColumnDefinition();
+            BindingOperations.SetBinding(c1, ColumnDefinition.WidthProperty, binding1);
+            ColumnDefinition c2 = new ColumnDefinition();
+            BindingOperations.SetBinding(c2, ColumnDefinition.WidthProperty, binding2);
+            ColumnDefinition c3 = new ColumnDefinition();
+            BindingOperations.SetBinding(c3, ColumnDefinition.WidthProperty, binding3);
 
             grid.ColumnDefinitions.Add(c0);
             grid.ColumnDefinitions.Add(c1);
@@ -742,7 +780,6 @@ namespace LiPTT
                     {
                         VerticalAlignment = VerticalAlignment.Center,
                         NavigateUri = uri,
-                        FontSize = 22,
                         Content = new TextBlock() { Text = text },
                     };
                     BindingOperations.SetBinding(hb, Control.FontSizeProperty, EchoFontSizeBinding);
@@ -1137,17 +1174,14 @@ namespace LiPTT
 
             webview.ContainsFullScreenElementChanged += (WebView, args) =>
             {
-                var act = LiPTT.RunInUIThread(() => {
-
-                    if (WebView.ContainsFullScreenElement)
-                    {
-                        FullScreenEntered?.Invoke(youtuGrid, new FullScreenEventArgs(WebView));  
-                    }
-                    else
-                    {
-                        FullScreenExited?.Invoke(youtuGrid, new FullScreenEventArgs(WebView));
-                    }
-                });
+                if (WebView.ContainsFullScreenElement)
+                {
+                    FullScreenEntered?.Invoke(youtuGrid, new FullScreenEventArgs(WebView));
+                }
+                else
+                {
+                    FullScreenExited?.Invoke(youtuGrid, new FullScreenEventArgs(WebView));
+                }
             };
 
             webview.ContentLoading += (a, b) =>

@@ -789,6 +789,38 @@ namespace LiPTT
         }
     }
 
+    public class EchoGridLengthConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double ViewWidth && parameter is int col)
+            {
+                double FontSizePercent = (Application.Current.Resources["SettingProperty"] as SettingProperty).FontSizePercent;
+                
+                switch (col)
+                {
+                    case 0:
+                        return new GridLength(1 * (1.5 - FontSizePercent), GridUnitType.Star);
+                    case 1:
+                        return new GridLength(3 * (1.5 - FontSizePercent), GridUnitType.Star);
+                    case 2:
+                        return new GridLength(14 * (1.5 - FontSizePercent), GridUnitType.Star);
+                    case 3:
+                        return new GridLength(4 * (1.5 - FontSizePercent), GridUnitType.Star);
+                }
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class FullScreenHeaderSideConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)

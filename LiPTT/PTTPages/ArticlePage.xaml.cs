@@ -168,9 +168,9 @@ namespace LiPTT
             var scrollviewer = GetScrollViewer(ListVW);
             if (scrollviewer != null)
             {
+                VerticalScrollOffset = scrollviewer.VerticalOffset;
                 scrollviewer.VerticalScrollMode = ScrollMode.Disabled;
                 scrollviewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-                VerticalScrollOffset = scrollviewer.VerticalOffset;
             }
 
             ListVW.Visibility = Visibility.Collapsed;
@@ -187,21 +187,30 @@ namespace LiPTT
             var app = Application.Current.Resources["ApplicationProperty"] as ApplicationProperty;
             var setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
 
+            VideoGrid.Visibility = Visibility.Collapsed;
+            VideoGrid.Children.Remove(e.WebView);
+            youtuGrid.Children.Add(e.WebView);
+
+            app.FullScreen = setting.FullScreen;
+
             var scrollviewer = GetScrollViewer(ListVW);
             if (scrollviewer != null)
             {
                 scrollviewer.VerticalScrollMode = ScrollMode.Auto;
                 scrollviewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-                scrollviewer.ChangeView(0, VerticalScrollOffset, null);
+
+                Windows.System.Threading.ThreadPoolTimer.CreateTimer((timer) => {
+                    var act = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                        scrollviewer.ChangeView(0, VerticalScrollOffset, null);
+                        ListVW.Visibility = Visibility.Visible;
+                    });
+                }, TimeSpan.FromMilliseconds(50));
             }
-
-            VideoGrid.Visibility = Visibility.Collapsed;
-
-            app.FullScreen = setting.FullScreen;
-
-            VideoGrid.Children.Remove(e.WebView);
-            youtuGrid.Children.Add(e.WebView);
-            ListVW.Visibility = Visibility.Visible;
+            else
+            {
+                ListVW.Visibility = Visibility.Visible;
+            }
+            
 
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;

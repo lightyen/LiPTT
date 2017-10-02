@@ -6,7 +6,7 @@
 
 #### 原本我一直都是用手機JPTT來上站的，但是想在Windows 10下就沒有好用的Store App桌面級應用，所以就開了這項目，在探索UWP的世界之餘也能做些小成果。
 
-#### (目前只考慮Windows 10 15063版本以上)
+#### (目前只考慮Windows 10 15063版本或以上)
 
 <img src="https://i.imgur.com/1XRlB3j.png"></img>
 

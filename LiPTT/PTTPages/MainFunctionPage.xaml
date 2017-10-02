@@ -47,7 +47,7 @@
                 </GridView.ItemContainerStyle>
                 <GridView.ItemTemplate>
                     <DataTemplate x:DataType="local:MyKeyValuePair">
-                        <Border Background="Black" Width="400" Height="200" >
+                        <Border Background="Black" Width="350" Height="150" >
                             <TextBlock Text="{x:Bind Key}" TextAlignment="Center" FontSize="36" VerticalAlignment="Center" Foreground="FloralWhite"/>
                         </Border>
                     </DataTemplate>

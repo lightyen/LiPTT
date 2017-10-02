@@ -36,6 +36,10 @@ namespace LiPTT
         {
             this.InitializeComponent();
 
+            this.DataContext = this;
+
+            ControlVisible = Visibility.Collapsed;
+
             BoardGridView.Items.Add(new MyKeyValuePair("Windows", "Windows"));
             BoardGridView.Items.Add(new MyKeyValuePair("笨蛋", "StupidClown"));
             BoardGridView.Items.Add(new MyKeyValuePair("Soft Job", "Soft_Job"));
@@ -46,7 +50,7 @@ namespace LiPTT
             BoardGridView.Items.Add(new MyKeyValuePair("少女前線", "GirlsFront"));
             BoardGridView.Items.Add(new MyKeyValuePair("C# 程式設計", "C_Sharp"));
 
-            this.DataContext = this;
+            ControlVisible = Visibility.Visible;
         }
 
         List<string> RelatedTable = new List<string>();
@@ -66,12 +70,15 @@ namespace LiPTT
             }
             set
             {
-                if (value == Visibility.Visible)
-                    control_visible = true;
-                else
-                    control_visible = false;
-                NotifyPropertyChanged("ControlVisible");
-                NotifyPropertyChanged("RingActive");
+                if ((control_visible && value == Visibility.Collapsed) || (!control_visible && value == Visibility.Visible))
+                {
+                    if (value == Visibility.Visible)
+                        control_visible = true;
+                    else
+                        control_visible = false;
+                    NotifyPropertyChanged("ControlVisible");
+                    NotifyPropertyChanged("RingActive");
+                }
             }
         }
 

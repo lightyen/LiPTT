@@ -407,7 +407,7 @@ namespace LiPTT
             {
 #if DEBUG
                 StringBuilder sb = new StringBuilder();
-                sb.Append("這裡是哪裡?\n");
+                sb.Append("這裡是哪裡? 進板畫面?\n");
                 var x = Client.Screen.ToStringArray();
                 foreach (string s in x)
                 {

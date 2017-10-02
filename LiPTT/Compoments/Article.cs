@@ -59,14 +59,6 @@ namespace LiPTT
 
         private const double ArticleFontSize = 24.0;
 
-        public ListView MyListView { get; set; }
-
-        public Grid VideoGrid { get; set; }
-
-        private bool VideoFullScreen { get; set; }
-
-        private double VerticalScrollOffset;
-
         private FontFamily ArticleFontFamily;
 
         private RichTextBlock RichTextBlock;
@@ -80,9 +72,10 @@ namespace LiPTT
         /// </summary>
         public event EventHandler BeginLoaded;
 
-        public event EventHandler FullScreenEntered;
+        public delegate void FullScreenEventHandler(Grid sender, FullScreenEventArgs e);
 
-        public event EventHandler FullScreenExited;
+        public event FullScreenEventHandler FullScreenEntered;
+        public event FullScreenEventHandler FullScreenExited;
 
         private SemaphoreSlim sem = new SemaphoreSlim(0, 1);
 
@@ -1136,48 +1129,15 @@ namespace LiPTT
 
             webview.ContainsFullScreenElementChanged += (WebView, args) =>
             {
-                var app = Application.Current.Resources["ApplicationProperty"] as ApplicationProperty;
-                var setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
-
                 var act = LiPTT.RunInUIThread(() => {
 
                     if (WebView.ContainsFullScreenElement)
                     {
-                        FullScreenEntered?.Invoke(WebView, new EventArgs());
-                        var scrollviewer = GetScrollViewer(MyListView);
-                        if (scrollviewer != null)
-                        {
-                            scrollviewer.VerticalScrollMode = ScrollMode.Disabled;
-                            scrollviewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-                            VerticalScrollOffset = scrollviewer.VerticalOffset;
-                        }
-
-                        MyListView.Visibility = Visibility.Collapsed;
-                        VideoFullScreen = true;
-                        app.FullScreen = VideoFullScreen;
-
-                        youtuGrid.Children.Remove(WebView);
-                        VideoGrid.Children.Add(WebView);
-                        VideoGrid.Visibility = Visibility.Visible;
+                        FullScreenEntered?.Invoke(youtuGrid, new FullScreenEventArgs(WebView));  
                     }
                     else
                     {
-                        var scrollviewer = GetScrollViewer(MyListView);
-                        if (scrollviewer != null)
-                        {
-                            scrollviewer.VerticalScrollMode = ScrollMode.Auto;
-                            scrollviewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-                            scrollviewer.ChangeView(0, VerticalScrollOffset, null);
-                        }
-
-                        VideoGrid.Visibility = Visibility.Collapsed;
-                        VideoFullScreen = false;
-                        app.FullScreen = setting.FullScreen;
-
-                        VideoGrid.Children.Remove(WebView);
-                        youtuGrid.Children.Add(WebView);
-                        MyListView.Visibility = Visibility.Visible;
-                        FullScreenExited?.Invoke(WebView, new EventArgs());
+                        FullScreenExited?.Invoke(youtuGrid, new FullScreenEventArgs(WebView));
                     }
                 });
             };
@@ -1471,6 +1431,19 @@ namespace LiPTT
             {
                 return null;
             }
+        }
+    }
+
+    public class FullScreenEventArgs : EventArgs
+    {
+        public FullScreenEventArgs(WebView webview)
+        {
+            WebView = webview;
+        }
+
+        public WebView WebView
+        {
+            get; set;
         }
     }
 }

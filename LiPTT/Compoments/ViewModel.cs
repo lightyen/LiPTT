@@ -42,10 +42,10 @@ namespace LiPTT
                     if (!LiPTT.Client.PTTWrongResponse) State = "斷線中...";
                     break;
                 case PttState.Login:
-                    State = "請輸入帳號";
+                    State = "(請輸入帳號)";
                     break;
                 case PttState.Password:
-                    State = "請輸入密碼";
+                    State = "(請輸入密碼)";
                     break;
                 case PttState.Loginning:
                     State = "登入中...";

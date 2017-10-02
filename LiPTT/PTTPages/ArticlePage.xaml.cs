@@ -76,6 +76,8 @@ namespace LiPTT
             }
         }
 
+        private double VerticalScrollOffset;
+
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -86,8 +88,6 @@ namespace LiPTT
             article = LiPTT.CurrentArticle;
             LiPTT.CacheBoard = true;
 
-            ContentCollection.MyListView = ListVW;
-            ContentCollection.VideoGrid = VideoGrid;
             ContentCollection.BeginLoaded += (a, b) =>
             {
                 if (ListVW.Items.Count > 0)
@@ -96,8 +96,8 @@ namespace LiPTT
                 Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             };
 
-            ContentCollection.FullScreenEntered += RemoveEventHandler;
-            ContentCollection.FullScreenExited += AddEventHandler;
+            ContentCollection.FullScreenEntered += EnterFullScreen;
+            ContentCollection.FullScreenExited += ExitFullScreen;
             LoadingExtraData = false;
             pressAny = false;
 
@@ -107,8 +107,8 @@ namespace LiPTT
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            ContentCollection.FullScreenEntered -= RemoveEventHandler;
-            ContentCollection.FullScreenExited -= AddEventHandler;
+            ContentCollection.FullScreenEntered -= EnterFullScreen;
+            ContentCollection.FullScreenExited -= ExitFullScreen;
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed -= ArticlePage_PointerPressed;
         }
@@ -157,16 +157,54 @@ namespace LiPTT
             }
         }
 
-        private void AddEventHandler(object sender, EventArgs e)
-        {
-            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
-            Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
-        }
-
-        private void RemoveEventHandler(object sender, EventArgs e)
+        private void EnterFullScreen(Grid youtuGrid, FullScreenEventArgs e)
         {
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed -= ArticlePage_PointerPressed;
+
+            var app = Application.Current.Resources["ApplicationProperty"] as ApplicationProperty;
+            var setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+
+            var scrollviewer = GetScrollViewer(ListVW);
+            if (scrollviewer != null)
+            {
+                scrollviewer.VerticalScrollMode = ScrollMode.Disabled;
+                scrollviewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+                VerticalScrollOffset = scrollviewer.VerticalOffset;
+            }
+
+            ListVW.Visibility = Visibility.Collapsed;
+
+            app.FullScreen = true;
+
+            youtuGrid.Children.Remove(e.WebView);
+            VideoGrid.Children.Add(e.WebView);
+            VideoGrid.Visibility = Visibility.Visible;
+        }
+
+        private void ExitFullScreen(Grid youtuGrid, FullScreenEventArgs e)
+        {
+            var app = Application.Current.Resources["ApplicationProperty"] as ApplicationProperty;
+            var setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+
+            var scrollviewer = GetScrollViewer(ListVW);
+            if (scrollviewer != null)
+            {
+                scrollviewer.VerticalScrollMode = ScrollMode.Auto;
+                scrollviewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+                scrollviewer.ChangeView(0, VerticalScrollOffset, null);
+            }
+
+            VideoGrid.Visibility = Visibility.Collapsed;
+
+            app.FullScreen = setting.FullScreen;
+
+            VideoGrid.Children.Remove(e.WebView);
+            youtuGrid.Children.Add(e.WebView);
+            ListVW.Visibility = Visibility.Visible;
+
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+            Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
         }
 
         private bool PressRight = false;

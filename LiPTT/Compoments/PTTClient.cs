@@ -67,7 +67,9 @@ namespace LiPTT
 
         protected void OnScreenDrawn(ScreenBuffer e)
         {
+#if DEBUG
             ScreenDrawn?.Invoke(this, new ScreenEventArgs(e));
+#endif
         }
 
         public event EventHandler Connected;
@@ -233,8 +235,8 @@ namespace LiPTT
 
             isConnected = false;
             DefaultState();
-            OnScreenUpdated(screenBuffer);
             OnScreenDrawn(screenBuffer);
+            OnScreenUpdated(screenBuffer);
         }
 
         public void Disconnect()

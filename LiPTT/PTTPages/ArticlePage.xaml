@@ -8,7 +8,6 @@
     mc:Ignorable="d" NavigationCacheMode="Disabled">
     <Page.Resources>
         <local:ArticleContentCollection x:Key="ContentCollection" x:Name="ContentCollection" />
-        <local:ArticleHeaderConverter x:Key="ArticleHeaderConverter" />
         <Style x:Key="ListViewStyle1" TargetType="ListView">
             <Setter Property="IsTabStop" Value="False"/>
             <Setter Property="TabNavigation" Value="Once"/>
@@ -83,7 +82,7 @@
                                     <StackPanel HorizontalAlignment="Stretch">
                                         <RichTextBlock  IsTextSelectionEnabled="True" HorizontalAlignment="Center">
                                             <Paragraph>
-                                                <Run Text="{x:Bind Type, Converter={StaticResource MyArticleTypeStringFormatConverter}}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=22}" Foreground="{x:Bind Type, Converter={StaticResource MyArticleTypeColorConverter}}" />
+                                                <Run Text="{x:Bind Type, Converter={StaticResource ArticleTypeStringFormatConverter}}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=22}" Foreground="{x:Bind Type, Converter={StaticResource ArticleTypeColorConverter}}" />
                                                 <Run Text="  " />
                                                 <Run Text="{x:Bind Category}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=22}" Foreground="DarkSalmon" />
                                                 <Run Text="  " />
@@ -93,7 +92,7 @@
                                                 <Run Text="  " />
                                                 <Run Text="{x:Bind AuthorNickname}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=16}" Foreground="DarkCyan" />
                                                 <Run Text="  " />
-                                                <Run Text="{x:Bind Date, Converter={StaticResource MyDateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:yyyy MMMM dd dddd HH:mm:ss}'}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=20}" Foreground="Aquamarine" />
+                                                <Run Text="{x:Bind Date, Converter={StaticResource DateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:yyyy MMMM dd dddd HH:mm:ss}'}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=20}" Foreground="Aquamarine" />
                                             </Paragraph>
                                         </RichTextBlock>
                                     </StackPanel>

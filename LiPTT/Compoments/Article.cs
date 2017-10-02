@@ -89,6 +89,30 @@ namespace LiPTT
             RawLines = new List<Block[]>();
             DownloadImageTasks = new List<Task<DownloadResult>>();
 
+            SmallFontSizeBinding = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["ArticleFontSizeConverter"] as ArticleFontSizeConverter,
+                ConverterParameter = ArticleFontSize - 8,
+            };
+
+            NormalFontSizeBinding = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["ArticleFontSizeConverter"] as ArticleFontSizeConverter,
+                ConverterParameter = ArticleFontSize,
+            };
+
+            EchoFontSizeBinding = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["ArticleFontSizeConverter"] as ArticleFontSizeConverter,
+                ConverterParameter = ArticleFontSize - 2,
+            };
+
             var action = LiPTT.RunInUIThread(() =>
             {
                 ArticleFontFamily = new FontFamily("Noto Sans Mono CJK TC");
@@ -291,6 +315,10 @@ namespace LiPTT
             }
         }
 
+        private Binding NormalFontSizeBinding;
+        private Binding SmallFontSizeBinding;
+        private Binding EchoFontSizeBinding;
+
         public async void Parse()
         {
             for (int row = ParsedLine; row < RawLines.Count; row++, ParsedLine++)
@@ -303,10 +331,11 @@ namespace LiPTT
                     Run run = new Run()
                     {
                         Text = str,
-                        FontSize = ArticleFontSize - 8,
                         FontFamily = ArticleFontFamily,
                         Foreground = new SolidColorBrush(Colors.Green),
                     };
+                    BindingOperations.SetBinding(run, TextElement.FontSizeProperty, SmallFontSizeBinding);
+
                     Paragraph.Inlines.Add(run);
                     Paragraph.Inlines.Add(new LineBreak());
                 }
@@ -493,10 +522,11 @@ namespace LiPTT
                     Run run = new Run()
                     {
                         Text = text.Replace('\0', ' '),
-                        FontSize = ArticleFontSize,
                         FontFamily = ArticleFontFamily,
                         Foreground = GetForegroundBrush(blocks[idx]),
                     };
+                    BindingOperations.SetBinding(run, TextElement.FontSizeProperty, NormalFontSizeBinding);
+
                     /***/
                     Paragraph.Inlines.Add(run);
                     idx = i;
@@ -527,11 +557,11 @@ namespace LiPTT
                     Run run = new Run()
                     {
                         Text = text.Replace('\0', ' '),
-                        FontSize = ArticleFontSize,
                         FontFamily = ArticleFontFamily,
                         Foreground = GetForegroundBrush(blocks[idx]),
                     };
                     /***/
+                    BindingOperations.SetBinding(run, TextElement.FontSizeProperty, NormalFontSizeBinding);
                     Paragraph.Inlines.Add(run);
                     color = b.ForegroundColor;
                     break;
@@ -545,25 +575,27 @@ namespace LiPTT
             try
             {
                 Hyperlink hyperlink = new Hyperlink() { NavigateUri = uri, UnderlineStyle = UnderlineStyle.Single };
-                hyperlink.Inlines.Add(new Run()
+                Run run = new Run()
                 {
                     Text = uri.OriginalString,
                     Foreground = new SolidColorBrush(Colors.Gray),
                     FontFamily = ArticleFontFamily,
-                    FontSize = ArticleFontSize
-                });
-
+                };
+                hyperlink.Inlines.Add(run);
+                BindingOperations.SetBinding(run, TextElement.FontSizeProperty, NormalFontSizeBinding);
                 Paragraph.Inlines.Add(hyperlink);
             }
             catch {
-                Paragraph.Inlines.Add(new Run()
+                Run run = new Run()
                 {
                     Text = uri.OriginalString,
                     Foreground = new SolidColorBrush(Colors.Gray),
                     FontFamily = ArticleFontFamily,
-                    FontSize = ArticleFontSize,
+                    //FontSize = ArticleFontSize,
                     TextDecorations = Windows.UI.Text.TextDecorations.Underline,
-                });
+                };
+                Paragraph.Inlines.Add(run);
+                BindingOperations.SetBinding(run, TextElement.FontSizeProperty, NormalFontSizeBinding);
             }
         }
 
@@ -607,10 +639,10 @@ namespace LiPTT
             else echo.Evaluation = Evaluation.箭頭;
             //////////////////////////////////////////////
             Grid grid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
-            ColumnDefinition c0 = new ColumnDefinition() { Width = new GridLength(30, GridUnitType.Pixel) };
-            ColumnDefinition c1 = new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) };
-            ColumnDefinition c2 = new ColumnDefinition() { Width = new GridLength(8.0, GridUnitType.Star) };
-            ColumnDefinition c3 = new ColumnDefinition() { Width = new GridLength(1.5, GridUnitType.Star) };
+            ColumnDefinition c0 = new ColumnDefinition() { Width = new GridLength(3, GridUnitType.Star) };
+            ColumnDefinition c1 = new ColumnDefinition() { Width = new GridLength(15, GridUnitType.Star) };
+            ColumnDefinition c2 = new ColumnDefinition() { Width = new GridLength(42, GridUnitType.Star) };
+            ColumnDefinition c3 = new ColumnDefinition() { Width = new GridLength(16, GridUnitType.Star) };
 
             grid.ColumnDefinitions.Add(c0);
             grid.ColumnDefinitions.Add(c1);
@@ -654,13 +686,16 @@ namespace LiPTT
                     break;
             }
 
-            g0.Children.Add(new TextBlock() {
+            var tb1 = new TextBlock()
+            {
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Center,
                 Text = str[0].ToString(),
-                FontSize = 22,
-                Foreground = EvalColor });
-            
+                Foreground = EvalColor
+            };
+            BindingOperations.SetBinding(tb1, TextBlock.FontSizeProperty, EchoFontSizeBinding);
+            g0.Children.Add(tb1);
+
             //推文ID////高亮五樓/////高亮原PO/////////////////////
             SolidColorBrush authorColor = new SolidColorBrush(Colors.LightSalmon);
 
@@ -678,17 +713,18 @@ namespace LiPTT
                 authorColor = new SolidColorBrush(Colors.LightBlue);
             }
 
-            TextBlock tb = new TextBlock() {
+            var tb2 = new TextBlock() {
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Text = echo.Author, FontSize = 22,
+                Text = echo.Author,
                 Foreground = authorColor
             };
-            g1.Children.Add(tb);
+            BindingOperations.SetBinding(tb2, TextBlock.FontSizeProperty, EchoFontSizeBinding);
+            g1.Children.Add(tb2);
 
             //並把五樓以前的五樓也高亮起來
             if (echo.Floor <= 5)
-                tempEchoes.Add(echo, tb);
+                tempEchoes.Add(echo, tb2);
 
             if (tempEchoes.Count >= 5)
             {
@@ -717,7 +753,7 @@ namespace LiPTT
                 if (index < match.Index)
                 {
                     string text = echo.Content.Substring(index, match.Index - index);
-                    stackpanel.Children.Add(new TextBlock()
+                    var tb3 = new TextBlock()
                     {
                         IsTextSelectionEnabled = true,
                         HorizontalAlignment = HorizontalAlignment.Left,
@@ -725,7 +761,9 @@ namespace LiPTT
                         FontSize = 22,
                         Foreground = new SolidColorBrush(Colors.Gold),
                         Text = text,
-                    });
+                    };
+                    BindingOperations.SetBinding(tb1, TextBlock.FontSizeProperty, EchoFontSizeBinding);
+                    stackpanel.Children.Add(tb3);
                 }
 
                 try
@@ -734,14 +772,15 @@ namespace LiPTT
                     Uri uri = new Uri(text);
 
                     //總是顯示超連結
-                    stackpanel.Children.Add(new HyperlinkButton()
+                    var hb = new HyperlinkButton()
                     {
                         VerticalAlignment = VerticalAlignment.Center,
                         NavigateUri = uri,
                         FontSize = 22,
                         Content = new TextBlock() { Text = text },
-                    });
-
+                    };
+                    BindingOperations.SetBinding(hb, Control.FontSizeProperty, EchoFontSizeBinding);
+                    stackpanel.Children.Add(hb);
                     if (IsUriView(uri))
                     {
 
@@ -760,15 +799,16 @@ namespace LiPTT
                 catch (UriFormatException)
                 {
                     string text = echo.Content.Substring(index, match.Index - index);
-                    stackpanel.Children.Add(new TextBlock()
+                    var tb = new TextBlock()
                     {
                         IsTextSelectionEnabled = true,
                         HorizontalAlignment = HorizontalAlignment.Left,
                         VerticalAlignment = VerticalAlignment.Center,
-                        FontSize = 22,
                         Foreground = new SolidColorBrush(Colors.Gold),
                         Text = text,
-                    });
+                    };
+                    BindingOperations.SetBinding(tb, TextBlock.FontSizeProperty, EchoFontSizeBinding);
+                    stackpanel.Children.Add(tb);
                 }
 
                 index = match.Index + match.Length;
@@ -777,15 +817,16 @@ namespace LiPTT
             if (index < echo.Content.Length)
             {
                 string text = echo.Content.Substring(index, echo.Content.Length - index);
-                stackpanel.Children.Add(new TextBlock()
+                var tb = new TextBlock()
                 {
                     IsTextSelectionEnabled = true,
                     HorizontalAlignment = HorizontalAlignment.Left,
                     VerticalAlignment = VerticalAlignment.Center,
-                    FontSize = 22,
                     Foreground = new SolidColorBrush(Colors.Gold),
                     Text = text,
-                });
+                };
+                BindingOperations.SetBinding(tb, TextBlock.FontSizeProperty, EchoFontSizeBinding);
+                stackpanel.Children.Add(tb);
             }
 
             g2.Children.Add(stackpanel);
@@ -793,15 +834,16 @@ namespace LiPTT
             //推文時間////////////////////////////////////////////
             if (echo.DateFormated)
             {
-                g3.Children.Add(new TextBlock()
+                var tb = new TextBlock()
                 {
-                    FontSize = 22,
                     Margin = new Thickness(0, 0, 20, 0),
                     HorizontalAlignment = HorizontalAlignment.Right,
                     VerticalAlignment = VerticalAlignment.Center,
                     Foreground = new SolidColorBrush(Colors.Wheat),
                     Text = echo.Date.ToString("MM/dd HH:mm")
-                });
+                };
+                BindingOperations.SetBinding(tb, TextBlock.FontSizeProperty, EchoFontSizeBinding);
+                g3.Children.Add(tb);
             }
 
             //////////////////////////////////////////////
@@ -1066,14 +1108,14 @@ namespace LiPTT
                 border.SetBinding(FrameworkElement.WidthProperty, bindingWidth);
                 border.SetBinding(FrameworkElement.HeightProperty, bindingHeight);
 
-                border.Child = new TextBlock() {
+                TextBlock textBlock = new TextBlock() {
                     Text = "圖片下載失敗",
                     HorizontalAlignment = HorizontalAlignment.Stretch,
                     VerticalAlignment = VerticalAlignment.Center,
                     TextAlignment = TextAlignment.Center,
-                    FontSize = ArticleFontSize,
                 };
-
+                BindingOperations.SetBinding(textBlock, TextBlock.FontSizeProperty, NormalFontSizeBinding);
+                border.Child = textBlock;
                 ImgGrid.Children.Add(border);
             }
 

@@ -843,6 +843,7 @@ namespace LiPTT
             ConnectionSecurity = true;
             AlwaysAlive = false;
             Space = 0.5;
+            FontSizePercent = 0.5;
         }
 
         /// <summary>
@@ -911,8 +912,22 @@ namespace LiPTT
             }
         }
 
+        public double FontSizePercent
+        {
+            get
+            {
+                return fontSize;
+            }
+            set
+            {
+                fontSize = value;
+                NotifyPropertyChanged("FontSizePercent");
+            }
+        }
+
         private double space;
         private bool fullScreen;
+        private double fontSize;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

@@ -505,6 +505,35 @@ namespace LiPTT
         }
     }
 
+    public class ArticleFontSizeConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double ViewWidth && parameter is double FontSize)
+            {
+                var setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+
+                if (ViewWidth > 0)
+                {
+                    return FontSize * ViewWidth * setting.FontSizePercent / 614.4;
+                }
+                else
+                {
+                    return 24.0;
+                }
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class RatioConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
@@ -605,7 +634,7 @@ namespace LiPTT
         }
     }
 
-    public class SpaceConverter : IValueConverter
+    public class PercentConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

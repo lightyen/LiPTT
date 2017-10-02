@@ -33,7 +33,7 @@
                     <ColumnDefinition Width="1*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="{Binding Source={StaticResource BoardContentCollection}, Mode=OneWay, Path=Board.Description}" IsTextSelectionEnabled="True" IsRightTapEnabled="False" FontSize="28" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
-                <TextBlock Grid.Column="1" Text="{Binding Source={StaticResource BoardContentCollection}, Mode=OneWay, Path=Board.Popularity}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTipService.ToolTip="人氣" Foreground="{Binding Source={StaticResource BoardContentCollection}, Converter={StaticResource MyPopularityColorConverter}, Mode=OneWay, Path=Board.Popularity}" />
+                <TextBlock Grid.Column="1" Text="{Binding Source={StaticResource BoardContentCollection}, Mode=OneWay, Path=Board.Popularity}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTipService.ToolTip="人氣" Foreground="{Binding Source={StaticResource BoardContentCollection}, Converter={StaticResource PopularityColorConverter}, Mode=OneWay, Path=Board.Popularity}" />
             </Grid>
             <TextBox Grid.Column="1" x:Name="SearchIDTextBox" BorderThickness="0" GotFocus="SearchIDTextBox_GotFocus" LostFocus="SearchIDTextBox_LostFocus" KeyDown="SearchIDTextBox_KeyDown" VerticalAlignment="Center" FontSize="21"/>
         </Grid>
@@ -43,14 +43,14 @@
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="local:Article">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{x:Bind ID, Converter={StaticResource MyArticleIDStringFormatConverter}}" TextAlignment="Center" Width="90" FontSize="25" Foreground="#EA7A56" Padding="5,0,5,0"/>
-                                <TextBlock Text="{x:Bind Like, Converter={StaticResource MyLikeStringFormatConverter}}" TextAlignment="Center" Width="38" FontSize="25" Foreground="{x:Bind Like, Converter={StaticResource MyLikeColorStringFormatConverter}}" Padding="5,0,5,0"/>
-                                <TextBlock Text="{x:Bind Date, Converter={StaticResource MyDateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:M/dd}'}" TextAlignment="Right" Padding="5,0,5,0" FontSize="22" Foreground="LightGreen" Width="80"/>
+                                <TextBlock Text="{x:Bind ID, Converter={StaticResource ArticleIDStringFormatConverter}}" TextAlignment="Center" Width="90" FontSize="25" Foreground="#EA7A56" Padding="5,0,5,0"/>
+                                <TextBlock Text="{x:Bind Like, Converter={StaticResource LikeStringFormatConverter}}" TextAlignment="Center" Width="38" FontSize="25" Foreground="{x:Bind Like, Converter={StaticResource LikeColorStringFormatConverter}}" Padding="5,0,5,0"/>
+                                <TextBlock Text="{x:Bind Date, Converter={StaticResource DateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:M/dd}'}" TextAlignment="Right" Padding="5,0,5,0" FontSize="22" Foreground="LightGreen" Width="80"/>
                                 <TextBlock Text="{x:Bind Author}" TextAlignment="Center" FontSize="25" Padding="5,0,5,0" Width="250" Foreground="Wheat" />
-                                <TextBlock Text="{x:Bind State, Converter={StaticResource MyReadStateStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" TextAlignment="Center" Width="40" Foreground="Green" />
-                                <TextBlock Text="{x:Bind Type, Converter={StaticResource MyArticleTypeStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" Foreground="{x:Bind Type, Converter={StaticResource MyArticleTypeColorConverter}}" TextAlignment="Center" Width="40" />
+                                <TextBlock Text="{x:Bind State, Converter={StaticResource ReadStateStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" TextAlignment="Center" Width="40" Foreground="Green" />
+                                <TextBlock Text="{x:Bind Type, Converter={StaticResource ArticleTypeStringFormatConverter}}" FontSize="22" Padding="2,0,2,0" Foreground="{x:Bind Type, Converter={StaticResource ArticleTypeColorConverter}}" TextAlignment="Center" Width="40" />
                                 <TextBlock Text="{x:Bind Category}" FontSize="22" Padding="2,0,8,0" Foreground="DarkSalmon" TextAlignment="Center" />
-                                <TextBlock Text="{x:Bind Title}" FontSize="22" Padding="5,0,5,0" Foreground="{Binding Converter={StaticResource MyTitleColorConverter}}"/>
+                                <TextBlock Text="{x:Bind Title}" FontSize="22" Padding="5,0,5,0" Foreground="{Binding Converter={StaticResource TitleColorConverter}}"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>

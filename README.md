@@ -6,9 +6,7 @@
 
 #### 原本我一直都是用手機JPTT來上站的，但是想在Windows 10下就沒有好用的Store App桌面級應用，所以就開了這項目，在探索UWP的世界之餘也能做些小成果。
 
-#### (別跟我提MoPTT，我覺得不是很喜歡。)
-
-
+#### (目前只考慮Windows 10 15063版本以上)
 
 <img src="https://i.imgur.com/1XRlB3j.png"></img>
 
@@ -22,17 +20,19 @@
 
 
 
-LiPTT取名並沒有什麼特別的含意，只是拿我的ID前兩個英文字母塞進去而已(笑。
+LiPTT取名並沒有什麼特別的含意，只是拿我的ID前兩個英文字母塞進去而已(笑
+
+要改名的話隨時都可以，我就是這麼隨便。
 
 ##### 順帶一提，這個項目不會打算放廣告，因為我最討厭廣告了。
 
 
 
-> ## 相依性
+> ## 使用到的傢伙
 
 - [SharpDX](https://github.com/sharpdx/SharpDX)
 
-  在套用傳統的顯示介面時，底層用的是DirectX的[DrawText](https://msdn.microsoft.com/en-us/library/windows/desktop/dd371919(v=vs.85).aspx)功能，以前稍微有玩過SharpDX，就拿來用了。
+  在套用傳統的顯示介面時，底層用的是DirectX的[DrawText](https://msdn.microsoft.com/en-us/library/windows/desktop/dd371919(v=vs.85).aspx)功能，過去稍微有玩過SharpDX，就拿來用了。
 
   實作這個主要的目的是拿來Debug用。
 
@@ -42,7 +42,7 @@ LiPTT取名並沒有什麼特別的含意，只是拿我的ID前兩個英文字�
 
 - [Big5](https://zh.wikipedia.org/wiki/%E5%A4%A7%E4%BA%94%E7%A2%BC) 和 [Unicode](http://graphemica.com/)轉換
 
-  參考了[PTT](https://github.com/ptt/pttbbs)的source code，裡面有兩張table，一個是Big5轉Unicode，另一個是Unicode轉Big5，代號是[UAO250](https://moztw.org/docs/big5/)。
+  參考了[PTT](https://github.com/ptt/pttbbs)的source code，裡面有兩張table，一個是Big5轉Unicode，另一個是Unicode轉Big5，代號應該是[UAO250](https://moztw.org/docs/big5/)。
 
   ​
 
@@ -94,11 +94,10 @@ LiPTT取名並沒有什麼特別的含意，只是拿我的ID前兩個英文字�
 4. UI設計
 5. 歷史紀錄、推文追蹤
 6. 文字與媒體自適應視窗大小
-7. 影片全螢幕
-8. 動態磚
-9. 用XBOX ONE遊戲手把上PTT!?（感覺來鬧的）
+7. 動態磚
+8. 用XBOX ONE遊戲手把上PTT!?（感覺來鬧的）
 
-## 未來可能(87%)不會實作的功能
+## 未來可能(8.7%)不會實作的功能
 
 1. ASCII圖或動畫撥放相關
 2. 文字Background color

@@ -80,7 +80,6 @@ namespace LiPTT
         private SemaphoreSlim sem = new SemaphoreSlim(0, 1);
 
         private uint Floor = 1;
-        private string FiveFloor = "";
 
         public ArticleContentCollection()
         {
@@ -599,11 +598,6 @@ namespace LiPTT
             }
         }
 
-        /// <summary>
-        /// 找五樓用的
-        /// </summary>
-        private Dictionary<Echo, TextBlock> tempEchoes = new Dictionary<Echo, TextBlock>();
-
         private void AddEcho(Block[] block)
         {
             AddNewTextBlock();
@@ -699,16 +693,7 @@ namespace LiPTT
             //推文ID////高亮五樓/////高亮原PO/////////////////////
             SolidColorBrush authorColor = new SolidColorBrush(Colors.LightSalmon);
 
-            if (echo.Floor == 5)
-            {
-                FiveFloor = echo.Author;
-                //authorColor = new SolidColorBrush(Colors.LightPink);
-            }
-            else if (FiveFloor == echo.Author)
-            {
-                //authorColor = new SolidColorBrush(Colors.LightPink);
-            }
-            else if (ArticleTag.Author == echo.Author)
+            if (ArticleTag.Author == echo.Author)
             {
                 authorColor = new SolidColorBrush(Colors.LightBlue);
             }
@@ -721,25 +706,6 @@ namespace LiPTT
             };
             BindingOperations.SetBinding(tb2, TextBlock.FontSizeProperty, EchoFontSizeBinding);
             g1.Children.Add(tb2);
-
-            //並把五樓以前的五樓也高亮起來
-            if (echo.Floor <= 5)
-                tempEchoes.Add(echo, tb2);
-
-            if (tempEchoes.Count >= 5)
-            {
-                foreach (var kv in tempEchoes)
-                {
-                    if (FiveFloor == kv.Key.Author)
-                    {
-                        if (FiveFloor != ArticleTag.Author)
-                        {
-                            //kv.Value.Foreground = new SolidColorBrush(Colors.LightPink);
-                        }   
-                    }                     
-                }
-                tempEchoes.Clear();
-            }
 
             //推文內容////////////////////////////////////////////
             Match match;

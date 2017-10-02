@@ -286,24 +286,9 @@ namespace LiPTT
             myPanel?.DrawPTT();
         }
 
-        private void RadioButtonTCP_Click(object sender, RoutedEventArgs e)
-        {
-            LiPTT.ConnectionSecurity = false;
-        }
-
-        private void RadioButtonSSH_Click(object sender, RoutedEventArgs e)
-        {
-            LiPTT.ConnectionSecurity = true;
-        }
-
-        private void Reconnect_Click(object sender, RoutedEventArgs e)
-        {
-            LiPTT.TryConnect();
-        }
-
         private void ReDraw_Click(object sender, RoutedEventArgs e)
         {
-            myPanel.DrawPTT();
+            myPanel?.DrawPTT();
         }
     }
 }

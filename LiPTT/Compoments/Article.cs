@@ -219,10 +219,7 @@ namespace LiPTT
                     RawLines.Add(LiPTT.Copy(client.Screen[i]));
                 }
 
-                if (line_bug)
-                {
-                    Debug.WriteLine(string.Format("PTT BUG? ReadLine {0}", RawLines.Count));
-                }
+                if (line_bug) Debug.WriteLine(string.Format("PTT BUG? ReadLine {0}", RawLines.Count));
 
 
                 action = LiPTT.RunInUIThread(() =>
@@ -352,10 +349,7 @@ namespace LiPTT
                     RawLines.Add(LiPTT.Copy(screen[i]));
                 }
 
-                if (line_bug)
-                {
-                    Debug.WriteLine(string.Format("PTT BUG? ReadLine {0}", RawLines.Count));
-                }
+                if (line_bug) Debug.WriteLine(string.Format("PTT BUG? ReadLine {0}", RawLines.Count));
 
                 action = LiPTT.RunInUIThread(() => 
                 {

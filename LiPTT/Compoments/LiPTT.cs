@@ -842,6 +842,7 @@ namespace LiPTT
         {
             ConnectionSecurity = true;
             AlwaysAlive = false;
+            LineSpaceDisabled = false;
             Space = 0.5;
             FontSizePercent = 0.5;
         }
@@ -897,6 +898,9 @@ namespace LiPTT
             }
         }
 
+        /// <summary>
+        /// 全螢幕選項
+        /// </summary>
         public bool FullScreen
         {
             get
@@ -912,6 +916,9 @@ namespace LiPTT
             }
         }
 
+        /// <summary>
+        /// 文字大小
+        /// </summary>
         public double FontSizePercent
         {
             get
@@ -925,9 +932,26 @@ namespace LiPTT
             }
         }
 
+        /// <summary>
+        /// 行與行之間不要留空白
+        /// </summary>
+        public bool LineSpaceDisabled
+        {
+            get
+            {
+                return disabledlinespace;
+            }
+            set
+            {
+                disabledlinespace = value;
+                NotifyPropertyChanged("LineSpaceDisabled");
+            }
+        }
+
         private double space;
         private bool fullScreen;
         private double fontSize;
+        private bool disabledlinespace;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

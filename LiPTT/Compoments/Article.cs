@@ -231,16 +231,12 @@ namespace LiPTT
                 {
                     Parse();
                     if (bound.Percent == 100) FlushTextBlock();
-                    //AddNewTextBlock();
+                    //FlushTextBlock();
                     sem.Release();
                 });
 
                 if (bound.Percent == 100)
-                {
                     more = false;
-                }
-                else
-                    more = true;
             }
         }
 
@@ -263,6 +259,7 @@ namespace LiPTT
             if (bound.Begin == 1)
             {
                 line_bug = false;
+                header = false;
 
                 tmps = screen.ToString(3);
 
@@ -335,7 +332,7 @@ namespace LiPTT
                 //////////////////////////////////////////////////////////////////////////////////////////
                 //第一頁文章內容
                 //////////////////////////////////////////////////////////////////////////////////////////
-                if (bound.Percent < 100 && bound.End - (header ? 0 : 1) - bound.Begin != 21)
+                if (bound.Percent < 100 && bound.End + (header ? 1 : 0) - bound.Begin != 22)
                 {
                     Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
                     line_bug = true;
@@ -349,7 +346,7 @@ namespace LiPTT
                     else o = bound.End;
                 }
 
-                if (line_bug) o = bound.End + (header ? 5 : 0);
+                if (line_bug) o = 23;
 
                 for (int i = header ? 4 : 0; i < o; i++, line++)
                 {
@@ -362,7 +359,7 @@ namespace LiPTT
                 {
                     Parse();
                     if (bound.Percent == 100) FlushTextBlock();
-                    //AddNewTextBlock();
+                    //FlushTextBlock();
                     BeginLoaded?.Invoke(this, new EventArgs());
                 });
 
@@ -512,21 +509,25 @@ namespace LiPTT
             {
                 RichTextBlock = new RichTextBlock()
                 {
-                    Margin = new Thickness(0),
-                    Padding = new Thickness(0),
                     IsTextSelectionEnabled = true,
                     IsRightTapEnabled = false,
                 };
-                Paragraph = new Paragraph
+
+                SettingProperty setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+
+                Paragraph = new Paragraph();
+
+                if (setting.LineSpaceDisabled)
                 {
-                    Margin = new Thickness(0),
-                    IsTextScaleFactorEnabled = true,
-                    //LineHeight = ArticleFontSize,
-                    //LineStackingStrategy = LineStackingStrategy.BlockLineHeight
-                };
+                    Paragraph.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                    BindingOperations.SetBinding(Paragraph, Paragraph.LineHeightProperty, NormalFontSizeBinding);
+                }
+                else
+                {
+                    Paragraph.LineStackingStrategy = LineStackingStrategy.MaxHeight;
+                }
+
                 RichTextBlock.Blocks.Add(Paragraph);
-                //還不要加到Visual Tree
-                //Add(RichTextBlock);
             }
         }
 
@@ -534,13 +535,7 @@ namespace LiPTT
         {
             if (RichTextBlock != null)
             {
-                Border border = new Border
-                {
-                    //BorderThickness = new Thickness(1),
-                    //BorderBrush = new SolidColorBrush(Colors.Red),
-                };
-                border.Child = RichTextBlock;
-                Add(border);
+                Add(RichTextBlock);
             }
                 
             RichTextBlock = null;
@@ -648,7 +643,6 @@ namespace LiPTT
                     Text = uri.OriginalString,
                     Foreground = new SolidColorBrush(Colors.Gray),
                     FontFamily = ArticleFontFamily,
-                    //FontSize = ArticleFontSize,
                     TextDecorations = Windows.UI.Text.TextDecorations.Underline,
                 };
                 Paragraph.Inlines.Add(run);
@@ -1379,9 +1373,9 @@ namespace LiPTT
                 case "youtu.be":
                     return true;
                 case "goo.gl":
-                    return true;
+                    return false; //暫不處理
                 case "bit.ly":
-                    return true;
+                    return false; //暫不處理
                 default:
                     return false;
             }

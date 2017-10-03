@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d" NavigationCacheMode="Disabled" >
     <!--https://docs.microsoft.com/en-us/windows/uwp/controls-and-patterns/color-picker-->
-    <!--等待軟軟Release再說-->
+    <!--Windows 10 Fall Creators Update 即將推出...-->
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" HorizontalAlignment ="Stretch" x:Name="ColorTable">
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"/>

@@ -345,7 +345,7 @@ namespace LiPTT
                     if (header) o = bound.End + 1;
                     else o = bound.End;
                 }
-
+                
                 if (line_bug) o = 23;
 
                 for (int i = header ? 4 : 0; i < o; i++, line++)

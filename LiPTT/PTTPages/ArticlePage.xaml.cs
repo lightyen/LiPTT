@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.System;
+using Windows.System.Threading;
 using Windows.Foundation.Collections;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
@@ -97,7 +98,15 @@ namespace LiPTT
             };
 
             ContentCollection.BugAlarmed += (a, b) => {
-                FlyoutBase.ShowAttachedFlyout((FrameworkElement)ListVW);
+                var act = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                    FlyoutBase.ShowAttachedFlyout(ListVW);
+                });
+
+                ThreadPoolTimer.CreateTimer((timer) => {
+                    var acti = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                        FlyoutBase.GetAttachedFlyout(ListVW).Hide();
+                    });
+                }, TimeSpan.FromSeconds(1));
             };
 
             ContentCollection.FullScreenEntered += EnterFullScreen;

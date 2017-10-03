@@ -47,6 +47,8 @@ namespace LiPTT
 
         private bool header;
 
+        private bool line_bug;
+
         /// <summary>
         /// 已讀的行數(包含標題頭)
         /// </summary>
@@ -178,10 +180,50 @@ namespace LiPTT
                 int o = header ? 1 : 0;
 
                 //有些文章bound.End - bound.Begin不等於23，而且也沒到100%，PTT的Bug嗎?
+                if (bound.Percent < 100)
+                {
+                    if (header)
+                    {
+                        if (bound.Begin < 5)
+                        {
+                            if (bound.End + o - bound.Begin != 22)
+                            {
+                                Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
+                                line_bug = true;
+                            }
+                                
+                        }
+                        else if (bound.End - bound.Begin != 22)
+                        {
+                            Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
+                            line_bug = true;
+                        }
+                    }
+                    else
+                    {
+                        if (bound.End - bound.Begin != 22)
+                        {
+                            Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
+                            line_bug = true;
+                        }
+                    }
+                }
+
+                if (line_bug)
+                {
+                    bound.Begin = line + 1;
+                }
+
                 for (int i = line - bound.Begin + 1 + (bound.Begin < 5 ? o : 0); i < 23; i++, line++)
                 {
                     RawLines.Add(LiPTT.Copy(client.Screen[i]));
                 }
+
+                if (line_bug)
+                {
+                    Debug.WriteLine(string.Format("PTT BUG? ReadLine {0}", RawLines.Count));
+                }
+
 
                 action = LiPTT.RunInUIThread(() =>
                 {
@@ -217,6 +259,8 @@ namespace LiPTT
 
             if (bound.Begin == 1)
             {
+                line_bug = false;
+
                 tmps = screen.ToString(3);
 
                 if (tmps.StartsWith("───────────────────────────────────────"))
@@ -288,6 +332,11 @@ namespace LiPTT
                 //////////////////////////////////////////////////////////////////////////////////////////
                 //第一頁文章內容
                 //////////////////////////////////////////////////////////////////////////////////////////
+                if (bound.Percent < 100 && bound.End - (header ? 0 : 1) - bound.Begin != 21)
+                {
+                    Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
+                    line_bug = true;
+                }
 
                 int o = bound.End - bound.Begin + 1;
                 if (o < 23)
@@ -296,9 +345,16 @@ namespace LiPTT
                     else o = bound.End;
                 }
 
+                if (line_bug) o = bound.End + (header ? 4 : 0);
+
                 for (int i = header ? 4 : 0; i < o; i++, line++)
                 {
                     RawLines.Add(LiPTT.Copy(screen[i]));
+                }
+
+                if (line_bug)
+                {
+                    Debug.WriteLine(string.Format("PTT BUG? ReadLine {0}", RawLines.Count));
                 }
 
                 action = LiPTT.RunInUIThread(() => 

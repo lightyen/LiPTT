@@ -7,6 +7,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d" NavigationCacheMode="Disabled">
     <Page.Resources>
+        <Flyout x:Key="ArticleWrongFlyout" Placement="Top">
+            <TextBlock Text="讀取文章發生問題" FontSize="22"></TextBlock>
+        </Flyout>
         <local:ArticleContentCollection x:Key="ContentCollection" x:Name="ContentCollection" />
         <Style x:Key="ListViewStyle1" TargetType="ListView">
             <Setter Property="IsTabStop" Value="False"/>
@@ -106,7 +109,7 @@
                 <ProgressRing IsActive="{Binding RingActive}" Width="100" Height="100" />
             </Grid>
             <Grid Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="ContentGrid"  Visibility="{Binding ControlVisible}">
-                <ListView x:Name="ListVW" ItemsSource="{Binding Source={StaticResource ContentCollection}}" SelectionMode="None" HorizontalAlignment="Stretch" IsTapEnabled="False">
+                <ListView x:Name="ListVW" ItemsSource="{Binding Source={StaticResource ContentCollection}}" SelectionMode="None" HorizontalAlignment="Stretch" IsTapEnabled="False" FlyoutBase.AttachedFlyout="{StaticResource ArticleWrongFlyout}">
                     <ListView.Resources>
                         <local:ActualSizePropertyProxy Element="{Binding ElementName=ListVW}" x:Name="proxy" />
                     </ListView.Resources>

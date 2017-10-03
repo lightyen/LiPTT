@@ -74,6 +74,8 @@ namespace LiPTT
         /// </summary>
         public event EventHandler BeginLoaded;
 
+        public event EventHandler BugAlarmed;
+
         public delegate void FullScreenEventHandler(Grid sender, FullScreenEventArgs e);
 
         public event FullScreenEventHandler FullScreenEntered;
@@ -189,6 +191,7 @@ namespace LiPTT
                             if (bound.End + o - bound.Begin != 22)
                             {
                                 Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
+                                if (!line_bug) BugAlarmed?.Invoke(this, new EventArgs());
                                 line_bug = true;
                             }
                                 
@@ -196,6 +199,7 @@ namespace LiPTT
                         else if (bound.End - bound.Begin != 22)
                         {
                             Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
+                            if (!line_bug) BugAlarmed?.Invoke(this, new EventArgs());
                             line_bug = true;
                         }
                     }
@@ -204,6 +208,7 @@ namespace LiPTT
                         if (bound.End - bound.Begin != 22)
                         {
                             Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
+                            if (!line_bug) BugAlarmed?.Invoke(this, new EventArgs());
                             line_bug = true;
                         }
                     }
@@ -211,7 +216,7 @@ namespace LiPTT
 
                 if (line_bug)
                 {
-                    bound.Begin = line + 1;
+                    bound.Begin = line;
                 }
 
                 for (int i = line - bound.Begin + 1 + (bound.Begin < 5 ? o : 0); i < 23; i++, line++)
@@ -225,7 +230,8 @@ namespace LiPTT
                 action = LiPTT.RunInUIThread(() =>
                 {
                     Parse();
-                    AddNewTextBlock();
+                    if (bound.Percent == 100) FlushTextBlock();
+                    //AddNewTextBlock();
                     sem.Release();
                 });
 
@@ -333,6 +339,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
                     line_bug = true;
+                    BugAlarmed?.Invoke(this, new EventArgs());
                 }
 
                 int o = bound.End - bound.Begin + 1;
@@ -342,7 +349,7 @@ namespace LiPTT
                     else o = bound.End;
                 }
 
-                if (line_bug) o = bound.End + (header ? 4 : 0);
+                if (line_bug) o = bound.End + (header ? 5 : 0);
 
                 for (int i = header ? 4 : 0; i < o; i++, line++)
                 {
@@ -354,7 +361,8 @@ namespace LiPTT
                 action = LiPTT.RunInUIThread(() => 
                 {
                     Parse();
-                    AddNewTextBlock();
+                    if (bound.Percent == 100) FlushTextBlock();
+                    //AddNewTextBlock();
                     BeginLoaded?.Invoke(this, new EventArgs());
                 });
 
@@ -489,7 +497,7 @@ namespace LiPTT
 
             if (ViewUri.Count > 0)
             {
-                AddNewTextBlock();
+                FlushTextBlock();
 
                 foreach (Uri view_uri in ViewUri)
                 {
@@ -522,7 +530,7 @@ namespace LiPTT
             }
         }
 
-        private void AddNewTextBlock()
+        private void FlushTextBlock()
         {
             if (RichTextBlock != null)
             {
@@ -650,7 +658,7 @@ namespace LiPTT
 
         private void AddEcho(Block[] block)
         {
-            AddNewTextBlock();
+            FlushTextBlock();
 
             Echo echo = new Echo() { Floor = Floor++ };
 

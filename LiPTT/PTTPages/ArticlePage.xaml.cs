@@ -96,6 +96,10 @@ namespace LiPTT
                 Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             };
 
+            ContentCollection.BugAlarmed += (a, b) => {
+                FlyoutBase.ShowAttachedFlyout((FrameworkElement)ListVW);
+            };
+
             ContentCollection.FullScreenEntered += EnterFullScreen;
             ContentCollection.FullScreenExited += ExitFullScreen;
             LoadingExtraData = false;

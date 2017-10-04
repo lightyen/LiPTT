@@ -842,6 +842,7 @@ namespace LiPTT
             ConnectionSecurity = true;
             AlwaysAlive = false;
             LineSpaceDisabled = false;
+            OpenShortUri = true;
             Space = 0.5;
             FontSizePercent = 0.5;
         }
@@ -947,10 +948,24 @@ namespace LiPTT
             }
         }
 
+        public bool OpenShortUri
+        {
+            get
+            {
+                return openshort;
+            }
+            set
+            {
+                openshort = value;
+                NotifyPropertyChanged("OpenShortUri");
+            }
+        }
+
         private double space;
         private bool fullScreen;
         private double fontSize;
         private bool disabledlinespace;
+        private bool openshort;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

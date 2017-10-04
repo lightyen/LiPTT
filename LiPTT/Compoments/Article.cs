@@ -1057,7 +1057,7 @@ namespace LiPTT
         {
             if (!IsShortUri(uri)) return null;
 
-            Debug.WriteLine(string.Format("Try Get: {0}", uri.OriginalString));
+            Debug.WriteLine(string.Format("Try to Get: {0}", uri.OriginalString));
             try
             {
                 WebRequest webRequest = WebRequest.Create(uri);
@@ -1380,9 +1380,12 @@ namespace LiPTT
                 case "youtu.be":
                     return true;
                 case "goo.gl":
-                    return false; //暫不處理
                 case "bit.ly":
-                    return false; //暫不處理
+                    SettingProperty setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+                    if (setting.OpenShortUri)
+                        return true;
+                    else
+                        return false;
                 default:
                     return false;
             }

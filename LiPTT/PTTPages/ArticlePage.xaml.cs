@@ -105,7 +105,7 @@ namespace LiPTT
                     var acti = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                         FlyoutBase.GetAttachedFlyout(ListVW).Hide();
                     });
-                }, TimeSpan.FromSeconds(1));
+                }, TimeSpan.FromMilliseconds(1600));
             };
 
             ContentCollection.FullScreenEntered += EnterFullScreen;

@@ -660,13 +660,10 @@
     <Content Include="Icons\youtube-logo.svg" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Templates\blank.html" />
-    <Content Include="Templates\imgur\imgur.html" />
     <Content Include="Templates\twitch\sample.html" />
     <Content Include="Templates\twitch\twitch.html" />
-    <Content Include="Templates\youtube\sample_.html" />
     <Content Include="Templates\youtube\sample.html" />
     <Content Include="Templates\youtube\youtube.html" />
-    <Content Include="Templates\youtube\youtube_.html" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">

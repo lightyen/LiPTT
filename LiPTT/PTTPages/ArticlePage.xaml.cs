@@ -87,7 +87,6 @@ namespace LiPTT
             //冷靜一下，先喝杯咖啡
             await Task.Delay(50);
             article = LiPTT.CurrentArticle;
-            LiPTT.CacheBoard = true;
 
             ContentCollection.BeginLoaded += (a, b) =>
             {
@@ -336,15 +335,23 @@ namespace LiPTT
             }
         }
 
-        private void StopVideo()
+        private async void StopVideo()
         {
             foreach (var o in ContentCollection)
             {
                 if (o is Grid grid)
                 {
-                    if (GetUIElement<WebView>(grid) is WebView view)
+                    if (GetUIElement<WebView>(grid) is WebView webview)
                     {
-                        view.Navigate(new Uri("ms-appx-web:///Templates/blank.html"));
+                        //webview.Navigate(new Uri("ms-appx-web:///Templates/blank.html"));
+                        try
+                        {
+                            string returnStr = await webview.InvokeScriptAsync("StopVideo", new string[] { });
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine("Script Error" + ex.ToString());
+                        }
                     }                 
                 }
             }

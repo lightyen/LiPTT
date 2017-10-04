@@ -224,6 +224,188 @@ namespace LiPTT
             }
         }
 
+        public bool IPVisible
+        {
+            get
+            {
+                return i;
+            }
+            set
+            {
+                i = value;
+                NotifyPropertyChanged("IPVisible");
+            }
+        }
+
+        public bool 公開
+        {
+            get
+            {
+                return h;
+            }
+            set
+            {
+                h = value;
+                NotifyPropertyChanged("公開");
+            }
+        }
+
+        public bool 可進入十大排行榜
+        {
+            get
+            {
+                return g;
+            }
+            set
+            {
+                g = value;
+                NotifyPropertyChanged("可進入十大排行榜");
+            }
+        }
+
+        public bool 開放非看板會員發文
+        {
+            get
+            {
+                return e;
+            }
+            set
+            {
+                e = value;
+                NotifyPropertyChanged("開放非看板會員發文");
+            }
+        }
+
+        public bool 開放推文
+        {
+            get
+            {
+                return r;
+            }
+            set
+            {
+                r = value;
+                NotifyPropertyChanged("開放推文");
+            }
+        }
+
+        public bool 開放噓文
+        {
+            get
+            {
+                return s;
+            }
+            set
+            {
+                s = value;
+                NotifyPropertyChanged("開放噓文");
+            }
+        }
+
+        public bool 開放回文
+        {
+            get
+            {
+                return y;
+            }
+            set
+            {
+                y = value;
+                NotifyPropertyChanged("開放回文");
+            }
+        }
+
+        public bool 開放自刪
+        {
+            get
+            {
+                return d;
+            }
+            set
+            {
+                d = value;
+                NotifyPropertyChanged("開放自刪");
+            }
+        }
+
+        public bool 開放快速連推
+        {
+            get
+            {
+                return f;
+            }
+            set
+            {
+                f = value;
+                NotifyPropertyChanged("開放快速連推");
+            }
+        }
+
+        public bool 自動對齊
+        {
+            get
+            {
+                return a;
+            }
+            set
+            {
+                a = value;
+                NotifyPropertyChanged("自動對齊");
+            }
+        }
+
+        public bool 板主可刪除違規文字
+        {
+            get
+            {
+                return k;
+            }
+            set
+            {
+                k = value;
+                NotifyPropertyChanged("板主可刪除違規文字");
+            }
+        }
+
+        public bool 轉文自動記錄
+        {
+            get
+            {
+                return x;
+            }
+            set
+            {
+                x = value;
+                NotifyPropertyChanged("轉文自動記錄");
+            }
+        }
+
+        public bool 冷靜模式
+        {
+            get
+            {
+                return j;
+            }
+            set
+            {
+                j = value;
+                NotifyPropertyChanged("冷靜模式");
+            }
+        }
+
+        public bool 允許十八歲進入
+        {
+            get
+            {
+                return eighteen;
+            }
+            set
+            {
+                eighteen = value;
+                NotifyPropertyChanged("允許十八歲進入");
+            }
+        }
+
         private string name;
         private string category;
         private string nick;
@@ -232,6 +414,20 @@ namespace LiPTT
         private string[] leaders;
         private int limitLogin;
         private int limitReject;
+        private bool h;
+        private bool g;
+        private bool e;
+        private bool y;
+        private bool d;
+        private bool r;
+        private bool s;
+        private bool f;
+        private bool i;
+        private bool a;
+        private bool k;
+        private bool x;
+        private bool j;
+        private bool eighteen;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

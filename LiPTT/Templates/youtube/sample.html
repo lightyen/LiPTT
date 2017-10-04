@@ -29,18 +29,38 @@
 
 	<body>
 
-    <div class="auto-resizable-iframe">
-    	<iframe id="frame" frameborder="0" src="https://www.youtube.com/embed/" allowfullscreen>
-		</iframe>
-    </div>
+	<!-- https://developers.google.com/youtube/iframe_api_reference -->
 
-	<script type="text/javascript">
-		function LoadVideoByID(youtuID)
-		{
-			var frame = document.getElementById('frame');
-			frame.src += youtuID;
-		}		
-		LoadVideoByID('oXp2oE0xQcE');
+    <div class="auto-resizable-iframe" id="player"></div>
+
+    <script type="text/javascript">
+
+		var tag = document.createElement('script');
+		tag.src = "https://www.youtube.com/iframe_api";
+		var firstScriptTag = document.getElementsByTagName('script')[0];
+		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+		// 3. This function creates an <iframe> (and YouTube player)
+      	//    after the API code downloads.
+
+		var player;
+		var options = { 
+			videoId: '',
+		};
+
+		document.getElementById('player').setAttribute("style", "position: absolute; top: 0px; left: 0px; width: 100%; height: 100%;");
+
+		function onYouTubeIframeAPIReady() {
+
+			//LoadVideo('TCUt35GANpE');
+      	}
+
+      	function LoadVideo(videoID)
+      	{
+      		options.videoId = videoID;
+      		player = new YT.Player('player', options);
+      	}
+
 	</script>
 
 	</body>

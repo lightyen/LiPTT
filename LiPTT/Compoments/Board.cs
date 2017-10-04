@@ -25,18 +25,6 @@ namespace LiPTT
 {
     public class BoardContentCollection : ObservableCollection<Article>, ISupportIncrementalLoading
     {
-        private Board board;
-
-        public Board Board
-        {
-            get { return board; }
-            set
-            {
-                board = value;
-                OnPropertyChanged(new PropertyChangedEventArgs("Board"));
-            }
-        }
-
         public int StarCount { get; set; }
 
         /// <summary>
@@ -99,18 +87,6 @@ namespace LiPTT
             ScreenBuffer screen = LiPTT.Screen;
 
             var x = screen.ToStringArray();
-
-            ///////////////////////////////////
-            //人氣
-            str = screen.ToString(2);
-            regex = new Regex(@"\d+");
-            match = regex.Match(str);
-
-            if (match.Success)
-            {
-                int popu = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                Board.Popularity = popu;
-            }
 
             /////////////////////////////
             ///置底文 and 其他文章

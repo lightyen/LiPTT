@@ -28,21 +28,25 @@
 
 	<body>
 
-	<!-- https://dev.twitch.tv/docs/embed#embedding-video-and-clips -->	
+	<!-- https://dev.twitch.tv/docs/embed -->	
 
-    <div class="auto-resizable-iframe">
-    	<iframe id="frame" frameborder="0" scrolling="no" src="http://player.twitch.tv/" allowfullscreen>
-		</iframe>
-    </div>
-
+    
+	<script src= "http://player.twitch.tv/js/embed/v1.js"></script>
+	<div class="auto-resizable-iframe" id="twitch_div" ></div>
 	<script type="text/javascript">
+
+		var options = { autoplay: false };
+		var player = new Twitch.Player("twitch_div", options);
+
 		function LoadVideoByID(twitchID)
 		{
-			var frame = document.getElementById('frame'); 
-			frame.src += '?channel=' + twitchID + '&autoplay=false';
-			console.log(frame.src);
+			player.setChannel(twitchID);
+			player.setVolume(0.5);
+			player.setQuality("chunked");
 		}
-		LoadVideoByID('trackingthepros');
+
+		LoadVideoByID("trackingthepros");
+
 	</script>
 
 	</body>

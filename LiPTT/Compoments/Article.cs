@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
+using Windows.System;
 using Windows.UI;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Controls;
@@ -1043,12 +1044,12 @@ namespace LiPTT
                     }
                 }
 
-                AddVideoView("youtube", youtubeID);
+                AddVideoView("youtube", youtubeID, uri);
             }
             else if (IsTwitchUri(uri))
             {
                 string twitchID = uri.LocalPath.Substring(1);
-                AddVideoView("twitch", twitchID);
+                AddVideoView("twitch", twitchID, uri);
             }
         }
 
@@ -1177,7 +1178,7 @@ namespace LiPTT
             return new DownloadResult() { Index = index, Item = ImgGrid };
         }
 
-        private void AddVideoView(string tag, string ID)
+        private void AddVideoView(string tag, string ID, Uri uri)
         {
             Grid MainGrid = new Grid() { Tag = tag, HorizontalAlignment = HorizontalAlignment.Stretch };
 
@@ -1247,12 +1248,20 @@ namespace LiPTT
                 webview.Visibility = Visibility.Visible;
             };
 
+            webview.ScriptNotify += async (c, d) =>
+            {
+                if (d.Value == "101" || d.Value == "150")
+                {
+                    await Launcher.LaunchUriAsync(uri);
+                }
+            };
+
             webview.DOMContentLoaded += async (a, b) =>
             {
                 try
                 {
                     //在WebView裡面執行Javascript, 撒尿牛丸膩?
-                    string returnStr = await webview.InvokeScriptAsync("LoadVideoByID", new string[] { ID });
+                    await webview.InvokeScriptAsync("LoadVideoByID", new string[] { ID });
                 }
                 catch (Exception ex)
                 {

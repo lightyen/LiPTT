@@ -165,7 +165,6 @@ namespace LiPTT
             get; set;
         }
 
-
         /// <summary>
         /// 在線人數
         /// </summary>

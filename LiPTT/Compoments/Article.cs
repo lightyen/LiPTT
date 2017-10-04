@@ -1251,9 +1251,7 @@ namespace LiPTT
             webview.ScriptNotify += async (c, d) =>
             {
                 if (d.Value == "101" || d.Value == "150")
-                {
                     await Launcher.LaunchUriAsync(uri);
-                }
             };
 
             webview.DOMContentLoaded += async (a, b) =>

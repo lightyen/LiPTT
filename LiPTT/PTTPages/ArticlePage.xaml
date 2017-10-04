@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d" NavigationCacheMode="Disabled">
     <Page.Resources>
-        <Flyout x:Key="ArticleWrongFlyout" Placement="Top">
+        <Flyout x:Key="ArticleWrongFlyout" Placement="Bottom">
             <TextBlock Text="讀取文章時發生問題" FontSize="22"></TextBlock>
         </Flyout>
         <local:ArticleContentCollection x:Key="ContentCollection" x:Name="ContentCollection" />
@@ -105,11 +105,11 @@
                     </ContentControl>
                 </Button>
             </Grid>
-            <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="3">
+            <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="3" x:Name="RingGrid" FlyoutBase.AttachedFlyout="{StaticResource ArticleWrongFlyout}">
                 <ProgressRing IsActive="{Binding RingActive}" Width="100" Height="100" />
             </Grid>
             <Grid Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="ContentGrid"  Visibility="{Binding ControlVisible}">
-                <ListView x:Name="ListVW" ItemsSource="{Binding Source={StaticResource ContentCollection}}" SelectionMode="None" HorizontalAlignment="Stretch" IsTapEnabled="False" FlyoutBase.AttachedFlyout="{StaticResource ArticleWrongFlyout}">
+                <ListView x:Name="ListVW" ItemsSource="{Binding Source={StaticResource ContentCollection}}" SelectionMode="None" HorizontalAlignment="Stretch" IsTapEnabled="False">
                     <ListView.Resources>
                         <local:ActualSizePropertyProxy Element="{Binding ElementName=ListVW}" x:Name="proxy" />
                     </ListView.Resources>

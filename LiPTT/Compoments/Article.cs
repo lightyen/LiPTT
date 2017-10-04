@@ -1066,28 +1066,28 @@ namespace LiPTT
                     return t.Result.ResponseUri;
                 else
                 {
-                    Debug.WriteLine(string.Format("{0} - {1}", uri.OriginalString, "等太久了"));
+                    Debug.WriteLine(string.Format("Timeout: {0}", uri.OriginalString));
                     return null;
                 }
             }
             catch (UriFormatException e)
             {
-                Debug.WriteLine(string.Format("{0} - {1}", uri.OriginalString, e.Message));
+                Debug.WriteLine(string.Format("UriFormatException: {0} - {1}", uri.OriginalString, e.Message));
                 return null;
             }
             catch (WebException e)
             {
-                Debug.WriteLine(string.Format("{0} - {1}", uri.OriginalString, e.Message));
+                Debug.WriteLine(string.Format("WebException: {0} - {1}", uri.OriginalString, e.Message));
                 return null;
             }
             catch (AggregateException e)
             {
-                Debug.WriteLine(string.Format("{0} - {1}", uri.OriginalString, e.Message));
+                Debug.WriteLine(string.Format("AggregateException: {0} - {1}", uri.OriginalString, e.Message));
                 return null;
             }
             catch (Exception e)
             {
-                Debug.WriteLine(string.Format("{0} - {1}", uri.OriginalString, e.Message));
+                Debug.WriteLine(string.Format("Exception: {0} - {1}", uri.OriginalString, e.Message));
                 return null;
             }
         }
@@ -1381,6 +1381,8 @@ namespace LiPTT
                     return true;
                 case "goo.gl":
                 case "bit.ly":
+                case "tinyurl.com":
+                case "redd.it":
                     SettingProperty setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
                     if (setting.OpenShortUri)
                         return true;

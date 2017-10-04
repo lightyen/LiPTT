@@ -98,14 +98,14 @@ namespace LiPTT
 
             ContentCollection.BugAlarmed += (a, b) => {
                 var act = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                    FlyoutBase.ShowAttachedFlyout(ListVW);
+                    FlyoutBase.ShowAttachedFlyout(RingGrid);
                 });
 
                 ThreadPoolTimer.CreateTimer((timer) => {
                     var acti = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                        FlyoutBase.GetAttachedFlyout(ListVW).Hide();
+                        FlyoutBase.GetAttachedFlyout(RingGrid).Hide();
                     });
-                }, TimeSpan.FromMilliseconds(1600));
+                }, TimeSpan.FromMilliseconds(2000));
             };
 
             ContentCollection.FullScreenEntered += EnterFullScreen;

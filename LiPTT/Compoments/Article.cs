@@ -9,7 +9,9 @@ using System.Text.RegularExpressions;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
+using System.IO;
 using Windows.System;
+using Windows.Web.Http;
 using Windows.UI;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Controls;
@@ -1005,7 +1007,7 @@ namespace LiPTT
                     }
                 }
 
-                AddVideoView("youtube", youtubeID, uri);
+                if (youtubeID.Length > 0) AddVideoView("youtube", youtubeID, uri);
             }
             else if (IsTwitchUri(uri))
             {
@@ -1017,19 +1019,16 @@ namespace LiPTT
         private Uri GetUri(Uri uri)
         {
             if (!IsShortUri(uri)) return null;
-
+            
             Debug.WriteLine(string.Format("Try to Get: {0}", uri.OriginalString));
             try
             {
-                WebRequest webRequest = WebRequest.Create(uri);
-                Task<WebResponse> t = webRequest.GetResponseAsync();
-                if (t.Wait(30000))
-                    return t.Result.ResponseUri;
+                Uri expand = ExpandUri(uri);
+                //////////////////////////
+                if (expand != null)
+                    return expand;
                 else
-                {
-                    Debug.WriteLine(string.Format("Timeout: {0}", uri.OriginalString));
                     return null;
-                }
             }
             catch (UriFormatException e)
             {
@@ -1043,12 +1042,55 @@ namespace LiPTT
             }
             catch (AggregateException e)
             {
+                
+
                 Debug.WriteLine(string.Format("AggregateException: {0} - {1}", uri.OriginalString, e.Message));
                 return null;
             }
             catch (Exception e)
             {
                 Debug.WriteLine(string.Format("Exception: {0} - {1}", uri.OriginalString, e.Message));
+                return null;
+            }
+        }
+
+        const string googleapikey = "AIzaSyCEcRFJD94zXZeab1yDSZ__SLBISmpPm6Y";
+        const string base_uri = @"https://www.googleapis.com/urlshortener/v1/url";
+
+        private Uri ExpandUri(Uri uri)
+        {
+            if (uri.Host == "youtu.be")
+            {
+                return new Uri("https://www.youtube.com" + uri.LocalPath);
+            }
+
+
+            //https://dotblogs.com.tw/larrynung/2011/08/03/32506
+            string r = string.Format("{0}?key={1}&shortUrl={2}", base_uri, googleapikey, uri.OriginalString);
+
+            WebRequest webRequest = WebRequest.Create(r);
+
+            Task<WebResponse> t = webRequest.GetResponseAsync();
+            if (t.Wait(30000))
+            {
+                using (StreamReader sr = new StreamReader(t.Result.GetResponseStream()))
+                {
+                    string code = sr.ReadToEnd();
+                    const string MATCH_PATTERN = @"""longUrl"": ?""(?<longUrl>.+)""";
+                    Match match = new Regex(MATCH_PATTERN).Match(code);
+                    if (match.Success)
+                    {
+                        return new Uri(match.Groups["longUrl"].Value);
+                    }
+                    else
+                        return null;
+                }
+
+                return null;
+            }
+            else
+            {
+                Debug.WriteLine(string.Format("Timeout: {0}", uri.OriginalString));
                 return null;
             }
         }
@@ -1320,8 +1362,22 @@ namespace LiPTT
 
         private bool IsYoutubeUri(Uri uri)
         {
-            if (uri.Host == "www.youtube.com")
-                return true;
+            if (uri.Host == "www.youtube.com" || uri.Host == "m.youtube.com")
+            {
+                string[] query = uri.Query.Split(new char[] { '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
+                string youtubeID = "";
+                foreach (string s in query)
+                {
+                    if (s.StartsWith("v"))
+                    {
+                        youtubeID = s.Substring(s.IndexOf("=") + 1);
+                        break;
+                    }
+                }
+
+                if (youtubeID.Length > 0) return true;
+                else return false;
+            }
             else
                 return false;
         }
@@ -1329,7 +1385,13 @@ namespace LiPTT
         private bool IsTwitchUri(Uri uri)
         {
             if (uri.Host == "www.twitch.tv" || uri.Host == "go.twitch.tv")
-                return true;
+            {
+                string twitchID = uri.LocalPath.Substring(1);
+                if (twitchID.Length > 0)
+                    return true;
+                else
+                    return false;
+            }
             else
                 return false;
         }

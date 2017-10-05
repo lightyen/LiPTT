@@ -146,6 +146,14 @@ namespace LiPTT
             }
         }
 
+        public ScreenBuffer PreviousScreen
+        {
+            get
+            {
+                return screenCache;
+            }
+        }
+
         public bool IsExit
         {
             get
@@ -196,6 +204,7 @@ namespace LiPTT
         #endregion 各種屬性
 
         private ScreenBuffer screenBuffer;
+        private ScreenBuffer screenCache;
         private TcpClient tcpClient;
         private MessageWebSocket WebSocket;
 
@@ -382,9 +391,9 @@ namespace LiPTT
                     KeepAliveTimer = ThreadPoolTimer.CreatePeriodicTimer(KeepAlive, KeepAlivePeriod);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Debug.WriteLine("WebSocket: 連線失敗");
+                Debug.WriteLine(string.Format("WebSocket: 連線失敗 {0}", e.ToString()));
                 OnPTTConnectionFailed(ConnectionType.WebSocket);
             }
         }
@@ -1098,11 +1107,51 @@ namespace LiPTT
                 Debug.WriteLine(ex.ToString());
             }
         }
+
+        public void CacheScreen()
+        {
+            screenCache = new ScreenBuffer(screenBuffer);
+        }
+
+        public int ComparePrevious()
+        {
+            var ps = screenCache.ToStringArray();
+            var cs = screenBuffer.ToStringArray();
+
+            for (int i = 0; i < ps.Length; i++)
+            {
+                ps[i] = ps[i].Replace('\0', ' ');
+                cs[i] = cs[i].Replace('\0', ' ');
+            }
+
+            for (int i = 0; i < screenBuffer.Height - 1; i++)
+            {
+                if (Intersect(ps, cs, i) == true)
+                {
+                    return i;
+                }
+            }
+
+            return screenBuffer.Height;
+        }
+
+        private bool Intersect(string[] prev, string[] current, int intersect)
+        {
+            int height = screenBuffer.Height - 1;
+            int range = height - intersect;
+
+            for (int pi = intersect; pi < height; pi++)
+            {
+                if (prev[pi] != current[pi - intersect])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 
-    /// <summary>
-    /// https://blog.gtwang.org/linux/xterm-theme-examples/
-    /// </summary>
     [Flags]
     public enum AttributeMode
     {
@@ -1126,6 +1175,14 @@ namespace LiPTT
         public Block()
         {
             SetDefault();
+        }
+
+        public Block(Block b)
+        {
+            Content = b.Content;
+            Mode = b.Mode;
+            ForegroundColor = b.ForegroundColor;
+            BackgroundColor = b.BackgroundColor;
         }
 
         public AttributeMode Mode
@@ -1251,6 +1308,25 @@ namespace LiPTT
                 for (int j = 0; j < _w; j++)
                 {
                     Screen[i][j] = new Block();
+                }
+            }
+        }
+
+        public ScreenBuffer(ScreenBuffer s)
+        {
+            Width = s.Width;
+            Height = s.Height;
+            X = s.X;
+            Y = s.Y;
+            Screen = new Block[_h][];
+
+            for (int i = 0; i < _h; i++)
+            {
+                Screen[i] = new Block[_w];
+
+                for (int j = 0; j < _w; j++)
+                {
+                    Screen[i][j] = new Block(s[i][j]);
                 }
             }
         }

@@ -211,12 +211,15 @@ namespace LiPTT
                 scrollviewer.VerticalScrollMode = ScrollMode.Auto;
                 scrollviewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
 
+                var act = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                    scrollviewer.ChangeView(0, VerticalScrollOffset, null);
+                });
+
                 Windows.System.Threading.ThreadPoolTimer.CreateTimer((timer) => {
-                    var act = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                        scrollviewer.ChangeView(0, VerticalScrollOffset, null);
+                    var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                         ListVW.Visibility = Visibility.Visible;
                     });
-                }, TimeSpan.FromMilliseconds(50));
+                }, TimeSpan.FromMilliseconds(150));
             }
             else
             {

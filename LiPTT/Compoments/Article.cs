@@ -180,53 +180,30 @@ namespace LiPTT
             {
                 bound = ReadLineBound(client.Screen.ToString(23));
 
-                int o = header ? 1 : 0;
+                int newline = LiPTT.Client.ComparePrevious();
 
-                //有些文章bound.End - bound.Begin不等於23，而且也沒到100%，PTT的Bug嗎?
-                if (bound.Percent < 100)
+                if (newline == 0)
                 {
-                    if (header)
+                    for (int i = 0; i < 23; i++)
                     {
-                        if (bound.Begin < 5)
-                        {
-                            if (bound.End + o - bound.Begin != 22)
-                            {
-                                Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
-                                if (!line_bug) BugAlarmed?.Invoke(this, new EventArgs());
-                                line_bug = true;
-                            }
-                                
-                        }
-                        else if (bound.End - bound.Begin != 22)
-                        {
-                            Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
-                            if (!line_bug) BugAlarmed?.Invoke(this, new EventArgs());
-                            line_bug = true;
-                        }
-                    }
-                    else
-                    {
-                        if (bound.End - bound.Begin != 22)
-                        {
-                            Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
-                            if (!line_bug) BugAlarmed?.Invoke(this, new EventArgs());
-                            line_bug = true;
-                        }
+                        RawLines.Add(LiPTT.Copy(client.Screen[i]));
                     }
                 }
-
-                if (line_bug)
+                else if (newline < 23)
                 {
-                    bound.Begin = line;
+                    for (int i = 23 - newline; i < 23; i++)
+                    {
+                        RawLines.Add(LiPTT.Copy(client.Screen[i]));
+                    }
+                }
+                else if (line_bug == false)
+                {
+                    Debug.WriteLine(string.Format("PTT BUG?"));
+                    line_bug = true;
+                    BugAlarmed?.Invoke(this, new EventArgs());
                 }
 
-                for (int i = line - bound.Begin + 1 + (bound.Begin < 5 ? o : 0); i < 23; i++, line++)
-                {
-                    RawLines.Add(LiPTT.Copy(client.Screen[i]));
-                }
-
-                if (line_bug) Debug.WriteLine(string.Format("PTT BUG? ReadLine {0}", RawLines.Count));
-
+                LiPTT.Client.CacheScreen();
 
                 action = LiPTT.RunInUIThread(() =>
                 {
@@ -252,6 +229,8 @@ namespace LiPTT
             ScreenBuffer screen = LiPTT.Screen;
 
             bound = ReadLineBound(screen.ToString(23));
+
+            LiPTT.Client.CacheScreen();
 
             Regex regex;
             Match match;
@@ -333,28 +312,10 @@ namespace LiPTT
                 //////////////////////////////////////////////////////////////////////////////////////////
                 //第一頁文章內容
                 //////////////////////////////////////////////////////////////////////////////////////////
-                if (bound.Percent < 100 && bound.End + (header ? 1 : 0) - bound.Begin != 22)
-                {
-                    Debug.WriteLine(string.Format("PTT BUG? {0} {1}", bound.Begin, bound.End));
-                    line_bug = true;
-                    BugAlarmed?.Invoke(this, new EventArgs());
-                }
-
-                int o = bound.End - bound.Begin + 1;
-                if (o < 23)
-                {
-                    if (header) o = bound.End + 1;
-                    else o = bound.End;
-                }
-                
-                if (line_bug) o = 23;
-
-                for (int i = header ? 4 : 0; i < o; i++, line++)
+                for (int i = header ? 4 : 0; i < 23; i++, line++)
                 {
                     RawLines.Add(LiPTT.Copy(screen[i]));
                 }
-
-                if (line_bug) Debug.WriteLine(string.Format("PTT BUG? ReadLine {0}", RawLines.Count));
 
                 action = LiPTT.RunInUIThread(() => 
                 {

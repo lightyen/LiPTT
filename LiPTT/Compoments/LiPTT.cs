@@ -961,11 +961,25 @@ namespace LiPTT
             }
         }
 
+        public string GoogleURLShortenerAPIKey
+        {
+            get
+            {
+                return googleURLShortenerAPIKey;
+            }
+            set
+            {
+                googleURLShortenerAPIKey = value;
+                NotifyPropertyChanged("GoogleURLShortenerAPIKey");
+            }
+        }
+
         private double space;
         private bool fullScreen;
         private double fontSize;
         private bool disabledlinespace;
         private bool openshort;
+        private string googleURLShortenerAPIKey;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

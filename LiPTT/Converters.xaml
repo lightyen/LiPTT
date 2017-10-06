@@ -30,4 +30,5 @@
     <local:FullScreenArticleSideConverter x:Key="FullScreenArticleSideConverter" />
     <local:FullScreenHeaderSideConverter x:Key="FullScreenHeaderSideConverter" />
     <local:EchoGridLengthConverter x:Key="EchoGridLengthConverter" />
+    <local:VisibilityConverter x:Key="VisibilityConverter" />
 </ResourceDictionary>

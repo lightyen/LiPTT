@@ -874,4 +874,27 @@ namespace LiPTT
             throw new NotImplementedException();
         }
     }
+
+    public class VisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is bool v)
+            {
+                if (v)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

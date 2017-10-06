@@ -32,7 +32,11 @@
                     </Slider.Header>
                 </Slider>
                 <CheckBox Content="行與行之間不要留空白" FontSize="28" Margin="200,10,10,50" VerticalContentAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding LineSpaceDisabled, Source={StaticResource SettingProperty}, Mode=TwoWay}" />
-                <CheckBox Content="縮網址展開" FontSize="28" Margin="200,10,10,40" VerticalContentAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding OpenShortUri, Source={StaticResource SettingProperty}, Mode=TwoWay}" />
+                <CheckBox x:Name="ShortenURLOpen" Content="縮網址展開" FontSize="28" Margin="200,10,10,40" VerticalContentAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding OpenShortUri, Source={StaticResource SettingProperty}, Mode=TwoWay}" />
+                <StackPanel Margin="200,10,520,40" Visibility="{Binding ElementName=ShortenURLOpen, Path=IsChecked, Converter={StaticResource VisibilityConverter}}">
+                    <TextBlock FontSize="22" Text="Google URL Shortener API key" Foreground="Gray" />
+                    <TextBox FontSize="28" Text="{Binding GoogleURLShortenerAPIKey, Source={StaticResource SettingProperty}, Mode=TwoWay}" IsEnabled="{Binding ElementName=ShortenURLOpen, Path=IsChecked}"/>
+                </StackPanel>
                 <CheckBox Content="斷線或被踢時自動重新連線" FontSize="28" Margin="200,10,10,50" VerticalContentAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding AlwaysAlive, Source={StaticResource SettingProperty}, Mode=TwoWay}" />
             </StackPanel>
         </ScrollViewer>

@@ -21,7 +21,7 @@ using Windows.UI.Xaml;
 
 namespace LiPTT
 {
-    public class ArticleContentCollection : ObservableCollection<object>, ISupportIncrementalLoading
+    public partial class ArticleContentCollection : ObservableCollection<object>, ISupportIncrementalLoading
     {
         private bool more;
 
@@ -1018,9 +1018,11 @@ namespace LiPTT
 
         private Uri GetUri(Uri uri)
         {
-            if (!IsShortUri(uri)) return null;
-            
+            if (!IsShortUri(uri))
+                return null;
+
             Debug.WriteLine(string.Format("Try to Get: {0}", uri.OriginalString));
+
             try
             {
                 Uri expand = ExpandUri(uri);
@@ -1050,47 +1052,6 @@ namespace LiPTT
             catch (Exception e)
             {
                 Debug.WriteLine(string.Format("Exception: {0} - {1}", uri.OriginalString, e.Message));
-                return null;
-            }
-        }
-
-        const string googleapikey = "AIzaSyCEcRFJD94zXZeab1yDSZ__SLBISmpPm6Y";
-        const string base_uri = @"https://www.googleapis.com/urlshortener/v1/url";
-
-        private Uri ExpandUri(Uri uri)
-        {
-            if (uri.Host == "youtu.be")
-            {
-                return new Uri("https://www.youtube.com" + uri.LocalPath);
-            }
-
-
-            //https://dotblogs.com.tw/larrynung/2011/08/03/32506
-            string r = string.Format("{0}?key={1}&shortUrl={2}", base_uri, googleapikey, uri.OriginalString);
-
-            WebRequest webRequest = WebRequest.Create(r);
-
-            Task<WebResponse> t = webRequest.GetResponseAsync();
-            if (t.Wait(30000))
-            {
-                using (StreamReader sr = new StreamReader(t.Result.GetResponseStream()))
-                {
-                    string code = sr.ReadToEnd();
-                    const string MATCH_PATTERN = @"""longUrl"": ?""(?<longUrl>.+)""";
-                    Match match = new Regex(MATCH_PATTERN).Match(code);
-                    if (match.Success)
-                    {
-                        return new Uri(match.Groups["longUrl"].Value);
-                    }
-                    else
-                        return null;
-                }
-
-                return null;
-            }
-            else
-            {
-                Debug.WriteLine(string.Format("Timeout: {0}", uri.OriginalString));
                 return null;
             }
         }
@@ -1341,79 +1302,6 @@ namespace LiPTT
             }
             else
                 return true;
-        }
-
-        private bool IsPictureUri(Uri uri)
-        {
-            string origin = uri.OriginalString;
-            if (origin.EndsWith(".jpg") ||
-                origin.EndsWith(".png") ||
-                origin.EndsWith(".png") ||
-                origin.EndsWith(".gif") ||
-                origin.EndsWith(".bmp") ||
-                origin.EndsWith(".tiff") ||
-                origin.EndsWith(".ico"))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool IsYoutubeUri(Uri uri)
-        {
-            if (uri.Host == "www.youtube.com" || uri.Host == "m.youtube.com")
-            {
-                string[] query = uri.Query.Split(new char[] { '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
-                string youtubeID = "";
-                foreach (string s in query)
-                {
-                    if (s.StartsWith("v"))
-                    {
-                        youtubeID = s.Substring(s.IndexOf("=") + 1);
-                        break;
-                    }
-                }
-
-                if (youtubeID.Length > 0) return true;
-                else return false;
-            }
-            else
-                return false;
-        }
-
-        private bool IsTwitchUri(Uri uri)
-        {
-            if (uri.Host == "www.twitch.tv" || uri.Host == "go.twitch.tv")
-            {
-                string twitchID = uri.LocalPath.Substring(1);
-                if (twitchID.Length > 0)
-                    return true;
-                else
-                    return false;
-            }
-            else
-                return false;
-        }
-
-        private bool IsShortUri(Uri uri)
-        {
-            switch (uri.Host)
-            {
-                case "youtu.be":
-                    return true;
-                case "goo.gl":
-                case "bit.ly":
-                case "tinyurl.com":
-                case "redd.it":
-                    SettingProperty setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
-                    if (setting.OpenShortUri)
-                        return true;
-                    else
-                        return false;
-                default:
-                    return false;
-            }
         }
 
         private bool IsEchoes(string msg)

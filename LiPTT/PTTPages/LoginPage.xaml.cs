@@ -258,7 +258,7 @@ namespace LiPTT
 
         private void SaveUserAccount(string user, string password)
         {
-            var container = ApplicationData.Current.LocalSettings.CreateContainer(AccountTableKey, ApplicationDataCreateDisposition.Always);
+            var container = ApplicationData.Current.RoamingSettings.CreateContainer(AccountTableKey, ApplicationDataCreateDisposition.Always);
 
             if (container != null)
             {
@@ -300,7 +300,7 @@ namespace LiPTT
         {
             try
             {
-                var container = ApplicationData.Current.LocalSettings.Containers[AccountTableKey].Values;
+                var container = ApplicationData.Current.RoamingSettings.Containers[AccountTableKey].Values;
 
                 if (container != null)
                 {
@@ -339,7 +339,7 @@ namespace LiPTT
 
         private void DefaultUserAccount()
         {
-            var container = ApplicationData.Current.LocalSettings.CreateContainer(AccountTableKey, ApplicationDataCreateDisposition.Always);
+            var container = ApplicationData.Current.RoamingSettings.CreateContainer(AccountTableKey, ApplicationDataCreateDisposition.Always);
 
             if (container != null)
             {

@@ -599,7 +599,7 @@ namespace LiPTT
 
         private static void DefaultSetting()
         {
-            var container = ApplicationData.Current.LocalSettings.CreateContainer(SettingPropertyName, ApplicationDataCreateDisposition.Always);
+            var container = ApplicationData.Current.RoamingSettings.CreateContainer(SettingPropertyName, ApplicationDataCreateDisposition.Always);
 
             if (container != null)
             {
@@ -610,7 +610,7 @@ namespace LiPTT
 
         private static void LoadSetting()
         {
-            var container = ApplicationData.Current.LocalSettings.Containers[SettingPropertyName].Values;
+            var container = ApplicationData.Current.RoamingSettings.Containers[SettingPropertyName].Values;
 
             if (container != null && container["Setting"] is string json)
             {
@@ -621,7 +621,7 @@ namespace LiPTT
 
         private static void SaveSetting()
         {
-            var container = ApplicationData.Current.LocalSettings.CreateContainer(SettingPropertyName, ApplicationDataCreateDisposition.Always);
+            var container = ApplicationData.Current.RoamingSettings.CreateContainer(SettingPropertyName, ApplicationDataCreateDisposition.Always);
 
             if (container != null)
             {
@@ -634,7 +634,7 @@ namespace LiPTT
 
         public static void CreateInstance()
         {
-            if (ApplicationData.Current.LocalSettings.Containers.ContainsKey(SettingPropertyName))
+            if (ApplicationData.Current.RoamingSettings.Containers.ContainsKey(SettingPropertyName))
             {
                 LoadSetting();
             }
@@ -842,7 +842,7 @@ namespace LiPTT
             ConnectionSecurity = true;
             AlwaysAlive = false;
             LineSpaceDisabled = false;
-            OpenShortUri = true;
+            OpenShortUri = false;
             Space = 0.5;
             FontSizePercent = 0.5;
         }

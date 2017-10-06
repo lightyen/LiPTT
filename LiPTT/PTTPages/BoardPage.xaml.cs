@@ -31,6 +31,7 @@ namespace LiPTT
             DataContext = this;
             LiPTT.ArticleCollection = ContentCollection;
             clipboardsem = new SemaphoreSlim(1, 1);
+            ContentCollection.BeginLoaded += ContentCollection_BeginLoaded;
         }
 
         SemaphoreSlim clipboardsem;
@@ -246,12 +247,19 @@ namespace LiPTT
                 var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     ContentCollection.BeginLoad();
-                    ControlVisible = Visibility.Visible;
-                    Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
-                    Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
                 });
             }
         }
+
+        private void ContentCollection_BeginLoaded(object sender, EventArgs e)
+        {
+            if (ArticleListView.Items.Count > 0)
+                ArticleListView.ScrollIntoView(ArticleListView.Items[0]);
+            ControlVisible = Visibility.Visible;
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+            Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
+        }
+
 
         //進入文章
         private void ArticleList_ItemClick(object sender, ItemClickEventArgs e)

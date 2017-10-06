@@ -416,25 +416,13 @@ namespace LiPTT
                 {
                     Uri uri = new Uri(match.ToString());
 
-                    if (IsUriView(uri))
-                    {
-                        if (IsUriVisible(uri))
-                            AddHyperlink(uri);
-                        ViewUri.Add(uri);
-                    }
-                    else
-                    {
-                        Uri u = GetUri(uri);
-                        if (u != null)
-                        {
-                            if (IsUriVisible(u))
-                                AddHyperlink(u);
-                            if (IsUriView(u))
-                                ViewUri.Add(u);
-                        }
-                        else
-                            AddHyperlink(uri);
-                    }
+                    Uri u = GetUri(uri);
+
+                    if (IsUriVisible(u))
+                        AddHyperlink(u);
+
+                    if (IsUriView(u))
+                        ViewUri.Add(u);
                 }
                 catch (UriFormatException)
                 {
@@ -590,11 +578,15 @@ namespace LiPTT
             //插入超連結
             try
             {
-                Hyperlink hyperlink = new Hyperlink() { NavigateUri = uri, UnderlineStyle = UnderlineStyle.Single };
+                Hyperlink hyperlink = new Hyperlink()
+                {
+                    NavigateUri = uri,
+                    UnderlineStyle = UnderlineStyle.Single,
+                    //Foreground = new SolidColorBrush(Colors.Gray),
+                };
                 Run run = new Run()
                 {
                     Text = uri.OriginalString,
-                    Foreground = new SolidColorBrush(Colors.Gray),
                     FontFamily = ArticleFontFamily,
                 };
                 hyperlink.Inlines.Add(run);
@@ -789,31 +781,25 @@ namespace LiPTT
                 try
                 {
                     string text = match.ToString();
+
+                    
                     Uri uri = new Uri(text);
 
-                    //總是顯示超連結
+                    Uri u = GetUri(uri);
+
+                    if (IsUriView(u))
+                        ViewUri.Add(u);
+
                     var hb = new HyperlinkButton()
                     {
                         VerticalAlignment = VerticalAlignment.Center,
-                        NavigateUri = uri,
-                        Content = new TextBlock() { Text = text },
+                        NavigateUri = u,
+                        Content = new TextBlock() { Text = u.OriginalString },
                     };
                     BindingOperations.SetBinding(hb, Control.FontSizeProperty, EchoFontSizeBinding);
                     stackpanel.Children.Add(hb);
-                    if (IsUriView(uri))
-                    {
 
-                        ViewUri.Add(uri);
-                    }
-                    else
-                    {
-                        Uri u = GetUri(uri);
-                        if (u != null)
-                        {
-                            if (IsUriView(u))
-                                ViewUri.Add(u);
-                        }
-                    }
+                    
                 }
                 catch (UriFormatException)
                 {
@@ -1019,7 +1005,7 @@ namespace LiPTT
         private Uri GetUri(Uri uri)
         {
             if (!IsShortUri(uri))
-                return null;
+                return uri;
 
             Debug.WriteLine(string.Format("Try to Get: {0}", uri.OriginalString));
 
@@ -1044,8 +1030,6 @@ namespace LiPTT
             }
             catch (AggregateException e)
             {
-                
-
                 Debug.WriteLine(string.Format("AggregateException: {0} - {1}", uri.OriginalString, e.Message));
                 return null;
             }

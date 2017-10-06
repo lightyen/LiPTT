@@ -6,14 +6,14 @@
     RequestedTheme="Dark">
     <Application.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Styles.xaml" />
-                <ResourceDictionary Source="Converters.xaml" />
-            </ResourceDictionary.MergedDictionaries>
             <local:ApplicationProperty x:Key="ApplicationProperty" />
             <local:SettingProperty x:Key="SettingProperty" />
             <local:Board x:Key="CurrentBoard" />
             <local:Article x:Key="CurrentArticle" />
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml" />
+                <ResourceDictionary Source="Converters.xaml" />
+            </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

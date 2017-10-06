@@ -32,10 +32,16 @@ namespace LiPTT
         /// </summary>
         public uint CurrentIndex { get; set; }
 
+        /// <summary>
+        /// Load完成。(給ScrollViewer在Load完成後捲到頂部用)
+        /// </summary>
+        public event EventHandler BeginLoaded;
+
         public void BeginLoad()
         {
             Parse();
             InitialLoaded = true;
+            BeginLoaded?.Invoke(this, new EventArgs());
         }
 
         protected override void ClearItems()

@@ -85,7 +85,7 @@ namespace LiPTT
 
         private void LoadColorTable()
         {
-            if (ApplicationData.Current.LocalSettings.Containers.ContainsKey(ColorTableKey))
+            if (ApplicationData.Current.RoamingSettings.Containers.ContainsKey(ColorTableKey))
             {
                 LoadColor();
             }
@@ -98,7 +98,7 @@ namespace LiPTT
 
         private void LoadColor()
         {
-            var container = ApplicationData.Current.LocalSettings.Containers[ColorTableKey].Values;
+            var container = ApplicationData.Current.RoamingSettings.Containers[ColorTableKey].Values;
 
             if (container != null)
             {   
@@ -133,7 +133,7 @@ namespace LiPTT
 
         private void DefaultColorTable()
         {
-            var container = ApplicationData.Current.LocalSettings.CreateContainer(ColorTableKey, ApplicationDataCreateDisposition.Always);
+            var container = ApplicationData.Current.RoamingSettings.CreateContainer(ColorTableKey, ApplicationDataCreateDisposition.Always);
 
             if (container != null)
             {  

@@ -231,25 +231,24 @@ namespace LiPTT
             Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
         }
 
-        private bool PressRight = false;
+        private bool RightPress = false;
 
         private void ArticlePage_PointerPressed(CoreWindow sender, PointerEventArgs args)
         {
             if (EchoDialog.Showing) return;
 
-            if (PressRight == false && args.CurrentPoint.Properties.IsRightButtonPressed)
+            if (RightPress == false && args.CurrentPoint.Properties.IsRightButtonPressed)
             {
-                Debug.WriteLine("Article PressRight");
-                PressRight = true;
+                RightPress = true;
                 Window.Current.CoreWindow.PointerReleased += ArticlePage_PointerReleased;
             }
         }
 
         private void ArticlePage_PointerReleased(CoreWindow sender, PointerEventArgs args)
         {
-            if (PressRight)
+            if (RightPress)
             {
-                PressRight = false;
+                RightPress = false;
                 Window.Current.CoreWindow.PointerPressed -= ArticlePage_PointerPressed;
                 Window.Current.CoreWindow.PointerReleased -= ArticlePage_PointerReleased;
                 GoBack();

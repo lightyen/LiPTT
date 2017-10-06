@@ -216,7 +216,7 @@ namespace LiPTT
         protected bool isConnected;
 
         private TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(3);
-        private TimeSpan keepAlivePeriod = TimeSpan.FromMinutes(1);
+        private TimeSpan keepAlivePeriod = TimeSpan.FromMinutes(3);
 
         public PTTClient()
         {
@@ -436,6 +436,7 @@ namespace LiPTT
             catch(Exception e)
             {
                 Debug.WriteLine(e.ToString());
+                WebSocket.Dispose();
             }
         }
 

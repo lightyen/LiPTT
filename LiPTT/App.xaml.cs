@@ -32,6 +32,8 @@ namespace LiPTT
         /// </summary>
         public App()
         {
+
+            //this.RequestedTheme;
             this.InitializeComponent();
             this.Suspending += OnSuspending;
         }

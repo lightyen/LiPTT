@@ -2,17 +2,14 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.UI.Xaml.Data;
-using Windows.Foundation;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using Windows.System;
+using Windows.UI.Xaml;
 using System.Net;
 using System.IO;
-using Windows.System;
 using Windows.Web.Http;
-using Windows.UI.Xaml;
-using Windows.Storage.Streams;
 using Windows.Web.Http.Headers;
 
 namespace LiPTT
@@ -21,7 +18,7 @@ namespace LiPTT
     {
         const string urlshortener = @"https://www.googleapis.com/urlshortener/v1/url";
 
-        private Uri ShortenUri(Uri uri) //google api
+        private Uri ShortenUri(Uri uri)
         {
             if (uri == null) return null;
 
@@ -62,37 +59,72 @@ namespace LiPTT
             return null;
         }
 
-
         private Uri ExpandUri(Uri uri)
         {
             if (uri == null) return null;
 
             if (uri.Host == "youtu.be")
-                return new Uri("https://www.youtube.com" + uri.LocalPath);
+                return new Uri("https://www.youtube.com/watch?v=" + uri.LocalPath);
 
-            HttpClient httpClient = new HttpClient();
-            var headers = httpClient.DefaultRequestHeaders;
-
-            //https://dotblogs.com.tw/larrynung/2011/08/03/32506
             SettingProperty setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
-            string r = string.Format("{0}?key={1}&shortUrl={2}", urlshortener, setting.GoogleURLShortenerAPIKey, uri.OriginalString);
 
-            WebRequest webRequest = WebRequest.Create(r);
+            if (uri.Host == "goo.gl" && setting.GoogleURLShortenerAPIKey.Length > 0)
+            {
+                HttpClient httpClient = new HttpClient();
+                var headers = httpClient.DefaultRequestHeaders;
 
+                //https://dotblogs.com.tw/larrynung/2011/08/03/32506
+                string r = string.Format("{0}?key={1}&shortUrl={2}", urlshortener, setting.GoogleURLShortenerAPIKey, uri.OriginalString);
+
+                try
+                {
+                    WebRequest webRequest = WebRequest.Create(r);
+                    Task<WebResponse> t = webRequest.GetResponseAsync();
+                    if (t.Wait(3000))
+                    {
+                        using (StreamReader sr = new StreamReader(t.Result.GetResponseStream()))
+                        {
+                            string code = sr.ReadToEnd();
+                            const string MATCH_PATTERN = @"""longUrl"": ?""(?<longUrl>.+)""";
+                            Match match = new Regex(MATCH_PATTERN).Match(code);
+                            if (match.Success)
+                            {
+                                return new Uri(match.Groups["longUrl"].Value);
+                            }
+                            else
+                                return null;
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine(string.Format("Timeout: {0}", uri.OriginalString));
+                        return null;
+                    }
+                }
+                catch (Exception)
+                {
+                    return ExpandUriWithUntiny(uri);
+                }
+                
+            }
+            else
+            {
+                return ExpandUriWithUntiny(uri);
+            }
+        }
+
+        private Uri ExpandUriWithUntiny(Uri uri)
+        {
+            //http://untiny.com/api/
+            string c = string.Format("http://untiny.com/api/1.0/extract/?url={0}&format=text", uri.OriginalString);
+            WebRequest webRequest = WebRequest.Create(c);
             Task<WebResponse> t = webRequest.GetResponseAsync();
-            if (t.Wait(30000))
+            if (t.Wait(3000))
             {
                 using (StreamReader sr = new StreamReader(t.Result.GetResponseStream()))
                 {
-                    string code = sr.ReadToEnd();
-                    const string MATCH_PATTERN = @"""longUrl"": ?""(?<longUrl>.+)""";
-                    Match match = new Regex(MATCH_PATTERN).Match(code);
-                    if (match.Success)
-                    {
-                        return new Uri(match.Groups["longUrl"].Value);
-                    }
-                    else
-                        return null;
+                    string url = sr.ReadToEnd();
+                    return new Uri(url);
                 }
             }
             else
@@ -104,8 +136,8 @@ namespace LiPTT
 
         private Uri ShortenYoutubeUri(Uri uri)
         {
-            if (uri == null) return null;
-
+            if (uri == null)
+                return null;
 
             string[] query = uri.Query.Split(new char[] { '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
             string youtubeID = "";
@@ -180,20 +212,18 @@ namespace LiPTT
 
         private bool IsShortUri(Uri uri)
         {
+            SettingProperty setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+
             switch (uri.Host)
             {
                 case "youtu.be":
                     return true;
-                //case "bit.ly":
-                //case "tinyurl.com":
-                //case "redd.it":
                 case "goo.gl":
-                    SettingProperty setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+                case "bit.ly":
+                case "tinyurl.com":
+                case "redd.it":
                     if (setting.OpenShortUri)
-                    {
-                        if (setting.GoogleURLShortenerAPIKey.Length > 0)
-                            return true;
-                    }
+                        return true;
                     return false;
                 default:
                     return false;

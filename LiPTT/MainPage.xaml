@@ -24,8 +24,8 @@
                     </Grid.RowDefinitions>
                     <RadioButton Grid.Row="1" x:Name="RatioPTT" Content="看板" Checked="RatioPTTChecked"/>
                     <RadioButton Grid.Row="2" x:Name="RatioSetting" Content="設定" Checked="RatioSettingChecked"/>
-                    <RadioButton Grid.Row="3" x:Name="RatioYoutube" Content="測試頁" Checked="YoutubePageChecked" Unchecked="YoutubePageUnchecked" />
-                    <RadioButton Grid.Row="4" x:Name="RatioTest" Content="測試頁2" Checked="TestPageChecked"/>
+                    <RadioButton Grid.Row="3" x:Name="RatioYoutube" Content="測試頁" Checked="YoutubePageChecked" Unchecked="YoutubePageUnchecked" IsEnabled="False" />
+                    <RadioButton Grid.Row="4" x:Name="RatioTest" Content="測試頁2" Checked="TestPageChecked" IsEnabled="False" />
                     <RadioButton Grid.Row="5" x:Name="RatioBBS" Content="Debug" Checked="RatioBBSChecked" Unchecked="RatioBBSUnchecked"/>
                     <RadioButton Grid.Row="6" x:Name="RatioColor" Content="顏色設定" Click="ColorPage_Click" IsEnabled="False"/>
                 </Grid>

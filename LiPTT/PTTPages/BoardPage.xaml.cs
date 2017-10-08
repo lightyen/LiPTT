@@ -270,26 +270,33 @@ namespace LiPTT
             LiPTT.CurrentArticle = article;
             LiPTT.CacheBoard = true;
 
-            if (article.ID != uint.MaxValue)
+            if (article.AID is string s && s.Length > 0)
             {
-                LiPTT.SendMessage(article.ID.ToString(), 0x0D);
+                LiPTT.SendMessage(article.AID, 0x0D);
             }
-            else //GoTo置底文
+            else
             {
-                //LiPTT.PageEnd();
-                List<byte> m = new List<byte>
+                if (article.ID != uint.MaxValue)
+                {
+                    LiPTT.SendMessage(article.ID.ToString(), 0x0D);
+                }
+                else //GoTo置底文
+                {
+                    //LiPTT.PageEnd();
+                    List<byte> m = new List<byte>
                 {
                     (byte)'$'
                 };
 
-                for (int i = 0; i < article.Star; i++)
-                {
-                    //LiPTT.Up();
-                    m.Add(0x1B);
-                    m.Add(0x5B);
-                    m.Add(0x41);
+                    for (int i = 0; i < article.Star; i++)
+                    {
+                        //LiPTT.Up();
+                        m.Add(0x1B);
+                        m.Add(0x5B);
+                        m.Add(0x41);
+                    }
+                    LiPTT.SendMessage(m.ToArray());
                 }
-                LiPTT.SendMessage(m.ToArray()); 
             }
 
             LiPTT.Frame.Navigate(typeof(ArticlePage));
@@ -399,6 +406,78 @@ namespace LiPTT
         private void SearchIDTextBox_GotFocus(object sender, RoutedEventArgs e)
         {
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+        }
+
+        
+
+        
+        private void SearchIDTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Escape)
+            {
+                SearchIDTextBox.Text = "";
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
+            }
+            else if (e.Key == VirtualKey.Enter)
+            {
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
+                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
+
+                if (SearchIDTextBox.Text.StartsWith("#"))
+                {
+                    LiPTT.SendMessage(SearchIDTextBox.Text, 0x0D);
+                    LiPTT.PttEventEchoed += SearchIDEnter;
+                }
+                else
+                {
+                    try
+                    {
+                        uint id = Convert.ToUInt32(SearchIDTextBox.Text);
+                        LiPTT.SendMessage(id.ToString(), 0x0D);
+
+                        LiPTT.PttEventEchoed += SearchIDEnter;
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        private void SearchIDEnter(PTTClient sender, LiPttEventArgs e)
+        {
+            Match match;
+
+            ScreenBuffer screen = sender.Screen;
+
+            if ((match = new Regex("請按任意鍵繼續").Match(screen.ToString(23))).Success)
+            {
+                LiPTT.PressAnyKey();
+            }
+            else
+            {
+                LiPTT.PttEventEchoed -= SearchIDEnter;
+
+                Article article = ParseArticleTag(screen.CurrentBlocks);
+
+                if (article != null && !article.Deleted)
+                {
+                    LiPTT.CurrentArticle = article;
+
+                    var b = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        LiPTT.Frame.Navigate(typeof(ArticlePage));
+                    });
+
+                }
+
+                var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    SearchIDTextBox.Text = "";
+                });
+            }
+
+            
+
         }
 
         int star;
@@ -538,73 +617,5 @@ namespace LiPTT
             return article;
         }
 
-        private void SearchIDTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            if (e.Key == VirtualKey.Escape)
-            {
-                SearchIDTextBox.Text = "";
-                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
-                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
-            }
-            else if (e.Key == VirtualKey.Enter)
-            {
-                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
-                FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
-
-                if (SearchIDTextBox.Text.StartsWith("#"))
-                {
-                    LiPTT.SendMessage(SearchIDTextBox.Text, 0x0D);
-                    LiPTT.PttEventEchoed += SearchIDEnter;
-                }
-                else
-                {
-                    try
-                    {
-                        uint id = Convert.ToUInt32(SearchIDTextBox.Text);
-                        LiPTT.SendMessage(id.ToString(), 0x0D);
-
-                        LiPTT.PttEventEchoed += SearchIDEnter;
-                    }
-                    catch { }
-                }
-            }
-        }
-
-        private void SearchIDEnter(PTTClient sender, LiPttEventArgs e)
-        {
-            Match match;
-
-            ScreenBuffer screen = sender.Screen;
-
-            if ((match = new Regex("請按任意鍵繼續").Match(screen.ToString(23))).Success)
-            {
-                LiPTT.PressAnyKey();
-            }
-            else
-            {
-                LiPTT.PttEventEchoed -= SearchIDEnter;
-
-                Article article = ParseArticleTag(screen.CurrentBlocks);
-
-                if (article != null)
-                {
-                    LiPTT.CurrentArticle = article;
-
-                    var b = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        LiPTT.Frame.Navigate(typeof(ArticlePage));
-                    });
-
-                }
-
-                var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    SearchIDTextBox.Text = "";
-                });
-            }
-
-            
-
-        }
     }
 }

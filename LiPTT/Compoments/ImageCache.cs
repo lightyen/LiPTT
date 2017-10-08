@@ -111,12 +111,16 @@ namespace LiPTT
 
         private async Task<StorageFile> DownloadAndGetFile(Uri uri, string name)
         {
+            DateTime StartTime = DateTime.Now;
             IBuffer buffer = await GetBufferAsync(uri);
-            Debug.WriteLine(string.Format("Downloaded: {0}", uri.OriginalString));
+            TimeSpan DownloadTime = DateTime.Now - StartTime;
+            Debug.WriteLine(string.Format("Downloaded: {0} 下載時間: {1}", uri.OriginalString, DownloadTime));
             if (buffer != null)
             {
+                StartTime = DateTime.Now;
                 await SaveFile(buffer, name);
-                Debug.WriteLine(string.Format("Save File: {0}", name));
+                TimeSpan SaveTime = DateTime.Now - StartTime;
+                Debug.WriteLine(string.Format("Save File: {0} 存檔時間: {1}", name, SaveTime));
                 return await GetFileFromLocalCache(name);
             }
             else return null;

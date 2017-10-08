@@ -39,7 +39,7 @@ namespace LiPTT
 
             EchoDialog.PrimaryButtonClick += (a, b) =>
             {
-                //GoBack();
+                GoBack();
             };
         }
 
@@ -90,8 +90,8 @@ namespace LiPTT
 
             ContentCollection.BeginLoaded += (a, b) =>
             {
-                if (ListVW.Items.Count > 0)
-                    ListVW.ScrollIntoView(ListVW.Items[0]);
+                if (ArticleListView.Items.Count > 0)
+                    ArticleListView.ScrollIntoView(ArticleListView.Items[0]);
                 Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
                 Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             };
@@ -133,7 +133,7 @@ namespace LiPTT
             bool Shift_Down = (Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift) & CoreVirtualKeyStates.Down) != 0;
             bool CapsLocked = (Window.Current.CoreWindow.GetKeyState(VirtualKey.CapitalLock) & CoreVirtualKeyStates.Locked) != 0;
 
-            var scrollviewer = GetScrollViewer(ListVW);
+            var scrollviewer = GetScrollViewer(ArticleListView);
 
             switch (args.VirtualKey)
             {
@@ -146,10 +146,10 @@ namespace LiPTT
                     scrollviewer?.ChangeView(0, scrollviewer.VerticalOffset - scrollviewer.ViewportHeight + 50.0, null);
                     break;
                 case VirtualKey.Home:
-                    if (ListVW.Items.Count > 0) ListVW.ScrollIntoView(ListVW.Items.First());
+                    if (ArticleListView.Items.Count > 0) ArticleListView.ScrollIntoView(ArticleListView.Items.First());
                     break;
                 case VirtualKey.End:
-                    if (ListVW.Items.Count > 0) ListVW.ScrollIntoView(ListVW.Items.Last());
+                    if (ArticleListView.Items.Count > 0) ArticleListView.ScrollIntoView(ArticleListView.Items.Last());
                     break;
                 case VirtualKey.Left:
                 case VirtualKey.Escape:
@@ -177,21 +177,15 @@ namespace LiPTT
             var app = Application.Current.Resources["ApplicationProperty"] as ApplicationProperty;
             var setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
 
-            var scrollviewer = GetScrollViewer(ListVW);
+            var scrollviewer = GetScrollViewer(ArticleListView);
             if (scrollviewer != null)
             {
                 VerticalScrollOffset = scrollviewer.VerticalOffset;
-                scrollviewer.VerticalScrollMode = ScrollMode.Disabled;
-                scrollviewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
             }
 
-            ListVW.Visibility = Visibility.Collapsed;
-
             app.FullScreen = true;
-
             youtuGrid.Children.Remove(e.WebView);
             VideoGrid.Children.Add(e.WebView);
-            VideoGrid.Visibility = Visibility.Visible;
         }
 
         private void ExitFullScreen(Grid youtuGrid, FullScreenEventArgs e)
@@ -199,33 +193,18 @@ namespace LiPTT
             var app = Application.Current.Resources["ApplicationProperty"] as ApplicationProperty;
             var setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
 
-            VideoGrid.Visibility = Visibility.Collapsed;
             VideoGrid.Children.Remove(e.WebView);
             youtuGrid.Children.Add(e.WebView);
 
             app.FullScreen = setting.FullScreen;
 
-            var scrollviewer = GetScrollViewer(ListVW);
-            if (scrollviewer != null)
+            if (GetScrollViewer(ArticleListView) is ScrollViewer scrollviewer)
             {
-                scrollviewer.VerticalScrollMode = ScrollMode.Auto;
-                scrollviewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-
                 var act = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                    scrollviewer.ChangeView(0, VerticalScrollOffset, null);
+                    scrollviewer.UpdateLayout();
+                    scrollviewer.ChangeView(0, VerticalScrollOffset, null, true);
                 });
-
-                Windows.System.Threading.ThreadPoolTimer.CreateTimer((timer) => {
-                    var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                        ListVW.Visibility = Visibility.Visible;
-                    });
-                }, TimeSpan.FromMilliseconds(150));
             }
-            else
-            {
-                ListVW.Visibility = Visibility.Visible;
-            }
-            
 
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
@@ -343,18 +322,23 @@ namespace LiPTT
             {
                 if (o is Grid grid)
                 {
-                    if (GetUIElement<WebView>(grid) is WebView webview)
+                    if (GetUIElement<Button>(grid) is Button button)
                     {
-                        //webview.Navigate(new Uri("ms-appx-web:///Templates/blank.html"));
-                        try
+                        if (button.Visibility == Visibility.Collapsed)
                         {
-                            string returnStr = await webview.InvokeScriptAsync("StopVideo", new string[] { });
+                            if (GetUIElement<WebView>(grid) is WebView webview)
+                            {
+                                try
+                                {
+                                    string returnStr = await webview.InvokeScriptAsync("StopVideo", new string[] { });
+                                }
+                                catch (Exception ex)
+                                {
+                                    Debug.WriteLine("Script Error" + ex.ToString());
+                                }
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine("Script Error" + ex.ToString());
-                        }
-                    }                 
+                    }
                 }
             }
         }
@@ -363,7 +347,11 @@ namespace LiPTT
 
         private void GoBack()
         {
-            if (!control_visible && !ContentCollection.InitialLoaded && ContentCollection.Loading && LiPTT.ArticleCollection != null || LiPTT.Frame.CurrentSourcePageType != typeof(ArticlePage)) return;
+            if (!control_visible && 
+                !ContentCollection.InitialLoaded &&
+                ContentCollection.Loading &&
+                ContentCollection.VideoRun == 0 &&
+                LiPTT.ArticleCollection != null || LiPTT.Frame.CurrentSourcePageType != typeof(ArticlePage)) return;
 
             if (back) return;
             back = true;

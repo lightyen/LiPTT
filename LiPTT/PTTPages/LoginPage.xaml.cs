@@ -120,6 +120,7 @@ namespace LiPTT
         private void Enter()
         {
             start = false;
+            LiPTT.IsExit = false;
             SaveUserAccount(UserText.Text, PasswordText.Password);
             enterAlreadyLogin = enterWrongLog = enteruser = enterpswd = false;
             LiPTT.PttEventEchoed += EnterAccount;

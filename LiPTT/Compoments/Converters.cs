@@ -463,10 +463,6 @@ namespace LiPTT
                         Text = str,
                     };
                 }
-
-
-
-
             }
             else return null;
         }
@@ -887,6 +883,90 @@ namespace LiPTT
                     return Visibility.Visible;
                 else
                     return Visibility.Collapsed;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class VideoButtonWidthConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double ViewWidth)
+            {
+                double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
+                return ViewWidth * space * 0.4;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class VideoButtonHeightConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double ViewWidth)
+            {
+                double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
+                return ViewWidth * space * 0.15;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class ImageButtonWidthConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double ViewWidth)
+            {
+                double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
+                return ViewWidth * space * 0.2;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class ImageButtonHeightConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value == null) return null;
+
+            if (value is double ViewWidth)
+            {
+                double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
+                return ViewWidth * space * 0.05;
             }
 
             return null;

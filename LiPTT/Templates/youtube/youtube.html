@@ -41,6 +41,7 @@
 		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 		var player;
+		
 		var options = { 
 			events: {
 				'onError': onPlayerError
@@ -60,29 +61,33 @@
 			document.getElementById('youtube_div').dispatchEvent(event);
       	}
 
-      	function Init(videoID)
+      	function Init(videoID, autoplay)
       	{
       		options.videoId = videoID;
+      		options.playerVars = new Object();
+      		options.playerVars.autoplay = 0;
+
+      		if (autoplay == "True") options.playerVars.autoplay = 1;
+
 			player = new YT.Player('youtube_div', options);
       	}
 
       	function onPlayerError(event)
       	{
       		var err = event.data.toString();
-      		//通知UWP這裡有錯誤發生
       		window.external.notify(err);
       	}
 
-      	function LoadVideoByID(videoID)
+      	function LoadVideoByID(videoID, autoplay)
       	{
       		if (ready)
       		{
-				Init(videoID);
+				Init(videoID, autoplay);
       		}
       		else
       		{
       			document.getElementById('youtube_div').addEventListener('build', function (e) {
-					Init(videoID);
+					Init(videoID, autoplay);
       			}, false);
       		}
       	}
@@ -90,6 +95,11 @@
       	function StopVideo()
       	{
 			player.stopVideo();
+      	}
+
+      	function PlayVideo()
+      	{
+      		player.playVideo();
       	}
 
 	</script>

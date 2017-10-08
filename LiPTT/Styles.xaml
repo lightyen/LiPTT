@@ -483,4 +483,44 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <Style TargetType="ToolTip">
+        <Setter Property="Foreground" Value="{ThemeResource SystemControlForegroundBaseHighBrush}" />
+        <Setter Property="Background" Value="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource SystemControlForegroundChromeHighBrush}" />
+        <Setter Property="BorderThickness" Value="{ThemeResource ToolTipBorderThemeThickness}" />
+        <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}" />
+        <Setter Property="FontSize" Value="{ThemeResource ToolTipContentThemeFontSize}" />
+        <Setter Property="Padding" Value="8,5,8,7" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <ContentPresenter x:Name="LayoutRoot"
+                         BorderThickness="{TemplateBinding BorderThickness}"
+                         Background="{TemplateBinding Background}"
+                         BorderBrush="{TemplateBinding BorderBrush}"
+                         MaxWidth="1600"
+                         Content="{TemplateBinding Content}"
+                         ContentTransitions="{TemplateBinding ContentTransitions}"
+                         ContentTemplate="{TemplateBinding ContentTemplate}"
+                         Padding="{TemplateBinding Padding}"
+                         TextWrapping="Wrap" >
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="OpenStates">
+                                <VisualState x:Name="Closed">
+                                    <Storyboard>
+                                        <FadeOutThemeAnimation TargetName="LayoutRoot" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Opened">
+                                    <Storyboard>
+                                        <FadeInThemeAnimation TargetName="LayoutRoot" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </ContentPresenter>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

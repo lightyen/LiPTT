@@ -113,7 +113,8 @@
     <Compile Include="Compoments\EchoContentDialog.xaml.cs">
       <DependentUpon>EchoContentDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Compoments\Uri.cs" />
+    <Compile Include="Compoments\PTTUri.cs" />
+    <Compile Include="Compoments\Settings.cs" />
     <Compile Include="Compoments\VisualTreeHelperExtensions.cs" />
     <Compile Include="Compoments\Collections.cs" />
     <Compile Include="Compoments\Converters.cs" />

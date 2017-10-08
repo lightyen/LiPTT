@@ -270,8 +270,9 @@ namespace LiPTT
 
         private void GridView_ItemClick(object sender, ItemClickEventArgs e)
         {
-            ControlVisible = Visibility.Collapsed;
+            if (ControlVisible == Visibility.Collapsed) return;
 
+            ControlVisible = Visibility.Collapsed;
 
             if (e.ClickedItem is MyKeyValuePair kv)
             {

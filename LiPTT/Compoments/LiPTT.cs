@@ -15,7 +15,6 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Windows.Gaming.Input;
 using Windows.Storage;
-using Newtonsoft.Json;
 
 namespace LiPTT
 {
@@ -48,6 +47,7 @@ namespace LiPTT
         Board, //文章列表
         BoardInfomation, //看板資訊
         Article, //閱覽文章
+        EchoType, //推文類型
         Angel, //小天使廣告
         BoardArt, //進版畫面
     }
@@ -55,7 +55,7 @@ namespace LiPTT
     /// <summary>
     /// 全域功能
     /// </summary>
-    public static class LiPTT
+    public static partial class LiPTT
     {
         public static PTTClient Client;
 
@@ -264,7 +264,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if(Match(@"\[←\]\[q\]回上層", 1))
+            else if(Match(@"選擇看板    \(a\)增加看板", 23))
             {
                 if (State != PttState.Favorite)
                 {
@@ -294,7 +294,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"\[←\]離開 \[→\]閱讀", 1))
+            else if (Match(@"文章選讀  \(y\)回應", 23))
             {
                 Debug.WriteLine("看板");
                 State = PttState.Board;
@@ -393,12 +393,20 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"請輸入代號", 20))
+            else if (Match("請輸入代號", 20))
             {
                 Debug.WriteLine("請輸入代號");
                 if (State != PttState.Login)
                 {
                     State = PttState.Login;
+                    OnPttEventEchoed(State);
+                }
+            }
+            else if (Match("您覺得這篇文章", 23))
+            {
+                if (State != PttState.EchoType)
+                {
+                    State = PttState.EchoType;
                     OnPttEventEchoed(State);
                 }
             }
@@ -596,41 +604,6 @@ namespace LiPTT
         {
             Client.Send(msg);
         }
-
-        private static void DefaultSetting()
-        {
-            var container = ApplicationData.Current.RoamingSettings.CreateContainer(SettingPropertyName, ApplicationDataCreateDisposition.Always);
-
-            if (container != null)
-            {
-                SettingProperty Setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
-                container.Values["Setting"] = JsonConvert.SerializeObject(Setting);
-            }
-        }
-
-        private static void LoadSetting()
-        {
-            var container = ApplicationData.Current.RoamingSettings.Containers[SettingPropertyName].Values;
-
-            if (container != null && container["Setting"] is string json)
-            {
-                SettingProperty Setting = JsonConvert.DeserializeObject<SettingProperty>(json);
-                Application.Current.Resources["SettingProperty"] = Setting;
-            }
-        }
-
-        private static void SaveSetting()
-        {
-            var container = ApplicationData.Current.RoamingSettings.CreateContainer(SettingPropertyName, ApplicationDataCreateDisposition.Always);
-
-            if (container != null)
-            {
-                SettingProperty Setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
-                container.Values["Setting"] = JsonConvert.SerializeObject(Setting);
-            }
-        }
-
-        private const string SettingPropertyName = "SettingProperty";
 
         public static void CreateInstance()
         {
@@ -832,160 +805,6 @@ namespace LiPTT
         public PttState State
         {
             get; set;
-        }
-    }
-
-    public class SettingProperty : INotifyPropertyChanged
-    {
-        public SettingProperty()
-        {
-            ConnectionSecurity = true;
-            AlwaysAlive = false;
-            LineSpaceDisabled = false;
-            OpenShortUri = false;
-            Space = 0.5;
-            FontSizePercent = 0.5;
-        }
-
-        /// <summary>
-        /// 圖片大小，預設70%
-        /// </summary>
-        public double Space
-        {
-            get
-            {
-                return space;
-            }
-            set
-            {
-                space = value;
-                NotifyPropertyChanged("Space");
-            }
-        }
-
-        /// <summary>
-        /// 是否安全連線
-        /// </summary>
-        public bool? ConnectionSecurity
-        {
-            get
-            {
-                return LiPTT.ConnectionSecurity;
-            }
-            set
-            {
-                if (value is bool b)
-                {
-                    LiPTT.ConnectionSecurity = b;
-                    NotifyPropertyChanged("ConnectionSecurity");
-                }
-            }
-        }
-
-        /// <summary>
-        /// 總是自動重新連線
-        /// </summary>
-        public bool AlwaysAlive
-        {
-            get
-            {
-                return LiPTT.AlwaysAlive;
-            }
-            set
-            {
-                LiPTT.AlwaysAlive = value;
-                NotifyPropertyChanged("AlwaysAlive");
-            }
-        }
-
-        /// <summary>
-        /// 全螢幕選項
-        /// </summary>
-        public bool FullScreen
-        {
-            get
-            {
-                return fullScreen;
-            }
-            set
-            {
-                var app = Application.Current.Resources["ApplicationProperty"] as ApplicationProperty;
-                fullScreen = value;
-                app.FullScreen = fullScreen;
-                NotifyPropertyChanged("FullScreen");
-            }
-        }
-
-        /// <summary>
-        /// 文字大小
-        /// </summary>
-        public double FontSizePercent
-        {
-            get
-            {
-                return fontSize;
-            }
-            set
-            {
-                fontSize = value;
-                NotifyPropertyChanged("FontSizePercent");
-            }
-        }
-
-        /// <summary>
-        /// 行與行之間不要留空白
-        /// </summary>
-        public bool LineSpaceDisabled
-        {
-            get
-            {
-                return disabledlinespace;
-            }
-            set
-            {
-                disabledlinespace = value;
-                NotifyPropertyChanged("LineSpaceDisabled");
-            }
-        }
-
-        public bool OpenShortUri
-        {
-            get
-            {
-                return openshort;
-            }
-            set
-            {
-                openshort = value;
-                NotifyPropertyChanged("OpenShortUri");
-            }
-        }
-
-        public string GoogleURLShortenerAPIKey
-        {
-            get
-            {
-                return googleURLShortenerAPIKey;
-            }
-            set
-            {
-                googleURLShortenerAPIKey = value;
-                NotifyPropertyChanged("GoogleURLShortenerAPIKey");
-            }
-        }
-
-        private double space;
-        private bool fullScreen;
-        private double fontSize;
-        private bool disabledlinespace;
-        private bool openshort;
-        private string googleURLShortenerAPIKey;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 

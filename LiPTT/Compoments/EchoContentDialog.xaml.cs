@@ -37,16 +37,54 @@ namespace LiPTT
         private void EchoContentDialog_Opened(ContentDialog sender, ContentDialogOpenedEventArgs args)
         {
             Showing = true;
+            
+            //Check State
+
         }
 
         private void OkClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
             System.Diagnostics.Debug.WriteLine(EchoTextBox.Text);
+
+            //LiPTT.PttEventEchoed += DialogOpen_PttEventEchoed;
+            //LiPTT.Send(new byte[] { 0x58 });
+        }
+
+        char Echotype = '3';
+
+        private void DialogOpen_PttEventEchoed(PTTClient sender, LiPttEventArgs e)
+        {
+            var x = LiPTT.Screen.ToStringArray();
+            if (e.State == PttState.EchoType)
+            {
+                LiPTT.PttEventEchoed -= DialogOpen_PttEventEchoed;
+                LiPTT.Send(new byte[] { 0x0D, 0x0D });
+            }
         }
 
         private void CancelClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
 
-        } 
+        }
+
+        private void RadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            if (sender is RadioButton rb)
+            {
+                string echotype = rb.Tag as string;
+                switch(echotype)
+                {
+                    case "推":
+                        Echotype = '1';
+                        break;
+                    case "噓":
+                        Echotype = '2';
+                        break;
+                    case "箭頭":
+                        Echotype = '3';
+                        break;
+                }
+            }
+        }
     }
 }

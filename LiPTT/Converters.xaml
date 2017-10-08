@@ -31,4 +31,8 @@
     <local:FullScreenHeaderSideConverter x:Key="FullScreenHeaderSideConverter" />
     <local:EchoGridLengthConverter x:Key="EchoGridLengthConverter" />
     <local:VisibilityConverter x:Key="VisibilityConverter" />
+    <local:VideoButtonWidthConverter x:Key="VideoButtonWidthConverter" />
+    <local:VideoButtonHeightConverter x:Key="VideoButtonHeightConverter" />
+    <local:ImageButtonWidthConverter x:Key="ImageButtonWidthConverter" />
+    <local:ImageButtonHeightConverter x:Key="ImageButtonHeightConverter" />
 </ResourceDictionary>

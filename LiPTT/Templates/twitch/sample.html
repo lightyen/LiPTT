@@ -35,18 +35,25 @@
 	<div class="auto-resizable-iframe" id="twitch_div" ></div>
 	<script type="text/javascript">
 
-		var options = { autoplay: false };
-		var player = new Twitch.Player("twitch_div", options);
+		var options = { autoplay : false };
+		var player;
 
-		function LoadVideoByID(twitchID)
-		{
+		function LoadVideoByID(twitchID, autoplay)
+		{	
+			if (autoplay == 'True') options.autoplay = true;
+
+			player = new Twitch.Player("twitch_div", options);	
 			player.setChannel(twitchID);
 			player.setVolume(0.5);
 			player.setQuality("chunked");
-			console.log(player);
 		}
 
-		LoadVideoByID("trackingthepros");
+		function StopVideo()
+		{
+			player.pause();
+		}
+
+		LoadVideoByID("trackingthepros", 'False');
 
 	</script>
 

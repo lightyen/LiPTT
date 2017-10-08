@@ -58,27 +58,6 @@ namespace LiPTT
     }
 
     /// <summary>
-    /// 瀏覽狀態
-    /// </summary>
-    public class Bound
-    {
-        /// <summary>
-        /// 開頭
-        /// </summary>
-        public int Begin { get; set; }
-
-        /// <summary>
-        /// 結尾
-        /// </summary>
-        public int End { get; set; }
-
-        /// <summary>
-        /// 瀏覽文章比例
-        /// </summary>
-        public int Percent { get; set; }
-    }
-
-    /// <summary>
     /// 回響
     /// </summary>
     public class Echo
@@ -89,6 +68,13 @@ namespace LiPTT
         public DateTimeOffset Date { get; set; }
         public bool DateFormated { get; set; }
         public uint Floor { get; set; }
+    }
+
+    public class Bound
+    {
+        public int Begin { get; set; }
+        public int End { get; set; }
+        public int Progress { get; set; }
     }
 
     /// <summary>

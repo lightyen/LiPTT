@@ -20,9 +20,9 @@
         <TextBox Name="EchoTextBox" Header=""/>
         <StackPanel HorizontalAlignment="Stretch">
             <RelativePanel>
-                <RadioButton x:Name="E1" Content="推" />
-                <RadioButton x:Name="E2" Content="噓" RelativePanel.RightOf="E1" />
-                <RadioButton x:Name="E3" Content="箭頭" RelativePanel.RightOf="E2" IsChecked="True" />
+                <RadioButton x:Name="E1" Tag="推" Content="推" Checked="RadioButton_Checked"/>
+                <RadioButton x:Name="E2" Tag="噓" Content="噓" RelativePanel.RightOf="E1" Checked="RadioButton_Checked"/>
+                <RadioButton x:Name="E3" Tag="箭頭" Content="箭頭" RelativePanel.RightOf="E2" IsChecked="True" Checked="RadioButton_Checked"/>
             </RelativePanel>
         </StackPanel>
         

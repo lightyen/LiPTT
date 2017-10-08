@@ -201,6 +201,14 @@ namespace LiPTT
                 }
             }
         }
+
+        public TimeSpan ConnectTimeInterval
+        {
+            get
+            {
+                return DateTime.Now - connectDateTime;
+            }
+        }
         #endregion 各種屬性
 
         private ScreenBuffer screenBuffer;
@@ -214,7 +222,7 @@ namespace LiPTT
         private Stream stream;
         private bool ConnectionSecurity;
         protected bool isConnected;
-
+        private DateTime connectDateTime;
         private TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(3);
         private TimeSpan keepAlivePeriod = TimeSpan.FromMinutes(3);
 
@@ -314,7 +322,8 @@ namespace LiPTT
                             }
                             else if (!IsExit)
                             {
-                                Debug.WriteLine("TCP: 被踢下線");
+                                Debug.WriteLine(string.Format("TCP: 被踢下線 於 {0}", DateTime.Now.ToString()));
+                                Debug.WriteLine(string.Format(@"總連線時間: {0:hh\:mm\:ss}", ConnectTimeInterval));
                                 OnPTTKicked();
                                 Dispose();
                             }
@@ -365,7 +374,8 @@ namespace LiPTT
                 }
                 else if (!IsExit)
                 {
-                    Debug.WriteLine("WebSocket: 被踢下線");
+                    Debug.WriteLine(string.Format("WebSocket: 被踢下線 於 {0}", DateTime.Now.ToString()));
+                    Debug.WriteLine(string.Format(@"總連線時間: {0:hh\:mm\:ss}", ConnectTimeInterval));
                     Dispose();
                     OnPTTKicked();
                 }
@@ -469,6 +479,7 @@ namespace LiPTT
             number = 0;
             numbers = new Queue<int>();
             screenBuffer = new ScreenBuffer();
+            connectDateTime = DateTime.Now;
             KeepAliveTimer?.Cancel();
         }
 

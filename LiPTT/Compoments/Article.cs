@@ -41,6 +41,7 @@ namespace LiPTT
             ParsedLine = 0;
             RawLines.Clear();
             more = false;
+            bound = new Bound();
             base.ClearItems();
         }
 
@@ -86,7 +87,31 @@ namespace LiPTT
 
         private SemaphoreSlim sem = new SemaphoreSlim(0, 1);
 
+        object videorunkey = new object();
+
+        private int videorun;
+
+        public int VideoRun
+        {
+            get
+            {
+                return videorun;
+            }
+            set
+            {
+                lock (videorunkey)
+                {
+                    videorun = value;
+                }
+            }
+        }
+
         private uint Floor = 1;
+
+        private Binding ImageButtonFontSizeBinding;
+        private Binding SmallFontSizeBinding;
+        private Binding NormalFontSizeBinding;
+        private Binding EchoFontSizeBinding;
 
         public ArticleContentCollection()
         {
@@ -94,6 +119,15 @@ namespace LiPTT
             line = 0;
             RawLines = new List<Block[]>();
             DownloadImageTasks = new List<Task<DownloadResult>>();
+            bound = new Bound();
+
+            ImageButtonFontSizeBinding = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["ArticleFontSizeConverter"] as ArticleFontSizeConverter,
+                ConverterParameter = ArticleFontSize - 4,
+            };
 
             SmallFontSizeBinding = new Binding
             {
@@ -163,13 +197,9 @@ namespace LiPTT
                 });
 
                 await sem.WaitAsync();
+            }
 
-                return new LoadMoreItemsResult { Count = (uint)this.Count };
-            }
-            else
-            {
-                return new LoadMoreItemsResult { Count = 0 };
-            }
+            return new LoadMoreItemsResult { Count = (uint)this.Count };
         }
 
         private void PttUpdated(PTTClient client, LiPttEventArgs e)
@@ -178,9 +208,11 @@ namespace LiPTT
 
             IAsyncAction action;
 
+            ScreenBuffer screen = client.Screen;
+
             if (e.State == PttState.Article)
             {
-                bound = ReadLineBound(client.Screen.ToString(23));
+                ReadBound(ref bound, screen.ToString(23));
 
                 int newline = LiPTT.Client.ComparePrevious();
 
@@ -188,14 +220,14 @@ namespace LiPTT
                 {
                     for (int i = 0; i < 23; i++)
                     {
-                        RawLines.Add(LiPTT.Copy(client.Screen[i]));
+                        RawLines.Add(LiPTT.Copy(screen[i]));
                     }
                 }
                 else if (newline < 23)
                 {
                     for (int i = 23 - newline; i < 23; i++)
                     {
-                        RawLines.Add(LiPTT.Copy(client.Screen[i]));
+                        RawLines.Add(LiPTT.Copy(screen[i]));
                     }
                 }
                 else if (line_bug == false)
@@ -210,12 +242,12 @@ namespace LiPTT
                 action = LiPTT.RunInUIThread(() =>
                 {
                     Parse();
-                    if (bound.Percent == 100) FlushTextBlock();
+                    if (bound.Progress == 100) FlushTextBlock();
                     //FlushTextBlock();
                     sem.Release();
                 });
 
-                if (bound.Percent == 100)
+                if (bound.Progress == 100)
                     more = false;
             }
         }
@@ -230,7 +262,8 @@ namespace LiPTT
 
             ScreenBuffer screen = LiPTT.Screen;
 
-            bound = ReadLineBound(screen.ToString(23));
+            ReadBound(ref bound, screen.ToString(23));
+            //progress = ReadProgress(screen.ToString(23));
 
             LiPTT.Client.CacheScreen();
 
@@ -238,106 +271,107 @@ namespace LiPTT
             Match match;
             string tmps;
 
-            if (bound.Begin == 1)
+            line_bug = false;
+            header = false;
+
+            tmps = screen.ToString(3);
+
+            if (tmps.StartsWith("───────────────────────────────────────"))
             {
-                line_bug = false;
-                header = false;
+                header = true;
+            }
 
-                tmps = screen.ToString(3);
-
-                if (tmps.StartsWith("───────────────────────────────────────"))
+            if (header)
+            {
+                //作者
+                tmps = screen.ToString(0);
+                regex = new Regex(@"作者  [A-Za-z0-9]+ ");
+                match = regex.Match(tmps);
+                if (match.Success)
                 {
-                    header = true;
+                    ArticleTag.Author = tmps.Substring(match.Index + 4, match.Length - 5);
                 }
 
-                if (header)
+                //匿稱
+                ArticleTag.AuthorNickname = "";
+                regex = new Regex(@"\([\S\s^\(^\)]+\)");
+                match = regex.Match(tmps);
+                if (match.Success)
                 {
-                    //作者
-                    tmps = screen.ToString(0);
-                    regex = new Regex(@"作者  [A-Za-z0-9]+ ");
-                    match = regex.Match(tmps);
-                    if (match.Success)
-                    {
-                        ArticleTag.Author = tmps.Substring(match.Index + 4, match.Length - 5);
-                    }
+                    ArticleTag.AuthorNickname = tmps.Substring(match.Index + 1, match.Length - 2);
+                }
 
-                    //匿稱
-                    ArticleTag.AuthorNickname = "";
-                    regex = new Regex(@"\([\S\s^\(^\)]+\)");
-                    match = regex.Match(tmps);
-                    if (match.Success)
+                //內文標題
+                tmps = screen.ToString(1).Replace('\0', ' ').Trim();
+                match = new Regex(LiPTT.bracket_regex).Match(tmps);
+                if (match.Success)
+                {
+                    if (match.Index + match.Length + 1 < tmps.Length)
                     {
-                        ArticleTag.AuthorNickname = tmps.Substring(match.Index + 1, match.Length - 2);
-                    }
-
-                    //內文標題
-                    tmps = screen.ToString(1).Replace('\0', ' ').Trim();
-                    match = new Regex(LiPTT.bracket_regex).Match(tmps);
-                    if (match.Success)
-                    {
-                        if (match.Index + match.Length + 1 < tmps.Length)
-                        {
-                            ArticleTag.InnerTitle = tmps.Substring(match.Index + match.Length + 1);
-                        }
+                        ArticleTag.InnerTitle = tmps.Substring(match.Index + match.Length + 1);
                     }
                     else
                     {
-                        if (tmps.StartsWith("標題 "))
-                            ArticleTag.InnerTitle = tmps.Substring(3);
-                        else
-                            ArticleTag.InnerTitle = tmps;
+                        ArticleTag.InnerTitle = ArticleTag.Title;
                     }
-
-                    //時間
-                    //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
-                    System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
-                    tmps = screen.ToString(2, 7, 24);
-                    if (tmps[8] == ' ') tmps = tmps.Remove(8, 1);
-
-                    try
-                    {
-                        ArticleTag.Date = DateTimeOffset.ParseExact(tmps, "ddd MMM d HH:mm:ss yyyy", provider);
-                    }
-                    catch (FormatException)
-                    {
-                        Debug.WriteLine("時間格式有誤? " + tmps);
-                    }
-
-                    line = 3;
                 }
                 else
                 {
-                    line = 0;
-                    Debug.WriteLine("沒有文章標頭? " + tmps);
+                    if (tmps.StartsWith("標題 "))
+                        tmps = tmps.Substring(3).Trim();
+
+                    if (tmps != "")
+                        ArticleTag.InnerTitle = tmps;
+                    else
+                        ArticleTag.InnerTitle = ArticleTag.Title;
                 }
 
-                //////////////////////////////////////////////////////////////////////////////////////////
-                //第一頁文章內容
-                //////////////////////////////////////////////////////////////////////////////////////////
-                for (int i = header ? 4 : 0; i < 23; i++, line++)
+                //時間
+                //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
+                System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
+                tmps = screen.ToString(2, 7, 24);
+                if (tmps[8] == ' ') tmps = tmps.Remove(8, 1);
+
+                try
                 {
-                    RawLines.Add(LiPTT.Copy(screen[i]));
+                    ArticleTag.Date = DateTimeOffset.ParseExact(tmps, "ddd MMM d HH:mm:ss yyyy", provider);
+                }
+                catch (FormatException)
+                {
+                    Debug.WriteLine("時間格式有誤? " + tmps);
                 }
 
-                action = LiPTT.RunInUIThread(() => 
-                {
-                    Parse();
-                    if (bound.Percent == 100) FlushTextBlock();
-                    //FlushTextBlock();
-                    BeginLoaded?.Invoke(this, new EventArgs());
-                });
-
-                InitialLoaded = true;
-                if (bound.Percent < 100) more = true;
-                else more = false;
+                line = 3;
             }
+            else
+            {
+                line = 0;
+                Debug.WriteLine("沒有文章標頭? " + tmps);
+                ArticleTag.InnerTitle = ArticleTag.Title;
+            }
+
+            //////////////////////////////////////////////////////////////////////////////////////////
+            //第一頁文章內容
+            //////////////////////////////////////////////////////////////////////////////////////////
+            for (int i = header ? 4 : 0; i < 23; i++, line++)
+            {
+                RawLines.Add(LiPTT.Copy(screen[i]));
+            }
+
+            action = LiPTT.RunInUIThread(() =>
+            {
+                Parse();
+                if (bound.Progress == 100) FlushTextBlock();
+                //FlushTextBlock();
+                BeginLoaded?.Invoke(this, new EventArgs());
+            });
+
+            InitialLoaded = true;
+            if (bound.Progress < 100) more = true;
+            else more = false;
         }
 
-        private Binding NormalFontSizeBinding;
-        private Binding SmallFontSizeBinding;
-        private Binding EchoFontSizeBinding;
-
-        public async void Parse()
+        public void Parse()
         {
             for (int row = ParsedLine; row < RawLines.Count; row++, ParsedLine++)
             {
@@ -373,21 +407,28 @@ namespace LiPTT
                 }
             }
 
-            //Parse完了以後 等待圖片下載完成後 並加入
-            if (DownloadImageTasks.Count > 0)
-            {
-                while (DownloadImageTasks.Count > 0)
+            var t = Task.Run(async () => {
+
+                if (DownloadImageTasks.Count > 0)
                 {
-                    var firstFinishedTask = await Task.WhenAny(DownloadImageTasks);
+                    while (DownloadImageTasks.Count > 0)
+                    {
+                        var firstFinishedTask = await Task.WhenAny(DownloadImageTasks);
 
-                    var item = firstFinishedTask.Result.Item;
+                        var item = firstFinishedTask.Result.Item;
 
-                    if (item != null)
-                        this[firstFinishedTask.Result.Index] = item;
-                    
-                    DownloadImageTasks.Remove(firstFinishedTask);
+                        if (item != null)
+                        {
+                            await LiPTT.RunInUIThread(() => {
+                                this[firstFinishedTask.Result.Index] = item;
+                            });
+                        }
+                        DownloadImageTasks.Remove(firstFinishedTask);
+                    }
                 }
-            }
+            });
+
+            
         }
 
         public void AddLine(Block[] blocks, string str)
@@ -398,7 +439,7 @@ namespace LiPTT
             int i = 0; //for block
             PrepareAddText();
 
-            List<Uri> ViewUri = new List<Uri>();
+            List<PTTUri> ViewUri = new List<PTTUri>();
 
             while ((match = regex.Match(str, index)).Success)
             {
@@ -414,15 +455,17 @@ namespace LiPTT
 
                 try
                 {
-                    Uri uri = new Uri(match.ToString());
+                    PTTUri uri = new PTTUri(match.ToString());
 
-                    Uri u = GetUri(uri);
-
-                    if (IsUriVisible(u))
-                        AddHyperlink(u);
-
-                    if (IsUriView(u))
-                        ViewUri.Add(u);
+                    if (uri.IsUriVisible)
+                    {
+                        AddHyperlink(uri);
+                    }
+                    
+                    if (uri.IsMediaUri)
+                    {
+                        ViewUri.Add(uri);
+                    } 
                 }
                 catch (UriFormatException)
                 {
@@ -448,7 +491,7 @@ namespace LiPTT
             {
                 FlushTextBlock();
 
-                foreach (Uri view_uri in ViewUri)
+                foreach (var view_uri in ViewUri)
                 {
                     AddUriView(view_uri);
                 }
@@ -573,7 +616,7 @@ namespace LiPTT
             }
         }
 
-        private void AddHyperlink(Uri uri)
+        private void AddHyperlink(PTTUri uri)
         {
             //插入超連結
             try
@@ -591,9 +634,17 @@ namespace LiPTT
                 };
                 hyperlink.Inlines.Add(run);
                 BindingOperations.SetBinding(run, TextElement.FontSizeProperty, NormalFontSizeBinding);
+
+                if (uri.IsShort && Application.Current.Resources["SettingProperty"] is SettingProperty setting && setting.OpenShortUri)
+                {
+                    PTTUri u = uri.Expand();
+                    AddExpandUriTooltip(hyperlink, u.OriginalString);
+                }
+
                 Paragraph.Inlines.Add(hyperlink);
             }
-            catch {
+            catch
+            {
                 Run run = new Run()
                 {
                     Text = uri.OriginalString,
@@ -758,7 +809,7 @@ namespace LiPTT
             Regex regex = new Regex(LiPTT.http_regex);
             index = 0; //for string
             StackPanel stackpanel = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
-            List<Uri> ViewUri = new List<Uri>();
+            List<PTTUri> ViewUri = new List<PTTUri>();
 
             while ((match = regex.Match(echo.Content, index)).Success)
             {
@@ -782,21 +833,28 @@ namespace LiPTT
                 {
                     string text = match.ToString();
 
-                    
-                    Uri uri = new Uri(text);
 
-                    Uri u = GetUri(uri);
+                    PTTUri uri = new PTTUri(text);
 
-                    if (IsUriView(u))
-                        ViewUri.Add(u);
+                    if (uri.IsMediaUri)
+                    {
+                        ViewUri.Add(uri);
+                    }
 
                     var hb = new HyperlinkButton()
                     {
                         VerticalAlignment = VerticalAlignment.Center,
-                        NavigateUri = u,
-                        Content = new TextBlock() { Text = u.OriginalString },
+                        NavigateUri = uri,
+                        Content = new TextBlock() { Text = text },
                     };
                     BindingOperations.SetBinding(hb, Control.FontSizeProperty, EchoFontSizeBinding);
+
+                    if (uri.IsShort && Application.Current.Resources["SettingProperty"] is SettingProperty setting && setting.OpenShortUri)
+                    {
+                        PTTUri u = uri.Expand();
+                        AddExpandUriTooltip(hb, u.OriginalString);
+                    }
+
                     stackpanel.Children.Add(hb);
 
                     
@@ -884,14 +942,14 @@ namespace LiPTT
 
             if (ViewUri.Count > 0)
             {
-                foreach (Uri uri in ViewUri)
+                foreach (var uri in ViewUri)
                 {
                     AddUriView(uri);
                 }
             }
         }
 
-        private void AddUriView(Uri uri)
+        private void AddUriView(PTTUri uri)
         {
             Debug.WriteLine("request: " + uri.OriginalString);
 
@@ -911,133 +969,188 @@ namespace LiPTT
 
             Binding ringBinding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["ImageRingRatioConverter"] as ImageRingRatioConverter };
 
-            if (IsPictureUri(uri))
-            {       
-                ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Aquamarine) };
+            if (uri.IsPicture)
+            {
+                ProgressRing ring = new ProgressRing() { Foreground = new SolidColorBrush(Colors.Aquamarine) };
                 ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
                 ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
+
                 Grid grid = new Grid() { Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
                 grid.SetBinding(FrameworkElement.WidthProperty, bindingWidth);
                 grid.SetBinding(FrameworkElement.HeightProperty, bindingHeight);
                 grid.Children.Add(ring);
                 Add(grid);
 
-                DownloadImageTasks.Add(DownloadImage(Count - 1, uri));
-            }
-            else if (uri.Host == "imgur.com")
-            {
-                if (uri.OriginalString.IndexOf("imgur.com/a/") == -1)
+                if (Application.Current.Resources["SettingProperty"] is SettingProperty setting && setting.AutoLoad)
                 {
-                    Match match = new Regex("imgur.com/").Match(uri.OriginalString);
-
-                    if (match.Success)
-                    {
-                        string ID = uri.OriginalString.Substring(match.Index + match.Length);
-
-                        if (ID != "")
-                        {
-                            Uri new_uri = new Uri("http://i.imgur.com/" + ID + ".png");
-
-                            ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Aquamarine) };
-                            ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
-                            ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
-                            Grid grid = new Grid() { Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
-                            grid.SetBinding(FrameworkElement.WidthProperty, bindingWidth);
-                            grid.SetBinding(FrameworkElement.HeightProperty, bindingHeight);
-                            grid.Children.Add(ring);
-                            Add(grid);
-                            DownloadImageTasks.Add(DownloadImage(Count - 1, new_uri));
-                        }                     
-                    }
+                    ring.IsActive = true;                  
+                    DownloadImageTasks.Add(DownloadImage(Count - 1, uri.PictureUri));
                 }
-            }
-            else if (uri.Host == "i.imgur.com")
-            {
-                string str = uri.OriginalString;
-
-                if (str.IndexOf("i.imgur.com/a/") == -1)
+                else
                 {
-                    Match match = new Regex("i.imgur.com/").Match(str);
-
-                    if (match.Success)
-                    {
-                        string ID = uri.OriginalString.Substring(match.Index + match.Length);
-                        if (ID != "")
-                        {
-                            Uri new_uri = new Uri("http://i.imgur.com/" + ID + ".png");
-
-                            ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Aquamarine) };
-                            ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
-                            ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
-                            Grid grid = new Grid() { Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)) };
-                            grid.SetBinding(FrameworkElement.WidthProperty, bindingWidth);
-                            grid.SetBinding(FrameworkElement.HeightProperty, bindingHeight);
-                            grid.Children.Add(ring);
-                            Add(grid);
-                            DownloadImageTasks.Add(DownloadImage(Count - 1, new_uri));
-                        } 
-                    }
-                }
-            }
-            else if (IsYoutubeUri(uri))
-            {
-                //取出youtube的video ID
-                string[] query = uri.Query.Split(new char[] { '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
-                string youtubeID = "";
-                foreach (string s in query)
-                {
-                    if (s.StartsWith("v"))
-                    {
-                        youtubeID = s.Substring(s.IndexOf("=") + 1);
-                        break;
-                    }
+                    ring.IsActive = false;
+                    AddImageView(Count - 1, ring, uri);
                 }
 
-                if (youtubeID.Length > 0) AddVideoView("youtube", youtubeID, uri);
-            }
-            else if (IsTwitchUri(uri))
+            }          
+            else if (uri.IsYoutube)
             {
-                string twitchID = uri.LocalPath.Substring(1);
-                AddVideoView("twitch", twitchID, uri);
+                AddVideoView("youtube", uri.YoutubeID, uri);
+            }
+            else if (uri.IsTwitch)
+            {
+                AddVideoView("twitch", uri.TwitchID, uri);
             }
         }
 
-        private Uri GetUri(Uri uri)
+        private void AddImageView(int index, ProgressRing ring, PTTUri uri)
         {
-            if (!IsShortUri(uri))
-                return uri;
-
-            Debug.WriteLine(string.Format("Try to Get: {0}", uri.OriginalString));
-
-            try
+            Button button = new Button
             {
-                Uri expand = ExpandUri(uri);
-                //////////////////////////
-                if (expand != null)
-                    return expand;
+                Content = "載入圖片",
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+            };
+
+            ToolTip toolTip = new ToolTip() { Content = uri.OriginalString };
+            ToolTipService.SetToolTip(button, toolTip);
+
+            bool click = false;
+
+            if (this[index] is Grid grid)
+            {
+                Binding _bindingWidth = new Binding
+                {
+                    ElementName = "proxy",
+                    Path = new PropertyPath("ActualWidthValue"),
+                    Converter = Application.Current.Resources["GridWidthConverter"] as GridWidthConverter,
+                };
+
+                Binding _bindingHeight = new Binding
+                {
+                    ElementName = "proxy",
+                    Path = new PropertyPath("ActualWidthValue"),
+                    Converter = Application.Current.Resources["GridHeightConverter"] as GridHeightConverter,
+                };
+
+                Border _border = new Border()
+                {
+                    Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)),
+                };
+                _border.SetBinding(FrameworkElement.WidthProperty, _bindingWidth);
+                _border.SetBinding(FrameworkElement.HeightProperty, _bindingHeight);
+
+                Binding bindingButtonWidth = new Binding
+                {
+                    ElementName = "proxy",
+                    Path = new PropertyPath("ActualWidthValue"),
+                    Converter = Application.Current.Resources["ImageButtonWidthConverter"] as ImageButtonWidthConverter,
+                };
+
+                Binding bindingButtonHeight = new Binding
+                {
+                    ElementName = "proxy",
+                    Path = new PropertyPath("ActualWidthValue"),
+                    Converter = Application.Current.Resources["ImageButtonHeightConverter"] as ImageButtonHeightConverter,
+                };
+
+                button.SetBinding(Button.WidthProperty, bindingButtonWidth);
+                button.SetBinding(Button.HeightProperty, bindingButtonHeight);
+                button.SetBinding(Button.FontSizeProperty, ImageButtonFontSizeBinding);
+
+                _border.Child = button;
+                grid.Children.Add(_border);
+            }
+
+            button.Click += async (a, b) =>
+            {
+                if (click) return;
+
+                click = true;
+                ring.IsActive = true;
+                button.Visibility = Visibility.Collapsed;
+
+                Grid ImgGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch, };
+                BitmapImage bmp = await LiPTT.ImageCache.GetFromCacheAsync(uri.PictureUri);
+                Image img = new Image() { HorizontalAlignment = HorizontalAlignment.Stretch };
+
+                if (bmp != null)
+                {
+                    img.Source = bmp;
+                    Windows.Graphics.Imaging.BitmapSize bitmapSize = new Windows.Graphics.Imaging.BitmapSize { Width = (uint)bmp.PixelWidth, Height = (uint)bmp.PixelHeight };
+
+                    Binding bindingSide = new Binding
+                    {
+                        ElementName = "proxy",
+                        Path = new PropertyPath("ActualWidthValue"),
+                        Converter = Application.Current.Resources["GridLengthSideConverter"] as GridLengthSideConverter,
+                        ConverterParameter = bitmapSize,
+                    };
+
+                    Binding bindingCenter = new Binding
+                    {
+                        ElementName = "proxy",
+                        Path = new PropertyPath("ActualWidthValue"),
+                        Converter = Application.Current.Resources["GridLengthCenterConverter"] as GridLengthCenterConverter,
+                        ConverterParameter = bitmapSize,
+                    };
+
+                    ColumnDefinition c1 = new ColumnDefinition(), c2 = new ColumnDefinition(), c3 = new ColumnDefinition();
+                    BindingOperations.SetBinding(c1, ColumnDefinition.WidthProperty, bindingSide);
+                    BindingOperations.SetBinding(c2, ColumnDefinition.WidthProperty, bindingCenter);
+                    BindingOperations.SetBinding(c3, ColumnDefinition.WidthProperty, bindingSide);
+
+                    ImgGrid.ColumnDefinitions.Add(c1);
+                    ImgGrid.ColumnDefinitions.Add(c2);
+                    ImgGrid.ColumnDefinitions.Add(c3);
+
+                    HyperlinkButton hyperlinkButton = new HyperlinkButton()
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Content = img,
+                        NavigateUri = uri,
+                    };
+
+                    hyperlinkButton.SetValue(Grid.ColumnProperty, 1);
+                    ImgGrid.Children.Add(hyperlinkButton);
+                }
                 else
-                    return null;
-            }
-            catch (UriFormatException e)
-            {
-                Debug.WriteLine(string.Format("UriFormatException: {0} - {1}", uri.OriginalString, e.Message));
-                return null;
-            }
-            catch (WebException e)
-            {
-                Debug.WriteLine(string.Format("WebException: {0} - {1}", uri.OriginalString, e.Message));
-                return null;
-            }
-            catch (AggregateException e)
-            {
-                Debug.WriteLine(string.Format("AggregateException: {0} - {1}", uri.OriginalString, e.Message));
-                return null;
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(string.Format("Exception: {0} - {1}", uri.OriginalString, e.Message));
-                return null;
-            }
+                {
+                    Binding bindingWidth = new Binding
+                    {
+                        ElementName = "proxy",
+                        Path = new PropertyPath("ActualWidthValue"),
+                        Converter = Application.Current.Resources["GridWidthConverter"] as GridWidthConverter,
+                    };
+
+                    Binding bindingHeight = new Binding
+                    {
+                        ElementName = "proxy",
+                        Path = new PropertyPath("ActualWidthValue"),
+                        Converter = Application.Current.Resources["GridHeightConverter"] as GridHeightConverter,
+                    };
+
+                    Border border = new Border()
+                    {
+                        Background = new SolidColorBrush(Color.FromArgb(0x20, 0x80, 0x80, 0x80)),
+                    };
+                    border.SetBinding(FrameworkElement.WidthProperty, bindingWidth);
+                    border.SetBinding(FrameworkElement.HeightProperty, bindingHeight);
+
+                    TextBlock textBlock = new TextBlock()
+                    {
+                        Text = "圖片下載失敗",
+                        HorizontalAlignment = HorizontalAlignment.Stretch,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        TextAlignment = TextAlignment.Center,
+                    };
+                    BindingOperations.SetBinding(textBlock, TextBlock.FontSizeProperty, NormalFontSizeBinding);
+                    border.Child = textBlock;
+                    ImgGrid.Children.Add(border); 
+                }
+
+                this[index] = ImgGrid;
+            };
         }
 
         private async Task<DownloadResult> DownloadImage(int index, Uri uri)
@@ -1128,7 +1241,36 @@ namespace LiPTT
 
         private void AddVideoView(string tag, string ID, Uri uri)
         {
-            Grid MainGrid = new Grid() { Tag = tag, HorizontalAlignment = HorizontalAlignment.Stretch };
+            Grid MainGrid = new Grid() { Tag = tag, HorizontalAlignment = HorizontalAlignment.Stretch, };
+
+            SettingProperty setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+
+            Button button = new Button {
+                Content = "載入影片",
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+            };
+
+            Binding bindingVideoWidth = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["VideoButtonWidthConverter"] as VideoButtonWidthConverter,
+            };
+
+            Binding bindingVideoHeight = new Binding
+            {
+                ElementName = "proxy",
+                Path = new PropertyPath("ActualWidthValue"),
+                Converter = Application.Current.Resources["VideoButtonHeightConverter"] as VideoButtonHeightConverter,
+            };
+
+            BindingOperations.SetBinding(button, Button.WidthProperty, bindingVideoWidth);
+            BindingOperations.SetBinding(button, Button.HeightProperty, bindingVideoHeight);
+            BindingOperations.SetBinding(button, Button.FontSizeProperty, NormalFontSizeBinding);
+
+            ToolTip toolTip = new ToolTip() { Content = uri.OriginalString }; 
+            ToolTipService.SetToolTip(button, toolTip);
 
             ColumnDefinition c1, c2, c3;
 
@@ -1161,17 +1303,34 @@ namespace LiPTT
             InnerGrid.SetValue(Grid.ColumnProperty, 1);
             MainGrid.Children.Add(InnerGrid);
 
-            Grid youtuGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
+            Grid youtuGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch, Background = new SolidColorBrush(Color.FromArgb(0xff, 0x0A, 0x0A, 0x0A)) };
             Binding binding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["YoutubeGridHeightConverter"] as YoutubeGridHeightConverter };
             youtuGrid.SetBinding(FrameworkElement.HeightProperty, binding);
             InnerGrid.Children.Add(youtuGrid);
 
-            ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Orange) };
+            ProgressRing ring = new ProgressRing() { IsActive = false, Foreground = new SolidColorBrush(Colors.Orange) };
             Binding ringBinding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["RingRatioConverter"] as RingRatioConverter };
             ring.SetBinding(FrameworkElement.WidthProperty, ringBinding);
             ring.SetBinding(FrameworkElement.HeightProperty, ringBinding);
 
             WebView webview = new WebView { DefaultBackgroundColor = Colors.Black };
+
+            if (!setting.AutoLoad)
+            {
+                button.Click += (a, b) =>
+                {
+                    VideoRun++;
+                    switch (tag)
+                    {
+                        case "youtube":
+                            webview.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube.html"));
+                            break;
+                        case "twitch":
+                            webview.Navigate(new Uri("ms-appx-web:///Templates/twitch/twitch.html"));
+                            break;
+                    }
+                };
+            }
 
             webview.ContainsFullScreenElementChanged += (WebView, args) =>
             {
@@ -1184,9 +1343,11 @@ namespace LiPTT
                     FullScreenExited?.Invoke(youtuGrid, new FullScreenEventArgs(WebView));
                 }
             };
-
+            
             webview.ContentLoading += (a, b) =>
             {
+                button.Visibility = Visibility.Collapsed;
+                ring.IsActive = true;
                 webview.Visibility = Visibility.Collapsed;
             };
 
@@ -1194,20 +1355,25 @@ namespace LiPTT
             {
                 ring.IsActive = false;
                 webview.Visibility = Visibility.Visible;
+                VideoRun--;
             };
 
-            webview.ScriptNotify += async (c, d) =>
+            webview.ScriptNotify += (c, d) =>
             {
+                Debug.WriteLine(string.Format("youtube err: {0}", d.Value));
+
                 if (d.Value == "101" || d.Value == "150")
-                    await Launcher.LaunchUriAsync(uri);
+                {
+                    var a = Launcher.LaunchUriAsync(uri);
+                }   
             };
 
             webview.DOMContentLoaded += async (a, b) =>
             {
                 try
                 {
-                    //在WebView裡面執行Javascript, 撒尿牛丸膩?
-                    await webview.InvokeScriptAsync("LoadVideoByID", new string[] { ID });
+                    bool autoplay = !setting.AutoLoad;
+                    await webview.InvokeScriptAsync("LoadVideoByID", new string[] { ID, autoplay.ToString() });
                 }
                 catch (Exception ex)
                 {
@@ -1217,75 +1383,25 @@ namespace LiPTT
 
             youtuGrid.Children.Add(webview);
             youtuGrid.Children.Add(ring);
+            if (!setting.AutoLoad)
+                youtuGrid.Children.Add(button);
+
 
             Add(MainGrid);
 
-            switch (tag)
+            if (setting.AutoLoad)
             {
-                case "youtube":
-                    webview.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube.html"));
-                    break;
-                case "twitch":
-                    webview.Navigate(new Uri("ms-appx-web:///Templates/twitch/twitch.html"));
-                    break;
-            }
-        }
-
-        private bool IsUriView(Uri uri)
-        {
-            bool view = false;
-
-            if (IsPictureUri(uri)) //.jpg,.png結尾 等等
-                view = true;
-            else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a/") == -1)
-            {
-                Match match = new Regex("imgur.com/").Match(uri.OriginalString);
-                if (match.Success)
+                VideoRun++;
+                switch (tag)
                 {
-                    string id = uri.OriginalString.Substring(match.Index + match.Length);
-                    if (id.Length > 0)
-                        view = true;
-                }
-            }  
-            else if (uri.Host == "i.imgur.com" && uri.OriginalString.IndexOf("i.imgur.com/a/") == -1)
-            {
-                Match match = new Regex("i.imgur.com/").Match(uri.OriginalString);
-                if (match.Success)
-                {
-                    string id = uri.OriginalString.Substring(match.Index + match.Length);
-                    if (id.Length > 0)
-                        view = true;
+                    case "youtube":
+                        webview.Navigate(new Uri("ms-appx-web:///Templates/youtube/youtube.html"));
+                        break;
+                    case "twitch":
+                        webview.Navigate(new Uri("ms-appx-web:///Templates/twitch/twitch.html"));
+                        break;
                 }
             }
-            else if (IsYoutubeUri(uri))
-                view = true;
-            else if (IsTwitchUri(uri))
-                view = true;
-
-            return view;
-        }
-
-        private bool IsUriVisible(Uri uri)
-        {
-            if (IsUriView(uri))
-            {
-                bool visible = true;
-
-                if (IsPictureUri(uri)) //.jpg,.png結尾 等等
-                    visible = false;
-                else if (uri.Host == "imgur.com" && uri.OriginalString.IndexOf("imgur.com/a/") == -1)
-                    visible = false;
-                else if (uri.Host == "i.imgur.com" && uri.OriginalString.IndexOf("i.imgur.com/a/") == -1)
-                    visible = false;
-                else if (IsYoutubeUri(uri))
-                    visible = false;
-                else if (uri.Host == "www.twitch.tv")
-                    visible = true;
-
-                return visible;
-            }
-            else
-                return true;
         }
 
         private bool IsEchoes(string msg)
@@ -1315,30 +1431,73 @@ namespace LiPTT
             return b;
         }
 
-        private Bound ReadLineBound(string msg)
+        private void AddExpandUriTooltip(DependencyObject obj, string url)
         {
-            Bound bound = new Bound();
+            TextBlock tb = new TextBlock
+            {
+                Text = url,
+                TextWrapping = TextWrapping.Wrap,
+            };
+
+            ToolTip tt = new ToolTip
+            {
+                Content = tb,
+                Background = new SolidColorBrush(Color.FromArgb(0xD0, 0x30, 0x90, 0x90)),
+                BorderThickness = new Thickness(0),
+                FontSize = 16,
+            };
+            ToolTipService.SetToolTip(obj, tt);
+        }
+
+        private int ReadProgress(string msg)
+        {
             Regex regex = new Regex(LiPTT.bound_regex);
             Match match = regex.Match(msg);
 
             if (match.Success)
             {
                 string percent = msg.Substring(match.Index + 1, match.Length - 3);
-                bound.Percent = Convert.ToInt32(percent);
+                return Convert.ToInt32(percent);
             }
 
-            regex = new Regex(@"第\s[\d~]+\s行");
-            match = regex.Match(msg, match.Length);
+            return 0;
+        }
+
+        private void ReadBound(ref Bound bound, string msg)
+        {
+            Regex regex = new Regex(LiPTT.bound_regex);
+            Match match = regex.Match(msg);
 
             if (match.Success)
             {
-                string s = msg.Substring(match.Index + 2, match.Length - 4);
-                string[] a = s.Split('~');
-                bound.Begin = Convert.ToInt32(a[0]);
-                bound.End = Convert.ToInt32(a[1]);
+                string percent = msg.Substring(match.Index + 1, match.Length - 3);
+                try
+                {
+                    bound.Progress = Convert.ToInt32(percent);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.ToString());
+                }
             }
 
-            return bound;
+            regex = new Regex(@"第 \d+~\d+ 行");
+            match = regex.Match(msg);
+
+            if (match.Success)
+            {
+                try
+                {
+                    string s = msg.Substring(match.Index + 2, match.Length - 4);
+                    string[] k = s.Split(new char[] { '~' }, StringSplitOptions.RemoveEmptyEntries);
+                    bound.Begin = Convert.ToInt32(k[0]);
+                    bound.End = Convert.ToInt32(k[1]);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.ToString());
+                }
+            }
         }
 
         private SolidColorBrush GetForegroundBrush(Block b)

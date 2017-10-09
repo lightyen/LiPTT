@@ -671,7 +671,7 @@ namespace LiPTT
             echo.Content = str.Substring(end + 1);
 
             string time = LiPTT.GetString(block, 67, 11);
-            //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
+            //自訂日期和時間格式字串 https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
             try
             {
                 System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
@@ -736,18 +736,6 @@ namespace LiPTT
             grid.ColumnDefinitions.Add(c2);
             grid.ColumnDefinitions.Add(c3);
 
-            switch (echo.Evaluation)
-            {
-                case Evaluation.推:
-                    grid.Background = new SolidColorBrush(Color.FromArgb(0x60, 0x1A, 0x1A, 0x00));
-                    break;
-                case Evaluation.噓:
-                    grid.Background = new SolidColorBrush(Color.FromArgb(0x60, 0x1A, 0x00, 0x00));
-                    break;
-                default:
-                    break;
-            }
-
             Grid g0 = new Grid();
             g0.SetValue(Grid.ColumnProperty, 0);
             Grid g1 = new Grid();
@@ -804,31 +792,36 @@ namespace LiPTT
             Match match;
             Regex regex = new Regex(LiPTT.http_regex);
             index = 0; //for string
-            StackPanel stackpanel = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
-            List<PTTUri> ViewUri = new List<PTTUri>();
+            RelativePanel panel = new RelativePanel()
+            {
 
+            };
+            List<PTTUri> ViewUri = new List<PTTUri>();
+            UIElement element = null;
+            
             while ((match = regex.Match(echo.Content, index)).Success)
             {
                 if (index < match.Index)
                 {
                     string text = echo.Content.Substring(index, match.Index - index);
-                    var tb3 = new TextBlock()
+                    var tb = new TextBlock()
                     {
                         IsTextSelectionEnabled = true,
-                        HorizontalAlignment = HorizontalAlignment.Left,
-                        VerticalAlignment = VerticalAlignment.Center,
-                        FontSize = 22,
                         Foreground = new SolidColorBrush(Colors.Gold),
                         Text = text,
                     };
-                    BindingOperations.SetBinding(tb1, TextBlock.FontSizeProperty, EchoFontSizeBinding);
-                    stackpanel.Children.Add(tb3);
+                    tb.SetBinding(TextBlock.FontSizeProperty, EchoFontSizeBinding);
+
+                    panel.Children.Add(tb);
+
+                    if (element != null)
+                        RelativePanel.SetRightOf(tb, element);
+                    element = tb;
                 }
 
                 try
                 {
                     string text = match.ToString();
-
 
                     PTTUri uri = new PTTUri(text);
 
@@ -839,8 +832,8 @@ namespace LiPTT
 
                     var hb = new HyperlinkButton()
                     {
-                        VerticalAlignment = VerticalAlignment.Center,
                         NavigateUri = uri,
+                        Padding = new Thickness(0),
                         Content = new TextBlock() { Text = text },
                     };
                     BindingOperations.SetBinding(hb, Control.FontSizeProperty, EchoFontSizeBinding);
@@ -851,9 +844,11 @@ namespace LiPTT
                         AddExpandUriTooltip(hb, u.OriginalString);
                     }
 
-                    stackpanel.Children.Add(hb);
+                    panel.Children.Add(hb);
 
-                    
+                    if (element != null)
+                        RelativePanel.SetRightOf(hb, element);
+                    element = hb;
                 }
                 catch (UriFormatException)
                 {
@@ -861,13 +856,16 @@ namespace LiPTT
                     var tb = new TextBlock()
                     {
                         IsTextSelectionEnabled = true,
-                        HorizontalAlignment = HorizontalAlignment.Left,
-                        VerticalAlignment = VerticalAlignment.Center,
                         Foreground = new SolidColorBrush(Colors.Gold),
                         Text = text,
                     };
                     BindingOperations.SetBinding(tb, TextBlock.FontSizeProperty, EchoFontSizeBinding);
-                    stackpanel.Children.Add(tb);
+
+                    panel.Children.Add(tb);
+                    if (element != null)
+                        RelativePanel.SetRightOf(tb, element);
+                    element = tb;
+                    
                 }
 
                 index = match.Index + match.Length;
@@ -879,16 +877,18 @@ namespace LiPTT
                 var tb = new TextBlock()
                 {
                     IsTextSelectionEnabled = true,
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    VerticalAlignment = VerticalAlignment.Center,
                     Foreground = new SolidColorBrush(Colors.Gold),
                     Text = text,
                 };
                 BindingOperations.SetBinding(tb, TextBlock.FontSizeProperty, EchoFontSizeBinding);
-                stackpanel.Children.Add(tb);
+                panel.Children.Add(tb);
+                if (element != null)
+                    RelativePanel.SetRightOf(tb, element);
+                element = tb;
+                
             }
 
-            g2.Children.Add(stackpanel);
+            g2.Children.Add(panel);
 
             //推文時間////////////////////////////////////////////
             if (echo.DateFormated)
@@ -916,12 +916,26 @@ namespace LiPTT
             Button button = new Button
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
                 BorderThickness = new Thickness(0),
+                Margin = new Thickness(0),
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch,
-                Padding = new Thickness(0),
-                Background = new SolidColorBrush(Colors.Black),
             };
+
+            switch (echo.Evaluation)
+            {
+                case Evaluation.推:
+                    button.Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x13, 0x13, 0x00));
+                    break;
+                case Evaluation.噓:
+                    button.Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x13, 0x00, 0x00));
+                    break;
+                default:
+                    button.Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x17, 0x07));
+                    break;
+            }
+
             button.Content = grid;
             //ListView list = new ListView() { IsItemClickEnabled = true, HorizontalAlignment = HorizontalAlignment.Stretch, };
             ToolTipService.SetToolTip(button, toolTip);
@@ -947,8 +961,6 @@ namespace LiPTT
 
         private void AddUriView(PTTUri uri)
         {
-            Debug.WriteLine("request: " + uri.OriginalString);
-
             Binding bindingWidth = new Binding
             {
                 ElementName = "proxy",
@@ -979,7 +991,8 @@ namespace LiPTT
 
                 if (Application.Current.Resources["SettingProperty"] is SettingProperty setting && setting.AutoLoad)
                 {
-                    ring.IsActive = true;                  
+                    ring.IsActive = true;
+                    Debug.WriteLine("request: " + uri.OriginalString);
                     DownloadImageTasks.Add(DownloadImage(Count - 1, uri.PictureUri));
                 }
                 else
@@ -1065,7 +1078,7 @@ namespace LiPTT
                 click = true;
                 ring.IsActive = true;
                 button.Visibility = Visibility.Collapsed;
-
+                Debug.WriteLine("request: " + uri.OriginalString);
                 Grid ImgGrid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch, };
                 BitmapImage bmp = await LiPTT.ImageCache.GetFromCacheAsync(uri.PictureUri);
                 Image img = new Image() { HorizontalAlignment = HorizontalAlignment.Stretch };

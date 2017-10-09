@@ -18,6 +18,10 @@
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
                 <StackPanel>
+                    <RelativePanel>
+                        <TextBlock x:Name="hello" Text="hello" />
+                        <TextBlock x:Name="world" Text="world" RelativePanel.RightOf="hello" />
+                    </RelativePanel>
                     <Button Content="AddText" Click="AddText_Click" Height="35" />
                     <Button Content="AddView" Click="AddView_Click" Height="35" />
                     <Button Content="AddListViewItem" Click="AddListViewItem_Click" Height="35" />

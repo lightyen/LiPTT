@@ -280,9 +280,12 @@ namespace LiPTT
         {
             if (Match(@"瀏覽 第", 23))
             {
+                State = PttState.Article;
+
                 Bound b = ReadBound(Screen.ToString(23));
                 if (b.Begin != Bound.Begin)
                 {
+                    Bound = b;
                     Debug.WriteLine("瀏覽文章");
                     State = PttState.Article;
                     OnPttEventEchoed(State);
@@ -348,6 +351,7 @@ namespace LiPTT
             else if (Match(@"文章選讀  \(y\)回應", 23))
             {
                 Debug.WriteLine("看板");
+                Bound = new Bound();
                 State = PttState.Board;
                 OnPttEventEchoed(State);
             }
@@ -403,6 +407,7 @@ namespace LiPTT
                 if (State != PttState.PressAny)
                 {
                     Debug.WriteLine("請按任意鍵繼續");
+                    Bound = new Bound();
                     State = PttState.PressAny;
                     OnPttEventEchoed(State);
                 }
@@ -457,6 +462,7 @@ namespace LiPTT
             {
                 if (State != PttState.EchoType)
                 {
+                    Bound = new Bound();
                     State = PttState.EchoType;
                     OnPttEventEchoed(State);
                 }

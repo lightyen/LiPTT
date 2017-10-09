@@ -9,8 +9,8 @@
     PrimaryButtonText="送出"
     PrimaryButtonClick="OkClick"
     CloseButtonText="取消"
-    CloseButtonClick="CancelClick" Height="225" Width="440">
-    
+    CloseButtonClick="CancelClick">
+
     <ContentDialog.Resources>
 
     </ContentDialog.Resources>
@@ -25,6 +25,6 @@
                 <RadioButton x:Name="E3" Tag="箭頭" Content="箭頭" RelativePanel.RightOf="E2" IsChecked="True" Checked="RadioButton_Checked"/>
             </RelativePanel>
         </StackPanel>
-        
+
     </StackPanel>
 </ContentDialog>

@@ -224,7 +224,7 @@ namespace LiPTT
         protected bool isConnected;
         private DateTime connectDateTime;
         private TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(3);
-        private TimeSpan keepAlivePeriod = TimeSpan.FromMinutes(3);
+        private TimeSpan keepAlivePeriod = TimeSpan.FromMinutes(5);
 
         public PTTClient()
         {
@@ -334,7 +334,7 @@ namespace LiPTT
                             }
                         }
 
-                    }, TimeSpan.FromSeconds(1));
+                    }, TimeSpan.FromMilliseconds(1000));
 
                     KeepAliveTimer = ThreadPoolTimer.CreatePeriodicTimer(KeepAlive, KeepAlivePeriod);
 
@@ -408,51 +408,6 @@ namespace LiPTT
             }
         }
 
-        Windows.Storage.Streams.Buffer testbuffer = new Windows.Storage.Streams.Buffer(4096);
-        ThreadPoolTimer TestWebSocketRecvTimer;
-        TimeSpan WebSocketDelay = TimeSpan.FromSeconds(2);
-        MemoryStream ms = new MemoryStream();
-
-        private async void WebSocket_MessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
-        {
-            try
-            {
-                using (IInputStream stream = args.GetDataStream())
-                {
-                    IBuffer buffer = await stream.ReadAsync(testbuffer, testbuffer.Capacity, InputStreamOptions.None);
-
-                    if (buffer.Length > 0)
-                    {
-                        var bbb = buffer.ToArray();
-                        await ms.WriteAsync(bbb, 0, bbb.Length);
-
-                        if (buffer.Length != 1024) //似乎一次訊息最多送1024byte
-                        {
-                            TestWebSocketRecvTimer?.Cancel();
-                            byte[] www = ms.ToArray();
-                            ms = new MemoryStream();
-                            screensem.Wait();
-                            Parse(www);
-                            OnScreenDrawn(screenBuffer);
-                            OnScreenUpdated(screenBuffer);
-                            CacheScreen();
-                            screensem.Release();
-                        }
-                        else
-                        {
-                            TestWebSocketRecvTimer?.Cancel();
-                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer(TestWebsocket, WebSocketDelay);
-                        }
-                    }
-                }
-            }
-            catch(Exception e)
-            {
-                Debug.WriteLine(e.ToString());
-                WebSocket.Dispose();
-            }
-        }
-
         private void TestWebsocket(ThreadPoolTimer timer)
         {
             byte[] msg = ms.ToArray();
@@ -504,9 +459,12 @@ namespace LiPTT
                     r = stream.Read(buffer, 0, buffer.Length);
                     if (r > 0)
                     {
+                        screensem.Wait();
                         Parse(buffer, 0, r);
                         OnScreenDrawn(screenBuffer);
                         OnScreenUpdated(screenBuffer);
+                        CacheScreen();
+                        screensem.Release();
                     }
                 }
                 catch (ObjectDisposedException)
@@ -528,6 +486,51 @@ namespace LiPTT
                 }
             }
         }
+
+        Windows.Storage.Streams.Buffer testbuffer = new Windows.Storage.Streams.Buffer(4096);
+        ThreadPoolTimer TestWebSocketRecvTimer;
+        TimeSpan WebSocketDelay = TimeSpan.FromSeconds(2);
+        MemoryStream ms = new MemoryStream();
+
+        private async void WebSocket_MessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
+        {
+            try
+            {
+                using (IInputStream stream = args.GetDataStream())
+                {
+                    IBuffer buffer = await stream.ReadAsync(testbuffer, testbuffer.Capacity, InputStreamOptions.None);
+
+                    if (buffer.Length > 0)
+                    {
+                        var bbb = buffer.ToArray();
+                        await ms.WriteAsync(bbb, 0, bbb.Length);
+
+                        if (buffer.Length != 1024) //似乎一次訊息最多送1024byte
+                        {
+                            TestWebSocketRecvTimer?.Cancel();
+                            byte[] www = ms.ToArray();
+                            ms = new MemoryStream();
+                            screensem.Wait();
+                            Parse(www);
+                            OnScreenDrawn(screenBuffer);
+                            OnScreenUpdated(screenBuffer);
+                            CacheScreen();
+                            screensem.Release();
+                        }
+                        else
+                        {
+                            TestWebSocketRecvTimer?.Cancel();
+                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer(TestWebsocket, WebSocketDelay);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.ToString());
+            }
+        }
+
 
         private void Parse(byte[] message)
         {
@@ -994,7 +997,7 @@ namespace LiPTT
                 }
             }
 #if DEBUG
-            Debug.WriteLine(RAW_Message.ToString());
+            //Debug.WriteLine(RAW_Message.ToString());
 #endif
         }
 

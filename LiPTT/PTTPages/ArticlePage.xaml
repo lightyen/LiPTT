@@ -132,7 +132,9 @@
                         <StackPanel Background="#000000" HorizontalAlignment="Stretch" Height="10" ToolTipService.ToolTip="文章開頭" />
                     </ListView.Header>
                     <ListView.Footer>
-                        <StackPanel Background="{ThemeResource SystemControlHighlightListLowBrush}" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章結尾" />
+                        <Grid Padding="0,10,0,10">
+                            <StackPanel Background="{ThemeResource SystemControlHighlightListLowBrush}" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章結尾" />
+                        </Grid>
                     </ListView.Footer>
                 </ListView>
             </Grid>

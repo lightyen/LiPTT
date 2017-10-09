@@ -283,6 +283,7 @@ namespace LiPTT
 
         private void ConnectPTT()
         {
+            screensem = new SemaphoreSlim(1, 1);
             if (ConnectionSecurity)
                 ConnectWithWebSocket();
             else
@@ -441,7 +442,6 @@ namespace LiPTT
             screenBuffer = new ScreenBuffer();
             connectDateTime = DateTime.Now;
             KeepAliveTimer?.Cancel();
-            screensem = new SemaphoreSlim(1, 1);
         }
 
         private void StartRecv()

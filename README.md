@@ -8,9 +8,11 @@
 
 #### (目前只考慮Windows 10 15063版本或以上)
 
-<img src="https://i.imgur.com/1XRlB3j.png"></img>
+<img src="https://i.imgur.com/I5WYXQe.png"/>
 
-<img src="https://i.imgur.com/RPSJQKG.png"></img>
+<img src="https://i.imgur.com/b47Fwji.png"/>
+
+<img src="https://i.imgur.com/pF3sNek.png"/>
 
 
 

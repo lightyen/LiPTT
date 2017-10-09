@@ -966,7 +966,7 @@ namespace LiPTT
             if (value is double ViewWidth)
             {
                 double space = (Application.Current.Resources["SettingProperty"] as SettingProperty).Space;
-                return ViewWidth * space * 0.05;
+                return ViewWidth * space * 0.07;
             }
 
             return null;

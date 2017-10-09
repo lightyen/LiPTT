@@ -431,9 +431,12 @@ namespace LiPTT
                             TestWebSocketRecvTimer?.Cancel();
                             byte[] www = ms.ToArray();
                             ms = new MemoryStream();
+                            screensem.Wait();
                             Parse(www);
                             OnScreenDrawn(screenBuffer);
                             OnScreenUpdated(screenBuffer);
+                            CacheScreen();
+                            screensem.Release();
                         }
                         else
                         {
@@ -459,6 +462,8 @@ namespace LiPTT
             OnScreenUpdated(screenBuffer);
         }
 
+        SemaphoreSlim screensem;
+
         bool hasNumber;
         bool ESC;
         bool Cut;
@@ -481,6 +486,7 @@ namespace LiPTT
             screenBuffer = new ScreenBuffer();
             connectDateTime = DateTime.Now;
             KeepAliveTimer?.Cancel();
+            screensem = new SemaphoreSlim(1, 1);
         }
 
         private void StartRecv()
@@ -988,8 +994,15 @@ namespace LiPTT
                 }
             }
 #if DEBUG
-            //Debug.WriteLine(RAW_Message.ToString());
+            Debug.WriteLine(RAW_Message.ToString());
 #endif
+        }
+
+        public void Send(string message)
+        {
+            byte[] msg = PTTEncoding.GetEncoding().GetBytes(message);
+            Debug.WriteLine("==>" + message);
+            Send(msg);
         }
 
         public async void Send(byte[] message)
@@ -1013,13 +1026,6 @@ namespace LiPTT
             {
                 Debug.WriteLine(ex.ToString());
             }
-        }
-
-        public void Send(string message)
-        {
-            byte[] msg = PTTEncoding.GetEncoding().GetBytes(message);
-            Debug.WriteLine("==>" + message);
-            Send(msg);
         }
 
         public async void Send(char c)
@@ -1120,7 +1126,7 @@ namespace LiPTT
             }
         }
 
-        public void CacheScreen()
+        private void CacheScreen()
         {
             screenCache = new ScreenBuffer(screenBuffer);
         }

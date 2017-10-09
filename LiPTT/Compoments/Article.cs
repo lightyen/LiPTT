@@ -212,7 +212,7 @@ namespace LiPTT
 
             if (e.State == PttState.Article)
             {
-                ReadBound(ref bound, screen.ToString(23));
+                bound = LiPTT.Bound;
 
                 int newline = LiPTT.Client.ComparePrevious();
 
@@ -237,8 +237,6 @@ namespace LiPTT
                     BugAlarmed?.Invoke(this, new EventArgs());
                 }
 
-                LiPTT.Client.CacheScreen();
-
                 action = LiPTT.RunInUIThread(() =>
                 {
                     Parse();
@@ -262,10 +260,8 @@ namespace LiPTT
 
             ScreenBuffer screen = LiPTT.Screen;
 
-            ReadBound(ref bound, screen.ToString(23));
+            bound = LiPTT.Bound;
             //progress = ReadProgress(screen.ToString(23));
-
-            LiPTT.Client.CacheScreen();
 
             Regex regex;
             Match match;
@@ -1461,43 +1457,6 @@ namespace LiPTT
             }
 
             return 0;
-        }
-
-        private void ReadBound(ref Bound bound, string msg)
-        {
-            Regex regex = new Regex(LiPTT.bound_regex);
-            Match match = regex.Match(msg);
-
-            if (match.Success)
-            {
-                string percent = msg.Substring(match.Index + 1, match.Length - 3);
-                try
-                {
-                    bound.Progress = Convert.ToInt32(percent);
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine(e.ToString());
-                }
-            }
-
-            regex = new Regex(@"第 \d+~\d+ 行");
-            match = regex.Match(msg);
-
-            if (match.Success)
-            {
-                try
-                {
-                    string s = msg.Substring(match.Index + 2, match.Length - 4);
-                    string[] k = s.Split(new char[] { '~' }, StringSplitOptions.RemoveEmptyEntries);
-                    bound.Begin = Convert.ToInt32(k[0]);
-                    bound.End = Convert.ToInt32(k[1]);
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine(e.ToString());
-                }
-            }
         }
 
         private SolidColorBrush GetForegroundBrush(Block b)

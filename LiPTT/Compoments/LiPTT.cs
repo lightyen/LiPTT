@@ -165,6 +165,11 @@ namespace LiPTT
             get; set;
         }
 
+        public static Bound Bound
+        {
+            get; private set;
+        }
+
         /// <summary>
         /// 在線人數
         /// </summary>
@@ -177,6 +182,7 @@ namespace LiPTT
         {
             Client.Security = security;
             State = PttState.Connecting;
+            Bound = new Bound();
             OnPttEventEchoed(State);
             Client.ConnectionFailed += HandleConnectionFailed;
             Client.Connected += AddEventHandler;
@@ -229,13 +235,58 @@ namespace LiPTT
             return new Regex(regex).Match(Screen.ToString(row)).Success;
         }
 
+        private static Bound ReadBound(string msg)
+        {
+            Bound bound = new Bound();
+
+            Regex regex = new Regex(LiPTT.bound_regex);
+            Match match = regex.Match(msg);
+
+            if (match.Success)
+            {
+                string percent = msg.Substring(match.Index + 1, match.Length - 3);
+                try
+                {
+                    bound.Progress = Convert.ToInt32(percent);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.ToString());
+                }
+            }
+
+            regex = new Regex(@"第 \d+~\d+ 行");
+            match = regex.Match(msg);
+
+            if (match.Success)
+            {
+                try
+                {
+                    string s = msg.Substring(match.Index + 2, match.Length - 4);
+                    string[] k = s.Split(new char[] { '~' }, StringSplitOptions.RemoveEmptyEntries);
+                    bound.Begin = Convert.ToInt32(k[0]);
+                    bound.End = Convert.ToInt32(k[1]);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.ToString());
+                }
+            }
+
+            return bound;
+        }
+
         private static void Current_ScreenUpdated(object sender, ScreenEventArgs e)
         {
-            if (Match(@"瀏覽", 23))
+            if (Match(@"瀏覽 第", 23))
             {
-                Debug.WriteLine("瀏覽文章");
-                State = PttState.Article;
-                OnPttEventEchoed(State);
+                Bound b = ReadBound(Screen.ToString(23));
+                if (b.Begin != Bound.Begin)
+                {
+                    Debug.WriteLine("瀏覽文章");
+                    State = PttState.Article;
+                    OnPttEventEchoed(State);
+                }   
             }
             else if (Match(@"您確定要離開", 22))
             {

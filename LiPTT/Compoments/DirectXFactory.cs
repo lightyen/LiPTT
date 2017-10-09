@@ -16,11 +16,17 @@ namespace SharpDX
         public static WIC.ImagingFactory ImageFactory => imageFactory;
         public static DirectWrite.Factory DWFactory => writeFactory;
 
+        public static bool Ready
+        {
+            get; set;
+        }
+
         public static void CreateIndependentResource()
         {
             d2d1factory = new Direct2D1.Factory();
             imageFactory = new WIC.ImagingFactory();
             writeFactory = new DirectWrite.Factory();
+            Ready = true;
         }
 
         public static void ReleaseIndependentResource()
@@ -28,6 +34,7 @@ namespace SharpDX
             Utilities.Dispose(ref imageFactory);
             Utilities.Dispose(ref writeFactory);
             Utilities.Dispose(ref d2d1factory);
+            Ready = false;
         }
 
         public static IList<string> EnumAdpter()

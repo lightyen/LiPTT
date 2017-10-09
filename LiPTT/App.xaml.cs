@@ -36,6 +36,14 @@ namespace LiPTT
             //this.RequestedTheme;
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            this.Resuming += App_Resuming;
+        }
+
+        private void App_Resuming(object sender, object e)
+        {
+            DirectXFactory.CreateIndependentResource();
+            LiPTT.CreateInstance();
+            LiPTT.ImageCache = new ImageCache();
         }
 
         /// <summary>
@@ -48,7 +56,6 @@ namespace LiPTT
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             DirectXFactory.CreateIndependentResource();
-
             LiPTT.CreateInstance();
             LiPTT.ImageCache = new ImageCache();
 

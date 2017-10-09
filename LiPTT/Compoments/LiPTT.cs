@@ -170,6 +170,11 @@ namespace LiPTT
             get; private set;
         }
 
+        public static bool Logined
+        {
+            get; set;
+        }
+
         /// <summary>
         /// 在線人數
         /// </summary>
@@ -689,7 +694,6 @@ namespace LiPTT
         public static void ReleaseInstance()
         {
             SaveSetting();
-
             Gamepads.Clear();
             Debug.WriteLine("Clear Cache");
             ClearCacheTask = Task.Run(async () => { await ImageCache.ClearAllCache(); });
@@ -707,6 +711,7 @@ namespace LiPTT
                 {
                     SendMessage('G', 0x0D);
                 }
+                State = PttState.Disconnected;
             }
             else
             {

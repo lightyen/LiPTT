@@ -24,10 +24,17 @@ namespace LiPTT
     /// </summary>
     public sealed partial class LoginPage : Page
     {
+        bool resume = false;
+
         public LoginPage()
         {
             this.InitializeComponent();
             Application.Current.Suspending += (a, b) => { SaveUserAccount(LiPTT.UserName, LiPTT.Password); };
+            Application.Current.Resuming += (a, b) => 
+            {
+                resume = true;
+                LiPTT.Frame.Navigate(typeof(LoginPage));
+            };
         }
 
         private const string AccountTableKey = "AccountTable";
@@ -53,6 +60,14 @@ namespace LiPTT
             {
                 DelayLogin(TimeSpan.FromSeconds(3));
             }
+            else if (resume)
+            {
+                resume = false;
+                if (LiPTT.Logined)
+                {
+                    DelayLogin(TimeSpan.FromSeconds(3));
+                }
+            }
             else
             {
                 UserText.IsEnabled = true;
@@ -69,13 +84,14 @@ namespace LiPTT
 
         private void DelayLogin(TimeSpan delay)
         {
+            UserText.IsEnabled = false;
+            PasswordText.IsEnabled = false;
+            MemoAcount.IsEnabled = false;
+            AutoLogin.IsEnabled = false;
+
             Windows.System.Threading.ThreadPoolTimer.CreateTimer((source) => {
 
                 var ac = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                    UserText.IsEnabled = false;
-                    PasswordText.IsEnabled = false;
-                    MemoAcount.IsEnabled = false;
-                    AutoLogin.IsEnabled = false;
                     Enter();
                 });
             }, delay);
@@ -195,8 +211,8 @@ namespace LiPTT
                     }                    
                     break;
                 case PttState.Accept:
-                    { 
-                        
+                    {
+                        LiPTT.Logined = true;
                     }
                     break;
                 case PttState.Loginning:

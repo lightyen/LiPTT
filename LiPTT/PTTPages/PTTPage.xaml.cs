@@ -123,6 +123,7 @@ namespace LiPTT
         private async void GoToLogin(object o, EventArgs e)
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                LiPTT.Logined = false;
                 LiPTT.Frame.Navigate(typeof(LoginPage));
                 LiPTT.Client.Disconnected -= GoToLogin;
             });

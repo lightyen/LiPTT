@@ -10,7 +10,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-
+using Windows.ApplicationModel.Core;
 using Windows.UI.Xaml.Navigation;
 using System.Text;
 using SharpDX;
@@ -48,10 +48,9 @@ namespace LiPTT
         public CustomSwapChainPanel()
         {
             this.InitializeComponent();
-            Colorful = true;
+            Loaded += CustomSwapChainPanel_Loaded;
             LiPTT.ScreenDrawn += Draw;
-            Loaded += CustomSwapChainPanel_Loaded;            
-            AdjustFontSize();
+            Colorful = true;
         }
 
         private void CustomSwapChainPanel_Loaded(object sender, RoutedEventArgs e)
@@ -240,7 +239,7 @@ namespace LiPTT
         {
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                DrawPTT();
+                if (DirectXFactory.Ready) DrawPTT();
             });
         }
 

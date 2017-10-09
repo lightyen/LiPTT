@@ -14,6 +14,12 @@ namespace LiPTT
         public PttPageViewModel()
         {
             LiPTT.PttEventEchoed += LiPTT_PttEventEchoed;
+            CoreApplication.Resuming += (a, b) =>
+            {
+                LiPTT.PttEventEchoed += LiPTT_PttEventEchoed;
+                State = "未連線";
+                OnPropertyChanged("State");
+            };
         }
 
         private void LiPTT_PttEventEchoed(PTTClient sender, LiPttEventArgs e)

@@ -231,11 +231,6 @@ namespace LiPTT
             DefaultState();
         }
 
-        ~PTTClient()
-        {
-            Dispose();
-        }
-
         public void Dispose()
         {
             if (tcpClient != null)

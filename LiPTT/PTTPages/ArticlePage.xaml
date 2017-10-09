@@ -133,7 +133,7 @@
                     </ListView.Header>
                     <ListView.Footer>
                         <Grid Padding="0,10,0,10">
-                            <StackPanel Background="{ThemeResource SystemControlHighlightListLowBrush}" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章結尾" />
+                            <Button Background="{ThemeResource SystemControlHighlightListLowBrush}" BorderThickness="0" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章結尾" />
                         </Grid>
                     </ListView.Footer>
                 </ListView>

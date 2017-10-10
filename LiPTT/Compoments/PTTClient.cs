@@ -9,7 +9,6 @@ using System.IO;
 using System.Diagnostics;
 using Windows.System.Threading;
 
-//Websocket
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -223,7 +222,8 @@ namespace LiPTT
         private bool ConnectionSecurity;
         protected bool isConnected;
         private DateTime connectDateTime;
-        private TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(3);
+        private DateTime websockRecvTime;
+        private TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(10);
         private TimeSpan keepAlivePeriod = TimeSpan.FromMinutes(5);
 
         public PTTClient()
@@ -384,6 +384,8 @@ namespace LiPTT
 
             try
             {
+                websockRecvTime = DateTime.Now;
+
                 if (!WebSocket.ConnectAsync(new Uri(WebSocketHost)).AsTask().Wait(ConnectionTimeout))
                 {
                     Debug.WriteLine("WebSocket: 連線失敗");
@@ -402,15 +404,6 @@ namespace LiPTT
                 Debug.WriteLine(string.Format("WebSocket: 連線失敗 {0}", e.ToString()));
                 OnPTTConnectionFailed(ConnectionType.WebSocket);
             }
-        }
-
-        private void TestWebsocket(ThreadPoolTimer timer)
-        {
-            byte[] msg = ms.ToArray();
-            ms = new MemoryStream();
-            Parse(msg);
-            OnScreenDrawn(screenBuffer);
-            OnScreenUpdated(screenBuffer);
         }
 
         SemaphoreSlim screensem;
@@ -482,10 +475,23 @@ namespace LiPTT
             }
         }
 
-        Windows.Storage.Streams.Buffer testbuffer = new Windows.Storage.Streams.Buffer(4096);
+        const int PTT_WEBSOCKET_BUFFERSIZE = 1024;
+
+        Windows.Storage.Streams.Buffer testbuffer = new Windows.Storage.Streams.Buffer(PTT_WEBSOCKET_BUFFERSIZE);
         ThreadPoolTimer TestWebSocketRecvTimer;
-        TimeSpan WebSocketDelay = TimeSpan.FromSeconds(2);
         MemoryStream ms = new MemoryStream();
+
+        private void WebSocketUpdateScreen()
+        {
+            byte[] msg = ms.ToArray();
+            ms = new MemoryStream();
+            screensem.Wait();
+            Parse(msg);
+            OnScreenDrawn(screenBuffer);
+            OnScreenUpdated(screenBuffer);
+            CacheScreen();
+            screensem.Release();
+        }
 
         private async void WebSocket_MessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
         {
@@ -500,22 +506,20 @@ namespace LiPTT
                         var bbb = buffer.ToArray();
                         await ms.WriteAsync(bbb, 0, bbb.Length);
 
-                        if (buffer.Length != 1024) //似乎一次訊息最多送1024byte
+                        var now = DateTime.Now;
+                        var testTimespan = now - websockRecvTime;
+                        websockRecvTime = now;
+                        Debug.WriteLine(string.Format("Test time = {0}", testTimespan));
+
+                        if (buffer.Length != PTT_WEBSOCKET_BUFFERSIZE) //似乎一次訊息最多送 PTT_WEBSOCKET_BUFFERSIZE byte
                         {
                             TestWebSocketRecvTimer?.Cancel();
-                            byte[] www = ms.ToArray();
-                            ms = new MemoryStream();
-                            screensem.Wait();
-                            Parse(www);
-                            OnScreenDrawn(screenBuffer);
-                            OnScreenUpdated(screenBuffer);
-                            CacheScreen();
-                            screensem.Release();
+                            WebSocketUpdateScreen();
                         }
                         else
                         {
                             TestWebSocketRecvTimer?.Cancel();
-                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer(TestWebsocket, WebSocketDelay);
+                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer((timer) => { WebSocketUpdateScreen(); }, TimeSpan.FromTicks(testTimespan.Ticks * 2) );
                         }
                     }
                 }
@@ -523,9 +527,9 @@ namespace LiPTT
             catch (Exception e)
             {
                 Debug.WriteLine(e.ToString());
+                WebSocket?.Dispose();
             }
         }
-
 
         private void Parse(byte[] message)
         {

@@ -26,28 +26,7 @@ namespace LiPTT
     {
         public BBSPage()
         {
-            this.InitializeComponent();
-            LiPTT.Connected += Client_Connected;
-        }
-
-        private async void Client_BellPlayed(object sender, EventArgs e)
-        {
-            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-            {
-                /***
-                if (DefaultBell.CurrentState == Windows.UI.Xaml.Media.MediaElementState.Paused)
-                {
-                    DefaultBell.Play();
-                }
-                /***/
-            });
-        }
-
-        private async void Client_Connected(object sender, EventArgs e)
-        {
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
-
-            });
+            InitializeComponent();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -278,17 +257,6 @@ namespace LiPTT
         private bool IsUpperCase(int v)
         {
             return v >= 0x41 && v <= 0x5A;
-        }
-
-        private void Slider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-        {
-            myPanel?.AdjustFontSize((double)e.NewValue);
-            myPanel?.DrawPTT();
-        }
-
-        private void ReDraw_Click(object sender, RoutedEventArgs e)
-        {
-            myPanel?.DrawPTT();
         }
     }
 }

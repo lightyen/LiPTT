@@ -11,13 +11,15 @@ namespace LiPTT
 {
     public class PttPageViewModel : INotifyPropertyChanged
     {
+        private string state;
+
         public PttPageViewModel()
         {
             LiPTT.PttEventEchoed += LiPTT_PttEventEchoed;
             CoreApplication.Resuming += (a, b) =>
             {
                 LiPTT.PttEventEchoed += LiPTT_PttEventEchoed;
-                State = "未連線";
+                State = "重新連線中...";
                 OnPropertyChanged("State");
             };
         }
@@ -72,7 +74,7 @@ namespace LiPTT
                     State = "登入太頻繁 請稍後在試";
                     break;
                 case PttState.Kicked:
-                    State = "誰踢我?";
+                    State = "誰踢我";
                     break;
                 case PttState.WrongPassword:
                     State = "密碼不對或無此帳號";
@@ -93,21 +95,28 @@ namespace LiPTT
                     State = "未定義狀態";
                     break;
             }
-
-            var action = LiPTT.RunInUIThread(() =>
-            {
-                OnPropertyChanged("State");
-            });
         }
 
         public string State
         {
-            get; set;
+            get
+            {
+                return state;
+            }
+            set
+            {
+                state = value;
+                OnPropertyChanged("State");
+                
+            }
         }
 
         private void OnPropertyChanged([CallerMemberName] String propertyName = "")
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            var action = LiPTT.RunInUIThread(() =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            });
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

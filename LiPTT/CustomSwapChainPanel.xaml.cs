@@ -368,9 +368,7 @@ namespace LiPTT
 
         public void DrawPTT()
         {
-#if DEBUG
             if (d2d1DC != null) DrawPTT(LiPTT.Screen);
-#endif
         }
 
         private void AdjustFontSize()

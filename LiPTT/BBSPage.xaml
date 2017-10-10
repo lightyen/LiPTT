@@ -21,9 +21,6 @@
                     <ColumnDefinition Width="1*" />
                     <ColumnDefinition Width="3*" />
                 </Grid.ColumnDefinitions>
-                <Grid Grid.Row="0" Grid.Column="3">
-                    <Button Content="重繪" IsTabStop="False" Click="ReDraw_Click" />
-                </Grid>
                 <Grid Grid.Row="0" Grid.Column="4">
                     <ComboBox x:Name="FontsComboBox" SelectionChanged="FontsComboBox_SelectionChanged" IsTabStop="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
                 </Grid>

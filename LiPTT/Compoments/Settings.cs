@@ -66,11 +66,11 @@ namespace LiPTT
         {
             get
             {
-                return LiPTT.AlwaysAlive;
+                return alwaysAlive;
             }
             set
             {
-                LiPTT.AlwaysAlive = value;
+                alwaysAlive = value;
                 NotifyPropertyChanged("AlwaysAlive");
             }
         }
@@ -164,6 +164,7 @@ namespace LiPTT
             }
         }
 
+        private bool alwaysAlive;
         private double space;
         private bool fullScreen;
         private double fontSize;

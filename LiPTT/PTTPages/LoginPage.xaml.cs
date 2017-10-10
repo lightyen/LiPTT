@@ -56,9 +56,14 @@ namespace LiPTT
                 MemoAcount.IsEnabled = false;
                 AutoLogin.IsEnabled = false;
             }
-            else if (LiPTT.AlwaysAlive && LiPTT.State == PttState.Kicked || LiPTT.State == PttState.LoginSoMany)
+            else if (LiPTT.AlwaysAlive && LiPTT.State == PttState.Kicked)
             {
-                DelayLogin(TimeSpan.FromSeconds(3));
+                if (Resources["ViewModel"] is PttPageViewModel viewmodel)
+                {
+                    viewmodel.State = "被踢了，重新連線中...";
+                }
+
+                DelayLogin(TimeSpan.FromMilliseconds(4500));
             }
             else if (resume)
             {

@@ -504,7 +504,11 @@ namespace LiPTT
 
         public static bool AlwaysAlive
         {
-            get; set;
+            get
+            {
+                SettingProperty Setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+                return Setting.AlwaysAlive;
+            }
         }
 
         public static bool IsExit
@@ -577,7 +581,7 @@ namespace LiPTT
 
         public static void PressAnyKey()
         {
-            PressSpace();
+            Left();
         }
 
         public static void PressI()

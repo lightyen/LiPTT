@@ -107,6 +107,7 @@ namespace LiPTT
         }
 
         private uint Floor = 1;
+        public bool isBeginLoad;
 
         private Binding ImageButtonFontSizeBinding;
         private Binding SmallFontSizeBinding;
@@ -241,7 +242,14 @@ namespace LiPTT
                 {
                     Parse();
                     if (bound.Progress == 100) FlushTextBlock();
-                    //FlushTextBlock();
+                    if (!isBeginLoad)
+                    {
+                        if (Count > 0)
+                        {
+                            isBeginLoad = true;
+                            BeginLoaded?.Invoke(this, new EventArgs());
+                        }
+                    }
                     sem.Release();
                 });
 
@@ -253,6 +261,8 @@ namespace LiPTT
         public void BeginLoad(Article article)
         {
             Clear();
+
+            isBeginLoad = false;
 
             ArticleTag = article;
 
@@ -357,9 +367,16 @@ namespace LiPTT
             action = LiPTT.RunInUIThread(() =>
             {
                 Parse();
-                if (bound.Progress == 100) FlushTextBlock();
-                //FlushTextBlock();
-                BeginLoaded?.Invoke(this, new EventArgs());
+                if (bound.Progress == 100)
+                {
+                    FlushTextBlock();
+                }
+                    
+                if (Count > 0)
+                {
+                    isBeginLoad = true;
+                    BeginLoaded?.Invoke(this, new EventArgs());
+                }
             });
 
             InitialLoaded = true;

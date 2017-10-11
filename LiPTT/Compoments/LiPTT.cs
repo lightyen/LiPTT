@@ -20,33 +20,114 @@ namespace LiPTT
 {
     public enum PttState
     {
+        /// <summary>
+        /// 無
+        /// </summary>
         None,
-        Disconnected, //未連線
-        Connecting, //連線中...
-        ConnectFailedTCP, //連線失敗 TCP
-        ConnectFailedWebSocket, //連線失敗 WebSocket
-        Disconnecting, //斷線中
-        Kicked, //被踢惹
-        OverLoading, //PTT爆炸惹
-        Login, // PTT歡迎畫面(輸入帳號)
-        Password, //輸入密碼
-        WrongPassword, //密碼錯誤
-        Accept, //密碼正確
-        Loginning, //登入中
-        Synchronizing, //同步處理中
-        LoginSoMany, //登入太頻繁
-        AlreadyLogin, //重複登入
-        MainPage, //主功能表
-        Popular, //熱門看板列表
-        PressAny, //按任意鍵喔
-        WrongLog, //登入錯誤資訊
-        Exit, //離開嗎?
-        Favorite, //最愛看板列表
-        SearchBoard, //搜尋看板
-        RelatedBoard, //相關資訊一覽表
+        /// <summary>
+        /// 未連線
+        /// </summary>
+        Disconnected,
+        /// <summary>
+        /// 連線中
+        /// </summary>
+        Connecting,
+        /// <summary>
+        /// TCP連線失敗
+        /// </summary>
+        ConnectFailedTCP,
+        /// <summary>
+        /// WebSocket連線失敗
+        /// </summary>
+        ConnectFailedWebSocket,
+        /// <summary>
+        /// 斷線中
+        /// </summary>
+        Disconnecting,
+        /// <summary>
+        /// 被踢下線
+        /// </summary>
+        Kicked,
+        /// <summary>
+        /// PTT系統過載
+        /// </summary>
+        OverLoading,
+        /// <summary>
+        /// 登入畫面
+        /// </summary>
+        Login,
+        /// <summary>
+        /// 請輸入密碼
+        /// </summary>
+        Password,
+        /// <summary>
+        /// 密碼錯誤或無此帳號
+        /// </summary>
+        WrongPassword,
+        /// <summary>
+        /// 密碼正確
+        /// </summary>
+        Accept,
+        /// <summary>
+        /// 登入中
+        /// </summary>
+        Loginning,
+        /// <summary>
+        /// 同步處理中
+        /// </summary>
+        Synchronizing,
+        /// <summary>
+        /// 登入太頻繁
+        /// </summary>
+        LoginSoMany,
+        /// <summary>
+        /// 重複登入
+        /// </summary>
+        AlreadyLogin,
+        /// <summary>
+        /// 主功能表
+        /// </summary>
+        MainPage,
+        /// <summary>
+        /// 熱門看板列表
+        /// </summary>
+        Popular,
+        /// <summary>
+        /// 按任意鍵繼續
+        /// </summary>
+        PressAny,
+        /// <summary>
+        /// 登入警告資訊
+        /// </summary>
+        WrongLog,
+        /// <summary>
+        /// 離開嗎?
+        /// </summary>
+        Exit,
+        /// <summary>
+        /// 最愛看板列表
+        /// </summary>
+        Favorite,
+        /// <summary>
+        /// s搜尋看板
+        /// </summary>
+        SearchBoard,
+        /// <summary>
+        /// 相關資訊一覽表
+        /// </summary>
+        RelatedBoard,
+        /// <summary>
+        /// 文章列表
+        /// </summary>
         Board, //文章列表
-        BoardInfomation, //看板資訊
-        Article, //閱覽文章
+        /// <summary>
+        /// 看板資訊
+        /// </summary>
+        BoardInfomation,
+        /// <summary>
+        /// 閱覽文章
+        /// </summary>
+        Article,
         EchoType, //推文類型
         Angel, //小天使廣告
         BoardArt, //進版畫面
@@ -283,7 +364,7 @@ namespace LiPTT
 
         private static void Current_ScreenUpdated(object sender, ScreenEventArgs e)
         {
-            if (Match(@"瀏覽 第", 23))
+            if (Match("瀏覽 第", 23))
             {
                 State = PttState.Article;
 
@@ -296,7 +377,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }   
             }
-            else if (Match(@"您確定要離開", 22))
+            else if (Match("您確定要離開", 22))
             {
                 if (State != PttState.Exit)
                 {
@@ -323,28 +404,31 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if(Match(@"選擇看板    \(a\)增加看板", 23))
+            else if(Match(@"\(a\)增加看板", 23))
             {
-                if (State != PttState.Favorite)
-                {
-                    Debug.WriteLine("我的最愛");
-                    State = PttState.Favorite;
-                    OnPttEventEchoed(State);
-                }
+                Debug.WriteLine("我的最愛");
+                State = PttState.Favorite;
+                OnPttEventEchoed(State);
             }
-            else if (Match(@"相關資訊一覽表", 2))
+            else if (Match(@"\(m\)加入/移出最愛", 23))
+            {
+                Debug.WriteLine("熱門看板");
+                State = PttState.Popular;
+                OnPttEventEchoed(State);
+            }
+            else if (Match("相關資訊一覽表", 2))
             {
                 Debug.WriteLine("搜尋相關看板");
                 State = PttState.RelatedBoard;
                 OnPttEventEchoed(State);
             }
-            else if (Match(@"請輸入看板名稱", 1))
+            else if (Match("請輸入看板名稱", 1))
             {
                 Debug.WriteLine("請輸入看板名稱");
                 State = PttState.SearchBoard;
                 OnPttEventEchoed(State);
             }
-            else if (Match(@"看板設定", 3))
+            else if (Match("看板設定", 3))
             {
                 if (State != PttState.BoardInfomation)
                 {
@@ -353,7 +437,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"文章選讀  \(y\)回應", 23))
+            else if (Match(@"\(y\)回應\(X\)推文", 23))
             {
                 Debug.WriteLine("看板");
                 Bound = new Bound();
@@ -369,7 +453,7 @@ namespace LiPTT
                 }
             }
 
-            else if (Match(@"密碼不對或無此帳號", 21))
+            else if (Match("密碼不對或無此帳號", 21))
             {
                 if (State != PttState.WrongPassword)
                 {
@@ -379,7 +463,7 @@ namespace LiPTT
                 }
 
             }
-            else if (Match(@"系統過載", 13))
+            else if (Match("系統過載", 13))
             {
                 if (State == PttState.OverLoading)
                 {
@@ -389,7 +473,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"密碼正確", 21))
+            else if (Match("密碼正確", 21))
             {
                 if (State != PttState.Accept)
                 {
@@ -398,7 +482,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"登入中", 22))
+            else if (Match("登入中", 22))
             {
                 if (State != PttState.Loginning)
                 {
@@ -407,7 +491,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"任意鍵", 23))
+            else if (Match("任意鍵", 23))
             {
                 if (State != PttState.PressAny)
                 {
@@ -417,7 +501,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"登入太頻繁", 23))
+            else if (Match("登入太頻繁", 23))
             {
                 if (State != PttState.LoginSoMany)
                 {
@@ -427,7 +511,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"更新與同步", 22))
+            else if (Match("更新與同步", 22))
             {
                 if (State != PttState.Synchronizing)
                 {
@@ -436,7 +520,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"請輸入您的密碼", 21))
+            else if (Match("請輸入您的密碼", 21))
             {
                 if (State != PttState.Password)
                 {
@@ -445,7 +529,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"您要刪除以上錯誤嘗試的記錄嗎", 23))
+            else if (Match("您要刪除以上錯誤嘗試的記錄嗎", 23))
             {
                 if (State != PttState.WrongLog)
                 {

@@ -64,16 +64,22 @@ namespace LiPTT
                     control_visible = true;
                 else
                     control_visible = false;
-                NotifyPropertyChanged("ControlVisible");
-                NotifyPropertyChanged("RingActive");
+                NotifyPropertyChanged("ControlVisible");             
             }
         }
+
+        private bool ringActive;
 
         public bool RingActive
         {
             get
             {
-                return !control_visible;
+                return ringActive;
+            }
+            set
+            {
+                ringActive = value;
+                NotifyPropertyChanged("RingActive");
             }
         }
 
@@ -84,6 +90,7 @@ namespace LiPTT
             base.OnNavigatedTo(e);
 
             ControlVisible = Visibility.Collapsed;
+            RingActive = true;
             //冷靜一下，先喝杯咖啡
             await Task.Delay(50);
             article = LiPTT.CurrentArticle;
@@ -94,6 +101,7 @@ namespace LiPTT
                     ArticleListView.ScrollIntoView(ArticleListView.Items[0]);
                 Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
                 Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+                RingActive = false;
             };
 
             ContentCollection.BugAlarmed += (a, b) => {

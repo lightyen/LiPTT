@@ -305,7 +305,7 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"主功能表", 0))
+            else if (Match("主功能表", 0))
             {
                 if (State != PttState.MainPage)
                 {
@@ -465,12 +465,9 @@ namespace LiPTT
             }
             else if (Match("您覺得這篇文章", 23))
             {
-                if (State != PttState.EchoType)
-                {
-                    Bound = new Bound();
-                    State = PttState.EchoType;
-                    OnPttEventEchoed(State);
-                }
+                Bound = new Bound();
+                State = PttState.EchoType;
+                OnPttEventEchoed(State);
             }
             else
             {

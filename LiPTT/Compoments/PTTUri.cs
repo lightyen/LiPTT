@@ -285,7 +285,7 @@ namespace LiPTT
                 case "goo.gl":
                 case "bit.ly":
                 case "tinyurl.com":
-                case "redd.it":
+                case "ppt.cc":
                     IsShort = true;
                     break;
                 default:
@@ -321,6 +321,29 @@ namespace LiPTT
                 Debug.WriteLine(string.Format("Exception: {0} - {1}", OriginalString, e.Message));
             }
 
+            return GetResponseUri();
+        }
+
+        private PTTUri GetResponseUri()
+        {
+            try
+            {
+                WebRequest webRequest = WebRequest.Create(OriginalString);
+                Task<WebResponse> t = webRequest.GetResponseAsync();
+                if (t.Wait(3000))
+                {
+                    WebResponse res = t.Result;
+                    return new PTTUri(res.ResponseUri.OriginalString);
+                }
+                else
+                {
+                    Debug.WriteLine(string.Format("Timeout: {0}", OriginalString));
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(string.Format("Exception: {0} - {1}", OriginalString, e.Message));
+            }
             return this;
         }
     }

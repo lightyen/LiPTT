@@ -509,7 +509,7 @@ namespace LiPTT
                         var now = DateTime.Now;
                         var testTimespan = now - websockRecvTime;
                         websockRecvTime = now;
-                        Debug.WriteLine(string.Format("Test time = {0}", testTimespan));
+                        //Debug.WriteLine(string.Format("Test time = {0}", testTimespan));
 
                         if (buffer.Length != PTT_WEBSOCKET_BUFFERSIZE) //似乎一次訊息最多送 PTT_WEBSOCKET_BUFFERSIZE byte
                         {

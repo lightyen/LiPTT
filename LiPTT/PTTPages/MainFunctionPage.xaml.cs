@@ -92,6 +92,7 @@ namespace LiPTT
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            ItemClick = false;
             ControlVisible = Visibility.Visible;
         }
 
@@ -268,10 +269,13 @@ namespace LiPTT
             }
         }
 
+        private bool ItemClick = false;
+
         private void GridView_ItemClick(object sender, ItemClickEventArgs e)
         {
-            if (ControlVisible == Visibility.Collapsed) return;
+            if (ItemClick) return;
 
+            ItemClick = true;
             ControlVisible = Visibility.Collapsed;
 
             if (e.ClickedItem is MyKeyValuePair kv)

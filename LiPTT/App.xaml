@@ -8,7 +8,7 @@
         <ResourceDictionary>
             <local:ApplicationProperty x:Key="ApplicationProperty" />
             <local:SettingProperty x:Key="SettingProperty" />
-            <local:Board x:Key="CurrentBoard" />
+            
             <local:Article x:Key="CurrentArticle" />
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Styles.xaml" />

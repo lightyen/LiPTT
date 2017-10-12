@@ -41,6 +41,8 @@ namespace LiPTT
             {
                 GoBack();
             };
+
+            this.DataContext = this;
         }
 
         private EchoContentDialog EchoDialog { get; set; }
@@ -282,8 +284,10 @@ namespace LiPTT
         {
             var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                ContentCollection.BeginLoad(LiPTT.CurrentArticle);
+                ContentCollection.BeginLoad(LiPTT.CurrentArticle); 
                 ArticleHeader.DataContext = LiPTT.CurrentArticle;
+                SplitViewPaneContent.DataContext = LiPTT.CurrentArticle;
+
                 ControlVisible = Visibility.Visible;
             });
             
@@ -359,7 +363,7 @@ namespace LiPTT
                 !ContentCollection.InitialLoaded &&
                 ContentCollection.Loading &&
                 ContentCollection.VideoRun == 0 &&
-                LiPTT.ArticleCollection != null || LiPTT.Frame.CurrentSourcePageType != typeof(ArticlePage)) return;
+                LiPTT.Frame.CurrentSourcePageType != typeof(ArticlePage)) return;
 
             if (back) return;
             back = true;
@@ -469,6 +473,21 @@ namespace LiPTT
             if (ArticleHeader.DataContext is Article article)
             {
                 await Launcher.LaunchUriAsync(article.WebUri);
+            }
+        }
+
+        private void Page_PointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            var pointerPosition = CoreWindow.GetForCurrentThread().PointerPosition;
+            var x = pointerPosition.X - Window.Current.Bounds.X;
+
+            if (SplitView.IsPaneOpen == false && x > ActualWidth * 0.99)
+            {
+                SplitView.IsPaneOpen = true;
+            }
+            else if (SplitView.IsPaneOpen == true && x < ActualWidth - SplitView.OpenPaneLength)
+            {
+                SplitView.IsPaneOpen = false;
             }
         }
     }

@@ -27,11 +27,17 @@ namespace LiPTT
     {
         public BoardPage()
         {
+            
             InitializeComponent();
-            DataContext = this;
+            CurrentBoard = new Board();
             LiPTT.ArticleCollection = ContentCollection;
             clipboardsem = new SemaphoreSlim(1, 1);
             ContentCollection.BeginLoaded += ContentCollection_BeginLoaded;
+        }
+
+        public Board CurrentBoard
+        {
+            get; set;
         }
 
         SemaphoreSlim clipboardsem;
@@ -57,20 +63,15 @@ namespace LiPTT
 
         private bool control_visible;
 
-        public Visibility ControlVisible
+        public bool ControlVisible
         {
-            get {
-                if (control_visible)
-                    return Visibility.Visible;
-                else
-                    return Visibility.Collapsed;
+            get
+            {
+                return control_visible;
             }
             private set
             {
-                if (value == Visibility.Visible)
-                    control_visible = true;
-                else
-                    control_visible = false;
+                control_visible = value;
                 NotifyPropertyChanged("ControlVisible");
                 NotifyPropertyChanged("RingActive");
             }
@@ -95,8 +96,9 @@ namespace LiPTT
                 if (match.Success)
                 {
                     int popu = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                    var Board = Application.Current.Resources["CurrentBoard"] as Board;
-                    Board.Popularity = popu;
+                    var Board = CurrentBoard;
+                    CurrentBoard.Popularity = popu;
+                    NotifyPropertyChanged("CurrentBoard");
                 }
             }
 
@@ -106,7 +108,7 @@ namespace LiPTT
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            ControlVisible = Visibility.Collapsed;
+            ControlVisible = false;
             //冷靜一下，先喝杯咖啡
             await Task.Delay(100);
 
@@ -133,7 +135,7 @@ namespace LiPTT
 
                 var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    var Board = Application.Current.Resources["CurrentBoard"] as Board;
+                    var Board = CurrentBoard;
 
                     //看板名稱
                     string str = screen.ToString(3);
@@ -219,12 +221,11 @@ namespace LiPTT
                             Board.LimitReject = Convert.ToInt32(str.Substring(match.Index, match.Length));
                         }
                         catch { Debug.WriteLine(str.Substring(match.Index, match.Length)); }
-                    }
-
+                    }                 
 
                     if (LiPTT.CacheBoard)
                     {
-                        ControlVisible = Visibility.Visible;
+                        ControlVisible = true;
                         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
                         Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
                     }
@@ -255,7 +256,7 @@ namespace LiPTT
         {
             if (ArticleListView.Items.Count > 0)
                 ArticleListView.ScrollIntoView(ArticleListView.Items[0]);
-            ControlVisible = Visibility.Visible;
+            ControlVisible = true;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
         }
@@ -380,7 +381,6 @@ namespace LiPTT
         {
             if (pressRight == false && args.CurrentPoint.Properties.IsRightButtonPressed)
             {
-                Debug.WriteLine("PressRight");
                 pressRight = true;
                 Window.Current.CoreWindow.PointerReleased += Board_PointerReleased;
             }

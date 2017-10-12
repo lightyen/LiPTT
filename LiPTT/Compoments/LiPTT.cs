@@ -448,6 +448,7 @@ namespace LiPTT
             {
                 if (State != PttState.AlreadyLogin)
                 {
+                    Debug.WriteLine("您想刪除其他重複登入的連線嗎");
                     State = PttState.AlreadyLogin;
                     OnPttEventEchoed(State);
                 }
@@ -457,6 +458,7 @@ namespace LiPTT
             {
                 if (State != PttState.WrongPassword)
                 {
+                    Debug.WriteLine("密碼不對或無此帳號");
                     State = PttState.WrongPassword;
                     Client.PTTWrongResponse = true;
                     OnPttEventEchoed(State);
@@ -540,9 +542,9 @@ namespace LiPTT
             }
             else if (Match("請輸入代號", 20))
             {
-                Debug.WriteLine("請輸入代號");
                 if (State != PttState.Login)
                 {
+                    Debug.WriteLine("請輸入代號");
                     State = PttState.Login;
                     OnPttEventEchoed(State);
                 }
@@ -553,11 +555,15 @@ namespace LiPTT
                 State = PttState.EchoType;
                 OnPttEventEchoed(State);
             }
+            else if (Match("批踢踢實業坊        ◢▃██◥█◤", 4))
+            {
+                //小馬
+            }
             else
             {
 #if DEBUG
                 StringBuilder sb = new StringBuilder();
-                sb.Append("這裡是哪裡? 進板畫面?\n");
+                sb.Append("這裡是哪裡?\n");
                 var x = Client.Screen.ToStringArray();
                 foreach (string s in x)
                 {

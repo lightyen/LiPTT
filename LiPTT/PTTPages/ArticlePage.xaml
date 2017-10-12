@@ -5,7 +5,9 @@
     xmlns:local="using:LiPTT"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d" NavigationCacheMode="Disabled">
+    mc:Ignorable="d" 
+    PointerMoved="Page_PointerMoved"
+    NavigationCacheMode="Disabled">
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
@@ -57,27 +59,12 @@
                 </Setter>
             </Style>
         </ResourceDictionary>
-
     </Page.Resources>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="{Binding FullScreen, Source={StaticResource ApplicationProperty}, Converter={StaticResource FullScreenHeaderSideConverter}}"/>
-                <RowDefinition Height="7*"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="{Binding FullScreen, Source={StaticResource ApplicationProperty}, Converter={StaticResource FullScreenArticleSideConverter}}" />
-                <ColumnDefinition Width="8*" />
-                <ColumnDefinition Width="{Binding FullScreen, Source={StaticResource ApplicationProperty}, Converter={StaticResource FullScreenArticleSideConverter}}" />
-            </Grid.ColumnDefinitions>
-            <Grid Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="0" Grid.RowSpan="2" x:Name="VideoGrid" Canvas.ZIndex="10">
-            </Grid>
-            <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="1" Visibility="{Binding ControlVisible}" Canvas.ZIndex="0">
-                <Button x:Name="ArticleHeader" HorizontalAlignment ="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{ThemeResource ArticleHeaderBackground}" BorderThickness="0" Click="ArticleHeader_Click" ToolTipService.ToolTip="前往網頁版">
-                    <Button.Resources>
-                        <local:ActualSizePropertyProxy Element="{Binding ElementName=ArticleHeader}" x:Name="HeaderProxy" />
-                    </Button.Resources>
-                    <ContentControl>
+        <SplitView x:Name="SplitView" CompactPaneLength="100" OpenPaneLength="200" DisplayMode="Overlay" PanePlacement="Right" IsPaneOpen="False">
+            <SplitView.Pane>
+                <Grid Visibility="{Binding ControlVisible}">
+                    <ContentControl x:Name="SplitViewPaneContent">
                         <ContentControl.Style>
                             <Style TargetType="ContentControl">
                                 <Setter Property="VerticalAlignment" Value="Stretch" />
@@ -88,56 +75,109 @@
                         </ContentControl.Style>
                         <ContentControl.ContentTemplate>
                             <DataTemplate x:DataType="local:Article">
-                                <Grid HorizontalAlignment="Stretch">
-                                    <StackPanel HorizontalAlignment="Stretch">
-                                        <RichTextBlock  IsTextSelectionEnabled="True" HorizontalAlignment="Center">
-                                            <Paragraph>
-                                                <Run Text="{x:Bind Type, Converter={StaticResource ArticleTypeStringFormatConverter}}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=22}" Foreground="{x:Bind Type, Converter={StaticResource ArticleTypeColorConverter}}" />
-                                                <Run Text="  " />
-                                                <Run Text="{x:Bind Category}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=22}" Foreground="DarkSalmon" />
-                                                <Run Text="  " />
-                                                <Run Text="{x:Bind InnerTitle}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=24}" Foreground="GreenYellow" />
-                                                <LineBreak />
-                                                <Run Text="{x:Bind Author}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=24}" Foreground="Yellow" />
-                                                <Run Text="  " />
-                                                <Run Text="{x:Bind AuthorNickname}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=16}" Foreground="DarkCyan" />
-                                                <Run Text="  " />
-                                                <Run Text="{x:Bind Date, Converter={StaticResource DateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:yyyy MMMM dd dddd HH:mm:ss}'}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=20}" Foreground="Aquamarine" />
-                                            </Paragraph>
-                                        </RichTextBlock>
-                                    </StackPanel>
-                                </Grid>
+                                <StackPanel>
+                                    <RelativePanel>
+                                        <TextBlock x:Name="ID_text" Text="編號:" IsTextSelectionEnabled="True" FontSize="18"/>
+                                        <TextBlock Text="{x:Bind ID}" IsTextSelectionEnabled="True" FontSize="20" RelativePanel.RightOf="ID_text"/>
+                                    </RelativePanel>
+                                    <RelativePanel>
+                                        <TextBlock x:Name="AID_text" Text="文章代碼:" IsTextSelectionEnabled="True" FontSize="18"/>
+                                        <TextBlock Text="{x:Bind AID}" IsTextSelectionEnabled="True" FontSize="20" RelativePanel.RightOf="AID_text"/>
+                                    </RelativePanel>
+                                    <RelativePanel>
+                                        <TextBlock x:Name="PTTCoin_text" Text="P幣:" IsTextSelectionEnabled="True" FontSize="18"/>
+                                        <TextBlock Text="{x:Bind PttCoin}" IsTextSelectionEnabled="True" FontSize="20" RelativePanel.RightOf="PTTCoin_text"/>
+                                    </RelativePanel>
+                                </StackPanel>
                             </DataTemplate>
                         </ContentControl.ContentTemplate>
                     </ContentControl>
-                </Button>
-            </Grid>
-            <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="3" x:Name="RingGrid" FlyoutBase.AttachedFlyout="{StaticResource ArticleWrongFlyout}" Canvas.ZIndex="5">
-                <ProgressRing IsActive="{Binding RingActive}" Width="100" Height="100" />
-            </Grid>
-            <Grid Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="ContentGrid"  Visibility="{Binding ControlVisible}" Canvas.ZIndex="0">
-                <ListView x:Name="ArticleListView" ItemsSource="{Binding Source={StaticResource ContentCollection}}" SelectionMode="None" HorizontalAlignment="Stretch" IsTapEnabled="False">
-                    <ListView.Resources>
-                        <local:ActualSizePropertyProxy Element="{Binding ElementName=ArticleListView}" x:Name="proxy" />
-                    </ListView.Resources>
-                    <!--[TextBlock] Text-->
-                    <!--[Grid] Youtube or Image-->
-                    <!--[ListViewItem] Echoes-->
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                    <ListView.Header>
-                        <StackPanel Background="#000000" HorizontalAlignment="Stretch" Height="10" ToolTipService.ToolTip="文章開頭" />
-                    </ListView.Header>
-                    <ListView.Footer>
-                        <Grid Padding="0,10,0,10">
-                            <Button Background="{ThemeResource SystemControlHighlightListLowBrush}" BorderThickness="0" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章結尾" />
-                        </Grid>
-                    </ListView.Footer>
-                </ListView>
-            </Grid>
-        </Grid>
+                </Grid>
+            </SplitView.Pane>
+            <SplitView.PaneBackground>
+                <SolidColorBrush Color="Gray" Opacity="0.5"/>
+            </SplitView.PaneBackground>
+            <SplitView.Content>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="{Binding FullScreen, Source={StaticResource ApplicationProperty}, Converter={StaticResource FullScreenHeaderSideConverter}}"/>
+                        <RowDefinition Height="7*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{Binding FullScreen, Source={StaticResource ApplicationProperty}, Converter={StaticResource FullScreenArticleSideConverter}}" />
+                        <ColumnDefinition Width="8*" />
+                        <ColumnDefinition Width="{Binding FullScreen, Source={StaticResource ApplicationProperty}, Converter={StaticResource FullScreenArticleSideConverter}}" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="0" Grid.RowSpan="2" x:Name="VideoGrid" Canvas.ZIndex="10">
+                    </Grid>
+                    <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="1" Visibility="{Binding ControlVisible}" Canvas.ZIndex="0">
+                        <Button x:Name="ArticleHeader" HorizontalAlignment ="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{ThemeResource ArticleHeaderBackground}" BorderThickness="0" Click="ArticleHeader_Click" ToolTipService.ToolTip="前往網頁版">
+                            <Button.Resources>
+                                <local:ActualSizePropertyProxy Element="{Binding ElementName=ArticleHeader}" x:Name="HeaderProxy" />
+                            </Button.Resources>
+                            <ContentControl>
+                                <ContentControl.Style>
+                                    <Style TargetType="ContentControl">
+                                        <Setter Property="VerticalAlignment" Value="Stretch" />
+                                        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    </Style>
+                                </ContentControl.Style>
+                                <ContentControl.ContentTemplate>
+                                    <DataTemplate x:DataType="local:Article">
+                                        <Grid HorizontalAlignment="Stretch">
+                                            <StackPanel HorizontalAlignment="Stretch">
+                                                <RichTextBlock  IsTextSelectionEnabled="True" HorizontalAlignment="Center">
+                                                    <Paragraph>
+                                                        <Run Text="{x:Bind Type, Converter={StaticResource ArticleTypeStringFormatConverter}}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=22}" Foreground="{x:Bind Type, Converter={StaticResource ArticleTypeColorConverter}}" />
+                                                        <Run Text="  " />
+                                                        <Run Text="{x:Bind Category}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=22}" Foreground="DarkSalmon" />
+                                                        <Run Text="  " />
+                                                        <Run Text="{x:Bind InnerTitle}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=24}" Foreground="GreenYellow" />
+                                                        <LineBreak />
+                                                        <Run Text="{x:Bind Author}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=24}" Foreground="Yellow" />
+                                                        <Run Text="  " />
+                                                        <Run Text="{x:Bind AuthorNickname}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=16}" Foreground="DarkCyan" />
+                                                        <Run Text="  " />
+                                                        <Run Text="{x:Bind Date, Converter={StaticResource DateTimeOffsetStringFormatConverter}, ConverterParameter='{}{0:yyyy MMMM dd dddd HH:mm:ss}'}" FontSize="{Binding ElementName=HeaderProxy, Path=ActualHeightValue, Converter={StaticResource ArticleHeaderConverter}, ConverterParameter=20}" Foreground="Aquamarine" />
+                                                    </Paragraph>
+                                                </RichTextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
+                        </Button>
+                    </Grid>
+                    <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="3" x:Name="RingGrid" FlyoutBase.AttachedFlyout="{StaticResource ArticleWrongFlyout}" Canvas.ZIndex="5">
+                        <ProgressRing IsActive="{Binding RingActive}" Width="100" Height="100" />
+                    </Grid>
+                    <Grid Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="ContentGrid"  Visibility="{Binding ControlVisible}" Canvas.ZIndex="0">
+                        <ListView x:Name="ArticleListView" ItemsSource="{Binding Source={StaticResource ContentCollection}}" SelectionMode="None" HorizontalAlignment="Stretch" IsTapEnabled="False">
+                            <ListView.Resources>
+                                <local:ActualSizePropertyProxy Element="{Binding ElementName=ArticleListView}" x:Name="proxy" />
+                            </ListView.Resources>
+                            <!--[TextBlock] Text-->
+                            <!--[Grid] Youtube or Image-->
+                            <!--[ListViewItem] Echoes-->
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.Header>
+                                <StackPanel Background="#000000" HorizontalAlignment="Stretch" Height="10" ToolTipService.ToolTip="文章開頭" />
+                            </ListView.Header>
+                            <ListView.Footer>
+                                <Grid Padding="0,10,0,10">
+                                    <Button Background="{ThemeResource SystemControlHighlightListLowBrush}" BorderThickness="0" HorizontalAlignment="Stretch" Height="20" ToolTipService.ToolTip="文章結尾" />
+                                </Grid>
+                            </ListView.Footer>
+                        </ListView>
+                    </Grid>
+                </Grid>
+            </SplitView.Content>
+        </SplitView>
     </Grid>
 </Page>

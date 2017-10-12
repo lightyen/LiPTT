@@ -300,9 +300,9 @@ namespace LiPTT
 
         private static void PTTKicked(object sender, EventArgs e)
         {
-            State = PttState.Kicked;
             Client.Kicked -= PTTKicked;
             Client.ScreenUpdated -= Current_ScreenUpdated;
+            State = PttState.Kicked;
             OnPttEventEchoed(State);
         }
 

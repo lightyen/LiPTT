@@ -297,7 +297,6 @@ namespace LiPTT
         {
             //AID
             article.AID = screen.ToString(19, 18, 9);
-            Debug.WriteLine("文章代碼: " + article.AID);
             //網頁版網址
             string str = screen.ToString(20);
             Regex regex = new Regex(LiPTT.http_regex);
@@ -309,7 +308,6 @@ namespace LiPTT
                 try
                 {
                     article.WebUri = new Uri(str.Substring(match.Index, match.Length));
-                    Debug.WriteLine("網頁版: " + article.WebUri.OriginalString);
                 }
                 catch (UriFormatException ex)
                 {
@@ -324,7 +322,6 @@ namespace LiPTT
             if (match.Success)
             {
                 article.PttCoin = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                Debug.WriteLine("PTT Coin: " + article.PttCoin.ToString());
             }
         }
 

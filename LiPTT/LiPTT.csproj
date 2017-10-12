@@ -768,7 +768,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>5.4.0</Version>
+      <Version>6.0.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>10.0.3</Version>
@@ -776,31 +776,13 @@
     <PackageReference Include="SharpDX">
       <Version>4.0.1</Version>
     </PackageReference>
-    <PackageReference Include="SharpDX.Animation">
-      <Version>4.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="SharpDX.D3DCompiler">
-      <Version>4.0.1</Version>
-    </PackageReference>
     <PackageReference Include="SharpDX.Direct2D1">
-      <Version>4.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="SharpDX.Direct3D10">
       <Version>4.0.1</Version>
     </PackageReference>
     <PackageReference Include="SharpDX.Direct3D11">
       <Version>4.0.1</Version>
     </PackageReference>
-    <PackageReference Include="SharpDX.Direct3D11.Effects">
-      <Version>4.0.1</Version>
-    </PackageReference>
     <PackageReference Include="SharpDX.Direct3D12">
-      <Version>4.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="SharpDX.Direct3D9">
-      <Version>4.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="SharpDX.DirectInput">
       <Version>4.0.1</Version>
     </PackageReference>
     <PackageReference Include="SharpDX.DXGI">

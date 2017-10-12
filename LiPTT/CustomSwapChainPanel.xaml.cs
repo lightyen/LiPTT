@@ -1,18 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.ApplicationModel.Core;
-using Windows.UI.Xaml.Navigation;
-using System.Text;
 using SharpDX;
 using SharpDX.DirectWrite;
 using SharpDX.DXGI;
@@ -27,7 +16,6 @@ namespace LiPTT
         public string PreferFont = "Noto Sans Mono CJK TC";
 
         private SharpDX.Direct3D11.Device2 device;
-        //private SharpDX.Direct3D11.DeviceContext2 d3d11DC;
         private SwapChain swapChain;
         private SharpDX.Direct3D11.Texture2D backBufferTexture;
         private DeviceContext d2d1DC;

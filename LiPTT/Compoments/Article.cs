@@ -676,7 +676,7 @@ namespace LiPTT
 
             Echo echo = new Echo() { Floor = Floor++ };
 
-            string str = LiPTT.GetString(block, 0, block.Length - 13).Replace('\0', ' ').Trim();
+            string str = LiPTT.GetString(block, 0, LiPTT.Screen.Width - 13).Replace('\0', ' ').Trim();
 
             int index = 2;
             int end = str.IndexOf(':');

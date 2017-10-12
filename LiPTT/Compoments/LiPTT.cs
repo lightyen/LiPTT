@@ -693,14 +693,12 @@ namespace LiPTT
 
         public static void Right()
         {
-            //Current.Send(new byte[] { 0x1B, 0x5B, 0x43 }); //ESC[C
-            Client.Send(0x72); //r
+            Client.Send(new byte[] { 0x1B, 0x5B, 0x43 }); //ESC[C
         }
 
         public static void Left()
         {
-            //Current.Send(new byte[] { 0x1B, 0x5B, 0x44 }); //ESC[D
-            Client.Send(0x71); //q
+            Client.Send(new byte[] { 0x1B, 0x5B, 0x44 }); //ESC[D
         }
 
         public static void PageDown()

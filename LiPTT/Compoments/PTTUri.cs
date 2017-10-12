@@ -280,18 +280,26 @@ namespace LiPTT
 
         private void GetShortUri()
         {
-            switch (Host)
+            if (LocalPath == "/")
             {
-                case "goo.gl":
-                case "bit.ly":
-                case "tinyurl.com":
-                case "ppt.cc":
-                    IsShort = true;
-                    break;
-                default:
-                    IsShort =  false;
-                    break;
+                IsShort = false;
+                return;
             }
+            else
+            {
+                switch (Host)
+                {
+                    case "goo.gl":
+                    case "bit.ly":
+                    case "tinyurl.com":
+                    case "ppt.cc":
+                        IsShort = true;
+                        break;
+                    default:
+                        IsShort = false;
+                        break;
+                }
+            }   
         }
 
         private PTTUri ExpandUriWithUntiny()

@@ -519,10 +519,14 @@ namespace LiPTT
                         else
                         {
                             TestWebSocketRecvTimer?.Cancel();
-                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer((timer) => { WebSocketUpdateScreen(); }, TimeSpan.FromTicks(testTimespan.Ticks * 2) );
+                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer((timer) => { WebSocketUpdateScreen(); }, TimeSpan.FromTicks(testTimespan.Ticks * 5) );
                         }
                     }
                 }
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                Debug.WriteLine(e.ToString());
             }
             catch (Exception e)
             {
@@ -1307,7 +1311,7 @@ namespace LiPTT
 
         private int temp_y;
 
-        const int delta = 0;
+        const int reserved = 5;
 
         private int _w;
 
@@ -1394,11 +1398,11 @@ namespace LiPTT
         {
             get
             {
-                return _w - delta;
+                return _w - reserved;
             }
             private set
             {
-                _w = value + delta;
+                _w = value + reserved;
             }
         }
 
@@ -1406,11 +1410,11 @@ namespace LiPTT
         {
             get
             {
-                return _h - delta;
+                return _h - reserved;
             }
             private set
             {
-                _h = value + delta;
+                _h = value + reserved;
             }
         }
 
@@ -1585,8 +1589,8 @@ namespace LiPTT
 
                     for (int k = Height - r; k < Height; k++)
                     {
-                        Screen[k] = new Block[Width + delta];
-                        for (int j = 0; j < Width + delta; j++) Screen[k][j] = new Block();
+                        Screen[k] = new Block[Width + reserved];
+                        for (int j = 0; j < Width + reserved; j++) Screen[k][j] = new Block();
                     }
                 }
                 else //clear all
@@ -1612,8 +1616,8 @@ namespace LiPTT
 
                     for (int k = 0; k < r; k++)
                     {
-                        Screen[k] = new Block[Width + delta];
-                        for (int j = 0; j < Width + delta; j++) Screen[k][j] = new Block();
+                        Screen[k] = new Block[Width + reserved];
+                        for (int j = 0; j < Width + reserved; j++) Screen[k][j] = new Block();
                     }
                 }
             }

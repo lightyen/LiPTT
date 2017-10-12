@@ -35,4 +35,5 @@
     <local:VideoButtonHeightConverter x:Key="VideoButtonHeightConverter" />
     <local:ImageButtonWidthConverter x:Key="ImageButtonWidthConverter" />
     <local:ImageButtonHeightConverter x:Key="ImageButtonHeightConverter" />
+    <local:PttCoinTextConverter x:Key="PttCoinTextConverter" />
 </ResourceDictionary>

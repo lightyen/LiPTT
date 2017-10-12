@@ -977,4 +977,23 @@ namespace LiPTT
             throw new NotImplementedException();
         }
     }
+
+    public class PttCoinTextConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is int coin)
+            {
+                if (coin >= 0)
+                    return string.Format("值 {0} Ptt幣", coin);
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

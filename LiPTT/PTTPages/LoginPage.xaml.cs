@@ -89,14 +89,12 @@ namespace LiPTT
 
         private void DelayLogin(TimeSpan delay)
         {
-            UserText.IsEnabled = false;
-            PasswordText.IsEnabled = false;
-            MemoAcount.IsEnabled = false;
-            AutoLogin.IsEnabled = false;
-
             Windows.System.Threading.ThreadPoolTimer.CreateTimer((source) => {
-
                 var ac = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                    UserText.IsEnabled = false;
+                    PasswordText.IsEnabled = false;
+                    MemoAcount.IsEnabled = false;
+                    AutoLogin.IsEnabled = false;
                     Enter();
                 });
             }, delay);
@@ -234,8 +232,6 @@ namespace LiPTT
                             MemoAcount.IsEnabled = true;
                             AutoLogin.IsEnabled = true;
                         });
-
-                        DelayLogin(TimeSpan.FromSeconds(1));
                     }
                     break;
                 case PttState.OverLoading:

@@ -63,7 +63,7 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <SplitView x:Name="SplitView" CompactPaneLength="100" OpenPaneLength="200" DisplayMode="Overlay" PanePlacement="Right" IsPaneOpen="False">
             <SplitView.Pane>
-                <Grid Visibility="{Binding ControlVisible}">
+                <Grid Visibility="{x:Bind ControlVisible, Mode=OneWay}">
                     <ContentControl x:Name="SplitViewPaneContent">
                         <ContentControl.Style>
                             <Style TargetType="ContentControl">
@@ -75,20 +75,16 @@
                         </ContentControl.Style>
                         <ContentControl.ContentTemplate>
                             <DataTemplate x:DataType="local:Article">
-                                <StackPanel>
-                                    <RelativePanel>
-                                        <TextBlock x:Name="ID_text" Text="編號:" IsTextSelectionEnabled="True" FontSize="18"/>
-                                        <TextBlock Text="{x:Bind ID}" IsTextSelectionEnabled="True" FontSize="20" RelativePanel.RightOf="ID_text"/>
-                                    </RelativePanel>
-                                    <RelativePanel>
-                                        <TextBlock x:Name="AID_text" Text="文章代碼:" IsTextSelectionEnabled="True" FontSize="18"/>
-                                        <TextBlock Text="{x:Bind AID}" IsTextSelectionEnabled="True" FontSize="20" RelativePanel.RightOf="AID_text"/>
-                                    </RelativePanel>
-                                    <RelativePanel>
-                                        <TextBlock x:Name="PTTCoin_text" Text="P幣:" IsTextSelectionEnabled="True" FontSize="18"/>
-                                        <TextBlock Text="{x:Bind PttCoin}" IsTextSelectionEnabled="True" FontSize="20" RelativePanel.RightOf="PTTCoin_text"/>
-                                    </RelativePanel>
-                                </StackPanel>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="1*" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="1" Text="{x:Bind AID, Mode=OneWay}" IsTextSelectionEnabled="True" FontSize="20" RelativePanel.RightOf="AID_text" HorizontalAlignment="Stretch" TextAlignment="Center"/>
+                                    <TextBlock Grid.Row="2" Text="{x:Bind PttCoin, Converter={StaticResource PttCoinTextConverter}, Mode=OneWay}" IsTextSelectionEnabled="True" FontSize="20" HorizontalAlignment="Stretch" TextAlignment="Center"/>
+                                </Grid>
                             </DataTemplate>
                         </ContentControl.ContentTemplate>
                     </ContentControl>
@@ -110,7 +106,7 @@
                     </Grid.ColumnDefinitions>
                     <Grid Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="0" Grid.RowSpan="2" x:Name="VideoGrid" Canvas.ZIndex="10">
                     </Grid>
-                    <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="1" Visibility="{Binding ControlVisible}" Canvas.ZIndex="0">
+                    <Grid Grid.Row="0" Grid.Column="1" Grid.RowSpan="1" Visibility="{x:Bind ControlVisible, Mode=OneWay}" Canvas.ZIndex="0">
                         <Button x:Name="ArticleHeader" HorizontalAlignment ="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="{ThemeResource ArticleHeaderBackground}" BorderThickness="0" Click="ArticleHeader_Click" ToolTipService.ToolTip="前往網頁版">
                             <Button.Resources>
                                 <local:ActualSizePropertyProxy Element="{Binding ElementName=ArticleHeader}" x:Name="HeaderProxy" />

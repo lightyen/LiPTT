@@ -51,21 +51,15 @@ namespace LiPTT
 
         private bool control_visible;
 
-        public Visibility ControlVisible
+        public bool ControlVisible
         {
             get
             {
-                if (control_visible)
-                    return Visibility.Visible;
-                else
-                    return Visibility.Collapsed;
+                return control_visible;
             }
             private set
             {
-                if (value == Visibility.Visible)
-                    control_visible = true;
-                else
-                    control_visible = false;
+                control_visible = value;
                 NotifyPropertyChanged("ControlVisible");             
             }
         }
@@ -91,7 +85,7 @@ namespace LiPTT
         {
             base.OnNavigatedTo(e);
 
-            ControlVisible = Visibility.Collapsed;
+            ControlVisible = false;
             RingActive = true;
             //冷靜一下，先喝杯咖啡
             await Task.Delay(50);
@@ -288,15 +282,18 @@ namespace LiPTT
                 ArticleHeader.DataContext = LiPTT.CurrentArticle;
                 SplitViewPaneContent.DataContext = LiPTT.CurrentArticle;
 
-                ControlVisible = Visibility.Visible;
+                ControlVisible = true;
             });
             
         }
 
-        private void ReadExtraData(ScreenBuffer screen)
+        private async void ReadExtraData(ScreenBuffer screen)
         {
             //AID
-            article.AID = screen.ToString(19, 18, 9);
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                article.AID = screen.ToString(19, 18, 9);
+            });
+            
             //網頁版網址
             string str = screen.ToString(20);
             Regex regex = new Regex(LiPTT.http_regex);
@@ -307,7 +304,9 @@ namespace LiPTT
 
                 try
                 {
-                    article.WebUri = new Uri(str.Substring(match.Index, match.Length));
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                        article.WebUri = new Uri(str.Substring(match.Index, match.Length));
+                    });
                 }
                 catch (UriFormatException ex)
                 {
@@ -319,10 +318,13 @@ namespace LiPTT
             str = screen.ToString(21);
             regex = new Regex(@"\d+");
             match = regex.Match(str);
-            if (match.Success)
-            {
-                article.PttCoin = Convert.ToInt32(str.Substring(match.Index, match.Length));
-            }
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                if (match.Success)
+                    article.PttCoin = Convert.ToInt32(str.Substring(match.Index, match.Length));
+                else
+                    article.PttCoin = -1;
+            });
+
         }
 
         private async void StopVideo()
@@ -340,6 +342,8 @@ namespace LiPTT
                                 try
                                 {
                                     string returnStr = await webview.InvokeScriptAsync("StopVideo", new string[] { });
+                                    //webview.Navigate(new Uri("ms-appx-web:///Templates/blank.html"));
+                                    grid.Children.Remove(webview);
                                 }
                                 catch (Exception ex)
                                 {

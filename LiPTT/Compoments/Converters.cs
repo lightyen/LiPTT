@@ -800,7 +800,7 @@ namespace LiPTT
                     case 0:
                         return new GridLength(1 * (1.5 - FontSizePercent), GridUnitType.Star);
                     case 1:
-                        return new GridLength(3 * (1.5 - FontSizePercent), GridUnitType.Star);
+                        return new GridLength(3.7 * (1.5 - FontSizePercent), GridUnitType.Star);
                     case 2:
                         return new GridLength(14 * (1.5 - FontSizePercent), GridUnitType.Star);
                     case 3:

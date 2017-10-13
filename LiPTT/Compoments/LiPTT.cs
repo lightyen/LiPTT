@@ -128,6 +128,10 @@ namespace LiPTT
         /// 閱覽文章
         /// </summary>
         Article,
+        /// <summary>
+        /// AID文章代碼
+        /// </summary>
+        AID,
         EchoType, //推文類型
         Angel, //小天使廣告
         BoardArt, //進版畫面
@@ -437,14 +441,14 @@ namespace LiPTT
                     OnPttEventEchoed(State);
                 }
             }
-            else if (Match(@"\(y\)回應\(X\)推文", 23))
+            else if (Match(@"文章選讀  \(y\)回應\(X\)推文\(\^X\)轉錄 \(\=\[\]\<\>\)相關主題\(\/\?a\)找標題\/作者 \(b\)進板畫面", 23))
             {
                 Debug.WriteLine("看板");
                 Bound = new Bound();
                 State = PttState.Board;
                 OnPttEventEchoed(State);
             }
-            else if (Match(@"您想刪除其他重複登入的連線嗎", 22))
+            else if (Match("您想刪除其他重複登入的連線嗎", 22))
             {
                 if (State != PttState.AlreadyLogin)
                 {
@@ -491,6 +495,15 @@ namespace LiPTT
                     Debug.WriteLine("登入中");
                     State = PttState.Loginning;
                     OnPttEventEchoed(State);
+                }
+            }
+            else if (AIDState(Client.Screen) is int line && line != -1)
+            {
+                if (State != PttState.AID)
+                {
+                    Debug.WriteLine("AID文章代碼");
+                    State = PttState.AID;
+                    OnPttEventEchoed(State, line);
                 }
             }
             else if (Match("任意鍵", 23))
@@ -558,6 +571,7 @@ namespace LiPTT
             else if (Match("批踢踢實業坊        ◢▃██◥█◤", 4))
             {
                 //小馬
+                Debug.WriteLine("批踢踢實業坊");
             }
             else
             {
@@ -573,6 +587,22 @@ namespace LiPTT
 #endif
                 State = PttState.Angel;
             }
+        }
+
+        private static int AIDState(ScreenBuffer screen)
+        {
+            Regex regex = new Regex(@"文章代碼\(AID\)");
+            for (int i = 0; i < screen.Height - 4; i++)
+            {
+                if (regex.IsMatch(screen.ToString(i)))
+                {
+                    if (screen.ToString(i + 1).IndexOf("文章網址:") != -1)
+                    {
+                        return i;
+                    }
+                }
+            }
+            return -1;
         }
 
         private static bool security;
@@ -937,7 +967,12 @@ namespace LiPTT
 
         private static void OnPttEventEchoed(PttState state)
         {
-            PttEventEchoed?.Invoke(Client, new LiPttEventArgs(state));
+            PttEventEchoed?.Invoke(Client, new LiPttEventArgs { State = state });
+        }
+
+        private static void OnPttEventEchoed(PttState state, int AID_line)
+        {
+            PttEventEchoed?.Invoke(Client, new LiPttEventArgs { State = state, Others = AID_line });
         }
 
         public static Windows.Foundation.IAsyncAction RunInUIThread(Windows.UI.Core.DispatchedHandler callback)
@@ -948,12 +983,12 @@ namespace LiPTT
 
     public class LiPttEventArgs : EventArgs
     {
-        public LiPttEventArgs(PttState state)
+        public PttState State
         {
-            State = state;
+            get; set;
         }
 
-        public PttState State
+        public object Others
         {
             get; set;
         }

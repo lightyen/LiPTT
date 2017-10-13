@@ -34,11 +34,9 @@ namespace LiPTT
 
         public MainFunctionPage()
         {
-            this.InitializeComponent();
-
             this.DataContext = this;
 
-            ControlVisible = Visibility.Collapsed;
+            this.InitializeComponent();
 
             BoardGridView.Items.Add(new MyKeyValuePair("Windows", "Windows"));
             BoardGridView.Items.Add(new MyKeyValuePair("笨蛋", "StupidClown"));

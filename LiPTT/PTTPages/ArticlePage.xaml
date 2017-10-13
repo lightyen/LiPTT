@@ -61,7 +61,7 @@
         </ResourceDictionary>
     </Page.Resources>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <SplitView x:Name="SplitView" CompactPaneLength="100" OpenPaneLength="200" DisplayMode="Overlay" PanePlacement="Right" IsPaneOpen="False">
+        <SplitView x:Name="SplitView" CompactPaneLength="100" OpenPaneLength="250" DisplayMode="Overlay" PanePlacement="Right" IsPaneOpen="False">
             <SplitView.Pane>
                 <Grid Visibility="{x:Bind ControlVisible, Mode=OneWay}">
                     <ContentControl x:Name="SplitViewPaneContent">
@@ -91,7 +91,7 @@
                 </Grid>
             </SplitView.Pane>
             <SplitView.PaneBackground>
-                <SolidColorBrush Color="Gray" Opacity="0.5"/>
+                <SolidColorBrush Color="#b0e0e6" Opacity="0.5"/>
             </SplitView.PaneBackground>
             <SplitView.Content>
                 <Grid>

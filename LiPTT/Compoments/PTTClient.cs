@@ -461,10 +461,7 @@ namespace LiPTT
                     {
                         Debug.WriteLine("TCP: 連線關閉");
                     }
-                    else
-                    {
 
-                    }
                     break;
                 }
                 catch (IOException)
@@ -530,7 +527,9 @@ namespace LiPTT
             }
             catch (Exception e)
             {
+                //發生意外了?
                 Debug.WriteLine(e.ToString());
+                IsExit = true;
                 WebSocket?.Dispose();
             }
         }

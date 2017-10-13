@@ -249,10 +249,10 @@ namespace LiPTT
                 LoadingExtraData = true;
                 LiPTT.SendMessage('Q');
             }
-            else if (!pressAny && e.State == PttState.PressAny && LoadingExtraData)
+            else if (!pressAny && e.State == PttState.AID && LoadingExtraData)
             {
                 pressAny = true;
-                ReadExtraData(client.Screen);
+                ReadExtraData(client.Screen, (int)e.Others);
                 LiPTT.PressAnyKey();
             }
             else if (e.State == PttState.Board && LoadingExtraData)
@@ -287,25 +287,27 @@ namespace LiPTT
             
         }
 
-        private async void ReadExtraData(ScreenBuffer screen)
+        private void ReadExtraData(ScreenBuffer screen, int line)
         {
+            var x = screen.ToStringArray();
             //AID
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                article.AID = screen.ToString(19, 18, 9);
+            var a = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                article.AID = screen.ToString(line, 18, 9);
             });
             
             //網頁版網址
-            string str = screen.ToString(20);
+            string str = screen.ToString(line + 1);
             Regex regex = new Regex(LiPTT.http_regex);
-            Match match = regex.Match(str);
-            if (match.Success)
+            Match match1 = regex.Match(str);
+            if (match1.Success)
             {
-                string aaa = str.Substring(match.Index, match.Length);
+                string aaa = str.Substring(match1.Index, match1.Length);
 
                 try
                 {
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                        article.WebUri = new Uri(str.Substring(match.Index, match.Length));
+                    var b = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                        string url = str.Substring(match1.Index, match1.Length);
+                        article.WebUri = new Uri(url);
                     });
                 }
                 catch (UriFormatException ex)
@@ -315,12 +317,12 @@ namespace LiPTT
             }
 
             //P幣
-            str = screen.ToString(21);
+            string p = screen.ToString(line + 2);
             regex = new Regex(@"\d+");
-            match = regex.Match(str);
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                if (match.Success)
-                    article.PttCoin = Convert.ToInt32(str.Substring(match.Index, match.Length));
+            Match match2 = regex.Match(p);
+            var c = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                if (match2.Success)
+                    article.PttCoin = Convert.ToInt32(p.Substring(match2.Index, match2.Length));
                 else
                     article.PttCoin = -1;
             });
@@ -393,16 +395,16 @@ namespace LiPTT
         {
             if (LiPTT.CurrentArticle.ID != int.MaxValue)
             {
-                Article article = LiPTT.ArticleCollection.FirstOrDefault(i => i.ID == LiPTT.CurrentArticle.ID);  
+                Article article = LiPTT.ArticleCollection.Single(i => i.AID == LiPTT.CurrentArticle.AID);  
             }
             else //置底文
             {
-                Article article = LiPTT.ArticleCollection.FirstOrDefault(i => (i.ID == int.MaxValue) && (i.Star == LiPTT.CurrentArticle.Star));
+                Article article = LiPTT.ArticleCollection.Single(i => (i.ID == int.MaxValue) && (i.Star == LiPTT.CurrentArticle.Star));
             }
 
             if (article != null)
             {
-                var act = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
+                var act = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                     article.State = LiPTT.GetReadSate((char)screen.CurrentBlocks[8].Content);
                 });
             }

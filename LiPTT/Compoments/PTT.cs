@@ -24,6 +24,21 @@ namespace LiPTT
         {
             get; set;
         }
+
+        public ScreenBuffer Screen
+        {
+            get; set;
+        }
+
+        public int AIDLine
+        {
+            get; set;
+        }
+
+        public Article Article
+        {
+            get; set;
+        }
     }
 
     public class SearchBoardUpdatedEventArgs : EventArgs
@@ -55,7 +70,7 @@ namespace LiPTT
         }
     }
 
-    public class BoardInfomationUpdatedEventArgs : EventArgs
+    public class BoardInfomationCompletedEventArgs : EventArgs
     {
         public Board BoardInfomation
         {
@@ -63,9 +78,21 @@ namespace LiPTT
         }
     }
 
+    public class ArticleInfomationCompletedEventArgs : EventArgs
+    {
+        public Article Article
+        {
+            get; set;
+        }
+    }
+
     public partial class PTT : PTTClient
     {
-        public PttState State { get; private set; }
+        private PttState State { get; set; }
+
+        public bool IsKicked { get { return State == PttState.Kicked; } }
+
+        private Article CurrentArticle { get; set; }
 
         ScreenBuffer Cache;
 
@@ -99,9 +126,13 @@ namespace LiPTT
 
         public event EventHandler ParseBugAlarmed;
 
-        public delegate void BoardInfomationUpdatedHandler(object sender, BoardInfomationUpdatedEventArgs e);
+        public delegate void BoardInfomationCompletedHandler(object sender, BoardInfomationCompletedEventArgs e);
 
-        public event BoardInfomationUpdatedHandler BoardInfomationUpdated;
+        public event BoardInfomationCompletedHandler BoardInfomationCompleted;
+
+        public delegate void ArticleInfomationCompletedEventHandler(object sender, ArticleInfomationCompletedEventArgs e);
+
+        public event ArticleInfomationCompletedEventHandler ArticleInfomationCompleted;
 
         public delegate void ArticlesReceivedHandler(object sender, ArticlesReceivedEventArgs e);
 
@@ -149,6 +180,7 @@ namespace LiPTT
                     Bound = b;
                     Debug.WriteLine("瀏覽文章");
                     State = PttState.Article;
+                    PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
 
                     List<Block[]> linelist = new List<Block[]>();
 
@@ -251,7 +283,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("AID文章代碼");
                     State = PttState.AID;
-                    PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
+                    PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, AIDLine = line, Article = CurrentArticle });
                 }
             }
             else if (Match(@"文章選讀  \(y\)回應\(X\)推文\(\^X\)轉錄", 23))
@@ -398,7 +430,6 @@ namespace LiPTT
             }
             else
             {
-
                 PTTStateUpdated += StateUpdated;
                 void StateUpdated(object sender, PTTStateUpdatedEventArgs e)
                 {
@@ -537,7 +568,7 @@ namespace LiPTT
             else if (e.State == PttState.Board)
             {
                 PTTStateUpdated -= ReadBoardInfo;
-                BoardInfomationUpdated?.Invoke(this, new BoardInfomationUpdatedEventArgs { BoardInfomation = CurrentBoard });
+                BoardInfomationCompleted?.Invoke(this, new BoardInfomationCompletedEventArgs { BoardInfomation = CurrentBoard });
             }
         }
 
@@ -1260,14 +1291,90 @@ namespace LiPTT
 
     public partial class PTT
     {
-        public void GoToArticle(string aid)
+
+        private bool ReadArticleInfomationCompleted;
+
+        public void GoToArticle(Article article)
         {
-            Debug.WriteLine(string.Format("Go To {0}", aid));
+            PTTStateUpdated += ReadArticleInfomation;
+            ReadArticleInfomationCompleted = false;
+
+            if (article.AID?.Length == 9)
+            {
+                CurrentArticle = article;
+                Debug.WriteLine(string.Format("Go To {0}", article.AID));
+                Send(article.AID, 0x0D, 'r');
+            }
+            else if (article.ID != uint.MaxValue)
+            {
+                CurrentArticle = article;
+                Debug.WriteLine(string.Format("Go To {0}", article.ID));
+                Send(article.ID.ToString(), 0x0D, 'r');
+            }
+            else
+            {
+                CurrentArticle = null;
+                PTTStateUpdated -= ReadArticleInfomation;
+            }     
         }
 
-        public void GoToArticle(uint id)
+        private async void ReadArticleInfomation(object sender, PTTStateUpdatedEventArgs e)
         {
-            Debug.WriteLine(string.Format("Go To {0}", id));
+            if (e.State == PttState.Article)
+            {
+                if(!ReadArticleInfomationCompleted)
+                    Send('Q');
+                else
+                {
+                    PTTStateUpdated -= ReadArticleInfomation;
+                    ArticleInfomationCompleted?.Invoke(this, new ArticleInfomationCompletedEventArgs { Article = e.Article });
+                }
+            }
+            else if (e.State == PttState.AID)
+            {
+                await LiPTT.RunInUIThread(() => 
+                {
+                    //AID
+                    if (e.Article.AID?.Length != 9)
+                    {
+                        e.Article.AID = Screen.ToString(e.AIDLine, 18, 9);
+                    }
+                    //網頁版網址
+                    string str = Screen.ToString(e.AIDLine + 1);
+                    Regex regex = new Regex(LiPTT.http_regex);
+                    Match match1 = regex.Match(str);
+                    if (match1.Success)
+                    {
+                        string aaa = str.Substring(match1.Index, match1.Length);
+
+                        try
+                        {
+                            string url = str.Substring(match1.Index, match1.Length);
+                            e.Article.WebUri = new Uri(url);
+                        }
+                        catch (UriFormatException ex)
+                        {
+                            Debug.WriteLine(ex.ToString());
+                        }
+                    }
+
+                    //P幣
+                    string p = Screen.ToString(e.AIDLine + 2);
+                    regex = new Regex(@"\d+");
+                    Match match2 = regex.Match(p);
+                    if (match2.Success)
+                        e.Article.PttCoin = Convert.ToInt32(p.Substring(match2.Index, match2.Length));
+                    else
+                        e.Article.PttCoin = 0;
+                });
+
+                ReadArticleInfomationCompleted = true;
+                PressAnyKey();
+            }
+            else if (e.State == PttState.Board)
+            {
+                Right();
+            }
         }
     }
 }

@@ -167,7 +167,7 @@ namespace LiPTT
             }
         }
 
-        protected ScreenBuffer Screen
+        public ScreenBuffer Screen
         {
             get
             {
@@ -189,7 +189,7 @@ namespace LiPTT
 
         protected bool PTTWrongResponse { set; get; }
 
-        protected bool IsConnected
+        public bool IsConnected
         {
             get
             {

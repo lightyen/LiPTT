@@ -40,7 +40,8 @@ namespace LiPTT
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if (PTTFrame.CurrentSourcePageType != typeof(LoginPage))
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+            if (!ptt.IsConnected && PTTFrame.CurrentSourcePageType != typeof(LoginPage))
             {
                 PTTFrame.Navigate(typeof(LoginPage));
             }

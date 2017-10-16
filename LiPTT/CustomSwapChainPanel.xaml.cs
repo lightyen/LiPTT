@@ -48,7 +48,8 @@ namespace LiPTT
         {
             AdjustFontSize();
             CreateDirectXSwapChain();
-            this.SizeChanged += CustomSwapChainPanel_SizeChanged;
+            DrawPTT();
+            SizeChanged += CustomSwapChainPanel_SizeChanged;
         }
 
         public void Dispose()
@@ -90,6 +91,7 @@ namespace LiPTT
             }
 
             AdjustFontSize();
+            DrawPTT();
         }
 
         public void CreateDirectXSwapChain()
@@ -228,12 +230,21 @@ namespace LiPTT
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                if (DirectXFactory.Ready && d2d1DC != null) DrawPTT(e.Screen);
+                DrawPTT(e.Screen);
             });
+        }
+
+        public void DrawPTT()
+        {
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+            if (ptt.Screen != null)
+                DrawPTT(ptt.Screen);
         }
 
         private void DrawPTT(ScreenBuffer Buffer)
         {
+            if (!DirectXFactory.Ready || d2d1DC == null) return;
+
             lock (d2d1DC)
             {
                 LeftFormat = new TextFormat(DirectXFactory.DWFactory, PreferFont, FontSize);

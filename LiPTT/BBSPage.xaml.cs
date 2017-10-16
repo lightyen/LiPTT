@@ -30,21 +30,15 @@ namespace LiPTT
         {
             InitializeComponent();
             PTT ptt = Application.Current.Resources["PTT"] as PTT;
+            List<string> fontNames = SharpDX.DirectXFactory.GetInstalledFontNames();
+            foreach (var s in fontNames) FontsComboBox.Items.Add(s);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            List<string> fontNames = SharpDX.DirectXFactory.GetInstalledFontNames();
-            foreach (var s in fontNames) FontsComboBox.Items.Add(s);
- 
             //測試用
             //Window.Current.CoreWindow.KeyDown += PanelKeyDown;
-            
-        }
 
-        private void PanelKeyDown(CoreWindow sender, KeyEventArgs args)
-        {
-            //args.VirtualKey == VirtualKey
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -52,10 +46,17 @@ namespace LiPTT
             myPanel.Dispose();
         }
 
+        private void PanelKeyDown(CoreWindow sender, KeyEventArgs args)
+        {
+            //args.VirtualKey == VirtualKey
+        }
+
+        
+
         private void FontsComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             myPanel.PreferFont = FontsComboBox.SelectedValue as string;
-            //myPanel.DrawPTT();
+            myPanel.DrawPTT();
         }
 
         private bool IsDigit(int v)

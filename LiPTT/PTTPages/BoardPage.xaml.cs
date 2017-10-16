@@ -96,7 +96,7 @@ namespace LiPTT
             {
                 ContentCollection.Clear();
 
-                ptt.BoardInfomationUpdated += async (a, b) =>
+                ptt.BoardInfomationCompleted += async (a, b) =>
                 {
                     CurrentBoard = b.BoardInfomation;
                     await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
@@ -159,21 +159,13 @@ namespace LiPTT
             LiPTT.CurrentArticle = article;
             LiPTT.CacheBoard = true;
 
-            if (article.AID is string s && s.Length > 0)
+            ptt.ArticleInfomationCompleted += async (a, b) =>
             {
-                ptt.GoToArticle(article.AID);
-            }
-            else
-            {
-                if (article.ID != uint.MaxValue)
-                {
-                    ptt.GoToArticle(article.ID);
-                }
-                else
-                    return;
-            }
-
-            LiPTT.Frame.Navigate(typeof(ArticlePage));
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                    LiPTT.Frame.Navigate(typeof(ArticlePage));
+                });
+            };
+            ptt.GoToArticle(article);
         }
 
         private void GoBack()

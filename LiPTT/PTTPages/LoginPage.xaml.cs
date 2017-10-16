@@ -61,7 +61,7 @@ namespace LiPTT
                 MemoAcount.IsEnabled = false;
                 AutoLogin.IsEnabled = false;
             }
-            else if (LiPTT.AlwaysAlive && ptt.State == PttState.Kicked)
+            else if (LiPTT.AlwaysAlive && ptt.IsKicked)
             {
                 if (Resources["ViewModel"] is PttPageViewModel viewmodel)
                 {

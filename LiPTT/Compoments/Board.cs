@@ -25,35 +25,21 @@ namespace LiPTT
 {
     public class BoardContentCollection : ObservableCollection<Article>, ISupportIncrementalLoading
     {
-        public int StarCount { get; set; }
-
-        /// <summary>
-        /// 當前位置
-        /// </summary>
-        public uint CurrentIndex { get; set; }
-
         /// <summary>
         /// Load完成。(給ScrollViewer在Load完成後捲到頂部用)
         /// </summary>
         public event EventHandler BeginLoaded;
 
-        public void BeginLoad()
-        {
-            Parse();
-            InitialLoaded = true;
-            BeginLoaded?.Invoke(this, new EventArgs());
-        }
-
-        protected override void ClearItems()
-        {
-            StarCount = 0;
-            CurrentIndex = uint.MaxValue;
-            base.ClearItems();
-        }
+        PTT ptt;
+        SemaphoreSlim Semaphore;
+        public bool Loading;
+        uint LoadMoreItemsResult;
 
         public BoardContentCollection()
         {
             CollectionChanged += BoardContentCollection_CollectionChanged;
+            ptt = Application.Current.Resources["PTT"] as PTT;
+            Semaphore = new SemaphoreSlim(0, 1);
         }
 
         private void BoardContentCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -84,185 +70,28 @@ namespace LiPTT
             return InnerLoadMoreItemsAsync(count).AsAsyncOperation();
         }
 
-        public void Parse()
-        {
-            Regex regex;
-            Match match;
-            string str;
-            uint id = 0;
-            ScreenBuffer screen = LiPTT.Screen;
-
-            var x = screen.ToStringArray();
-
-            /////////////////////////////
-            ///置底文 and 其他文章
-            ///
-            for (int i = 22; i >= 3; i--)
-            {
-                Article article = new Article();
-
-                //ID流水號
-                str = screen.ToString(i, 0, 8);
-                if (str.IndexOf('★') != -1)
-                {
-                    article.ID = uint.MaxValue;
-                    article.Star = StarCount++;
-                }
-                else
-                {
-                    regex = new Regex(@"(\d+)");
-                    match = regex.Match(str);
-
-                    if (match.Success)
-                    {
-                        id = Convert.ToUInt32(str.Substring(match.Index, match.Length));
-                        article.ID = id;
-
-                        if (id > CurrentIndex) continue;
-
-                        if (id != CurrentIndex && CurrentIndex != uint.MaxValue) //id 被游標遮住
-                            article.ID = CurrentIndex;
-
-                        CurrentIndex = article.ID - 1;
-                    }
-                }
-
-                //推文數
-                str = screen.ToString(i, 9, 2);
-
-                if (str[0] == '爆')
-                {
-                    article.Like = 100;
-                }
-                else if (str[0] == 'X')
-                {
-                    if (str[1] == 'X')
-                    {
-                        article.Like = -100;
-                    }
-                    else
-                    {
-                        article.Like = Convert.ToInt32(str[1].ToString());
-                        article.Like = -article.Like * 10;
-                    }
-                }
-                else
-                {
-                    regex = new Regex(@"(\d+)");
-                    match = regex.Match(str);
-                    if (match.Success) article.Like = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                    else article.Like = 0;
-                }
-
-                //未讀、已讀、M文 等等等
-                article.State = LiPTT.GetReadSate((char)screen[i][8].Content);
-
-                //文章日期
-                str = screen.ToString(i, 11, 5);
-                try
-                {
-                    article.Date = DateTimeOffset.Parse(str);
-                }
-                catch
-                {
-                    continue;
-                }
-
-                //作者
-                str = screen.ToString(i, 17, 13).Replace('\0', ' ');
-                regex = new Regex(@"[\w\S]+");
-                match = regex.Match(str);
-                if (match.Success) article.Author = str.Substring(match.Index, match.Length);
-
-                //文章類型
-                str = screen.ToString(i, 30, 2).Replace('\0', ' ');
-                if (str.StartsWith("R:")) article.Type = ArticleType.回覆;
-                else if (str.StartsWith("□")) article.Type = ArticleType.一般;
-                else if (str.StartsWith("轉")) article.Type = ArticleType.轉文;
-                else article.Type = ArticleType.無;
-                //是否被刪除
-                if (article.Author == "-") article.Deleted = true;
-                else article.Deleted = false;
-
-                str = screen.ToString(i, 30, screen.Width - 30).Replace('\0', ' ');
-
-                if (article.Deleted)
-                {
-                    article.Title = str;
-                    regex = new Regex(LiPTT.bracket_regex);
-                    match = regex.Match(str);
-                    string s = str.Substring(1);
-                    if (match.Success)
-                    {
-                        article.Author = str.Substring(match.Index + 1, match.Length - 2);
-                        s = s.Replace(match.ToString(), "");
-                    }
-                    article.Title = s;
-                    article.Type = ArticleType.無;
-                }
-                else
-                {
-                    //標題, 分類
-                    regex = new Regex(LiPTT.bracket_regex);
-                    match = regex.Match(str);
-                    if (match.Success)
-                    {
-                        article.Category = str.Substring(match.Index + 1, match.Length - 2).Trim();
-                        str = str.Substring(match.Index + match.Length);
-                        int k = 0;
-                        while (k < str.Length && str[k] == ' ') k++;
-                        int j = str.Length - 1;
-                        while (j >= 0 && str[j] == ' ') j--;
-                        if (k <= j) article.Title = str.Substring(k, j - k + 1);
-                    }
-                    else
-                    {
-                        article.Title = str.Substring(2);
-                    }
-                }
-
-                Add(article);
-            }
-
-            CurrentIndex = id - 1;
-
-            if (CurrentIndex > 0)
-                more = true;
-            else
-                more = false;
-        }
-
         private async Task<LoadMoreItemsResult> InnerLoadMoreItemsAsync(uint count)
         {
-            if (InitialLoaded)
-            {
-                await Task.Run(() => {
-                    LiPTT.PttEventEchoed += PttUpdated;
-                    LiPTT.SendMessage(CurrentIndex.ToString(), 0x0D);
-                });
-
-                await sem.WaitAsync();
-
-                return new LoadMoreItemsResult { Count = CurrentIndex };
-            }
-            else
-            {
-                return new LoadMoreItemsResult { Count = 0 };
-            }
+            ptt.ArticlesReceived += Ptt_ArticlesReceived;
+            ptt.GetArticles();
+            await Semaphore.WaitAsync();
+            ptt.ArticlesReceived -= Ptt_ArticlesReceived;
+            Loading = false;
+            return new LoadMoreItemsResult { Count = LoadMoreItemsResult };
         }
 
-        private void PttUpdated(PTTClient sender, LiPttEventArgs e)
+        private async void Ptt_ArticlesReceived(object sender, ArticlesReceivedEventArgs e)
         {
-            LiPTT.PttEventEchoed -= PttUpdated;
+            await LiPTT.RunInUIThread(() => {
 
-            if (e.State == PttState.Board)
-            {
-                var action = LiPTT.RunInUIThread(() =>
+                foreach (var art in e.Articles)
                 {
-                    Parse();
-                    sem.Release();
-                });
-            }
+                    Add(art);
+                }
+
+                LoadMoreItemsResult = (uint)e.Articles.Count;
+                Semaphore.Release();
+            });       
         }
 
         private bool more;
@@ -273,12 +102,14 @@ namespace LiPTT
         {
             get
             {
-                if (InitialLoaded)
-                    return more;
+                if (ptt.HasArticle() && !Loading)
+                {
+                    Loading = true;
+                    return true;
+                }
                 else
                     return false;
             }
-            set { more = value; }
         }
     }
 }

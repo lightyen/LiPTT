@@ -70,7 +70,7 @@ namespace LiPTT
         public uint Floor { get; set; }
     }
 
-    public class Bound
+    public struct Bound
     {
         public int Begin { get; set; }
         public int End { get; set; }

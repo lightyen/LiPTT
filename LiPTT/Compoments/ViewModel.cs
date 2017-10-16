@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.ApplicationModel.Core;
+using Windows.UI.Xaml;
 
 namespace LiPTT
 {
@@ -13,23 +14,27 @@ namespace LiPTT
     {
         private string state;
 
+        PTT ptt;
+
         public PttPageViewModel()
         {
-            LiPTT.PttEventEchoed += LiPTT_PttEventEchoed;
+            ptt = Application.Current.Resources["PTT"] as PTT;
+            ptt.PTTStateUpdated += Ptt_PTTStateUpdated;
+
             CoreApplication.Resuming += (a, b) =>
             {
-                LiPTT.PttEventEchoed += LiPTT_PttEventEchoed;
+                ptt.PTTStateUpdated += Ptt_PTTStateUpdated;
                 State = "重新連線中...";
                 OnPropertyChanged("State");
             };
         }
 
-        private void LiPTT_PttEventEchoed(PTTClient sender, LiPttEventArgs e)
+        private void Ptt_PTTStateUpdated(object sender, PTTStateUpdatedEventArgs e)
         {
             switch (e.State)
             {
                 case PttState.Disconnected:
-                    if (!LiPTT.Client.PTTWrongResponse) State = "未連線";
+                    State = "未連線";
                     break;
                 case PttState.Connecting:
                     State = "連線中...";
@@ -47,7 +52,7 @@ namespace LiPTT
                     State = "搜尋看板";
                     break;
                 case PttState.Disconnecting:
-                    if (!LiPTT.Client.PTTWrongResponse) State = "斷線中...";
+                    State = "斷線中...";
                     break;
                 case PttState.Login:
                     State = "(請輸入帳號)";
@@ -95,6 +100,11 @@ namespace LiPTT
                     State = "未定義狀態";
                     break;
             }
+        }
+
+        private void LiPTT_PttEventEchoed(PTTClient sender, LiPttEventArgs e)
+        {
+            
         }
 
         public string State

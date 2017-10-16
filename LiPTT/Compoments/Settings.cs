@@ -47,13 +47,15 @@ namespace LiPTT
         {
             get
             {
-                return LiPTT.ConnectionSecurity;
+                PTT ptt = Application.Current.Resources["PTT"] as PTT;
+                return ptt.ConnectionSecurity;
             }
             set
             {
                 if (value is bool b)
                 {
-                    LiPTT.ConnectionSecurity = b;
+                    PTT ptt = Application.Current.Resources["PTT"] as PTT;
+                    ptt.ConnectionSecurity = b;
                     NotifyPropertyChanged("ConnectionSecurity");
                 }
             }

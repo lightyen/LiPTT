@@ -32,11 +32,15 @@ namespace LiPTT
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        PTT ptt;
+
         public MainFunctionPage()
         {
             this.DataContext = this;
 
             this.InitializeComponent();
+
+            ptt = Application.Current.Resources["PTT"] as PTT;
 
             BoardGridView.Items.Add(new MyKeyValuePair("Windows", "Windows"));
             BoardGridView.Items.Add(new MyKeyValuePair("笨蛋", "StupidClown"));
@@ -94,6 +98,19 @@ namespace LiPTT
             ControlVisible = Visibility.Visible;
         }
 
+        private bool AcceptString(string s)
+        {
+            foreach (char c in s)
+            {
+                if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c == '-' || c <= '_')))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private void BoardAutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
             if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
@@ -114,114 +131,29 @@ namespace LiPTT
                 RelatedTable.Clear();
                 BoardAutoSuggestBox.ItemsSource = null;
 
-                LiPTT.PttEventEchoed += SearchBoard;
-                LiPTT.SendMessage('s', BoardAutoSuggestBox.Text, 0x20);
+                ptt.SearchBoardUpdated += Ptt_SearchBoardUpdated;
+                ptt.SearchBoard(BoardAutoSuggestBox.Text);
             }
         }
 
-        private void SearchBoard(PTTClient sender, LiPttEventArgs e)
+        private async void Ptt_SearchBoardUpdated(object sender, SearchBoardUpdatedEventArgs e)
         {
-            Regex regex = new Regex(@"([\w-_]+)");
-            Match match;
-            ScreenBuffer screen = sender.Screen;
+            ptt.SearchBoardUpdated -= Ptt_SearchBoardUpdated;
 
-            switch (e.State)
+            foreach (var s in e.Boards)
             {
-                case PttState.SearchBoard:
-                    LiPTT.PttEventEchoed -= SearchBoard;
-                    var msg = screen.ToString(1, 34, 20).Trim();
-
-                    match = regex.Match(msg);
-
-                    if (match.Success)
-                    {
-                        string suggestion = msg.Substring(match.Index, match.Length);
-
-                        var action = LiPTT.RunInUIThread(() =>
-                        {
-                            if (BoardAutoSuggestBox.Text.Length <= suggestion.Length) RelatedTable.Add(suggestion);
-                        });
-
-                         
-                    }
-
-                    ClearSearch();
-
-                    var a = LiPTT.RunInUIThread(() =>
-                    {
-                        BoardAutoSuggestBox.ItemsSource = RelatedTable;
-                    });
-
-                    break;
-                case PttState.RelatedBoard:
-
-                    for (int i = 3; i < 23; i++)
-                    {
-                        string k = screen.ToString(i).Replace('\0', ' ');
-
-                        match = regex.Match(k, 0);
-                        if (match.Success) RelatedTable.Add(k.Substring(match.Index, match.Length));
-
-                        match = regex.Match(k, 22);
-                        if (match.Success) RelatedTable.Add(k.Substring(match.Index, match.Length));
-
-                        match = regex.Match(k, 44);
-                        if (match.Success) RelatedTable.Add(k.Substring(match.Index, match.Length));
-
-                    }
-
-                    if (new Regex("按空白鍵可列出更多項目").Match(screen.ToString(23)).Success)
-                    {
-                        LiPTT.PressSpace();
-                    }
-                    else
-                    {
-                        LiPTT.PttEventEchoed -= SearchBoard;
-
-                        RelatedTable.Sort();    
-                        ClearSearch();
-
-                        var t = LiPTT.RunInUIThread(() => 
-                        {
-                            BoardAutoSuggestBox.ItemsSource = RelatedTable;
-                        }); 
-                    }
-                    break;
-            }
-        }
-       
-        private bool AcceptString(string s)
-        {
-            foreach (char c in s)
-            {
-                if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c == '-' || c <= '_')))
-                {
-                    return false;
-                }
+                RelatedTable.Add(s);
             }
 
-            return true;
-        }
-
-        private void ClearSearch()
-        {
-            string lastText = "";
-            var msg = LiPTT.Screen.ToString(1, 34, 20).Trim();
-            Regex regex = new Regex(@"([\w-_]+)");
-            Match match = regex.Match(msg);
-            if (match.Success)
-            {
-                lastText = msg.Substring(match.Index, match.Length);
-            }
-            else return;
-
-            byte[] back = new byte[lastText.Length + 1];
-            back[lastText.Length] = 0x0D;
-            for (int i = 0; i < lastText.Length; i++) back[i] = 0x08;
-            LiPTT.SendMessage(back);
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
+                BoardAutoSuggestBox.ItemsSource = RelatedTable;
+            });
+            
 
             searching = false;
         }
+
+
 
         private void BoardAutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
@@ -229,13 +161,13 @@ namespace LiPTT
 
             if (args.ChosenSuggestion is string chosen)
             {
-                LiPTT.PttEventEchoed += GoToBoard;
-                LiPTT.SendMessage('s', chosen, 0x0D);
+                ptt.GoToBoardCompleted += Ptt_EnterBoardCompleted;
+                ptt.GoToBoard(chosen);
             }
             else if (RelatedTable.Count > 0 && RelatedTable.First() == args.QueryText)
             {
-                LiPTT.PttEventEchoed += GoToBoard;
-                LiPTT.SendMessage('s', args.QueryText, 0x0D);
+                ptt.GoToBoardCompleted += Ptt_EnterBoardCompleted;
+                ptt.GoToBoard(args.QueryText);
             }
             else if (RelatedTable.Count > 0)
             {
@@ -243,28 +175,12 @@ namespace LiPTT
             }
         }
 
-        private bool pressAny = false;
-
-        private void GoToBoard(PTTClient sender, LiPttEventArgs e)
+        private async void Ptt_EnterBoardCompleted(object sender, EventArgs e)
         {
-            switch (e.State)
-            {
-                case PttState.PressAny:
-                    if (!pressAny)
-                    {
-                        pressAny = true;
-                        LiPTT.PressAnyKey();
-                    }
-                    
-                    break;
-                case PttState.Board:
-                    LiPTT.PageEnd();
-                    LiPTT.PttEventEchoed -= GoToBoard;
-                    var t = LiPTT.RunInUIThread(() => {
-                        LiPTT.Frame.Navigate(typeof(BoardPage));
-                    });
-                    break;
-            }
+            await LiPTT.RunInUIThread(() => {
+                ptt.GoToBoardCompleted -= Ptt_EnterBoardCompleted;
+                LiPTT.Frame.Navigate(typeof(BoardPage));
+            });
         }
 
         private bool ItemClick = false;
@@ -278,8 +194,8 @@ namespace LiPTT
 
             if (e.ClickedItem is MyKeyValuePair kv)
             {
-                LiPTT.PttEventEchoed += GoToBoard;
-                LiPTT.SendMessage('s', kv.Value, 0x0D);
+                ptt.GoToBoardCompleted += Ptt_EnterBoardCompleted;
+                ptt.GoToBoard((string)kv.Value);
             }
         }
     }

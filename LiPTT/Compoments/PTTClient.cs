@@ -14,35 +14,40 @@ using Windows.Storage.Streams;
 using System.Runtime.InteropServices.WindowsRuntime;
 
 //https://docs.microsoft.com/zh-tw/windows/uwp/networking/websockets
+
 namespace LiPTT
 {
+    public enum PTTConnectionType
+    {
+        TCP,
+        WebSocket,
+    }
+
+    public enum PTTNetworkEventType
+    {
+        Disconnected,
+        Connected,
+        Failed,
+        Kicked,
+        Belled,
+    }
+
     public class ScreenEventArgs : EventArgs
     {
-        public ScreenEventArgs(ScreenBuffer buffer)
-        {
-            Screen = buffer;
-        }
-
         public ScreenBuffer Screen
         {
             get; set;
         }
     }
 
-    public enum ConnectionType
+    public class NetworkEventArgs : EventArgs
     {
-        TCP,
-        WebSocket,
-    }
-
-    public class ConnectionFailedEventArgs : EventArgs
-    {
-        public ConnectionFailedEventArgs(ConnectionType e)
+        public PTTNetworkEventType Event
         {
-            ConnectionType = e;
+            get; set;
         }
 
-        public ConnectionType ConnectionType
+        public PTTConnectionType ConnectionType
         {
             get; set;
         }
@@ -50,78 +55,95 @@ namespace LiPTT
 
     public class PTTClient
     {
-        #region 事件一堆堆
-        public delegate void ScreenEventHandler(object sender, ScreenEventArgs e);
+        #region 事件
 
-        public delegate void ConnectionFailedEventHandler(object sender, ConnectionFailedEventArgs e);
+        public delegate void NetworkEventHandler(object sender, NetworkEventArgs e);
 
+        /// <summary>
+        /// 畫面更新
+        /// </summary>
         public event ScreenEventHandler ScreenUpdated;
-
-        protected void OnScreenUpdated(ScreenBuffer e)
-        {
-            ScreenUpdated?.Invoke(this, new ScreenEventArgs(e));
-        }
-
+        /// <summary>
+        /// 畫面繪製(Debug用)
+        /// </summary>
         public event ScreenEventHandler ScreenDrawn;
 
-        protected void OnScreenDrawn(ScreenBuffer e)
+        public delegate void ScreenEventHandler(object sender, ScreenEventArgs e);
+
+        /// <summary>
+        /// 已連線
+        /// </summary>
+        public event NetworkEventHandler Connected;
+        /// <summary>
+        /// 未連線
+        /// </summary>
+        public event NetworkEventHandler Disconnected;
+        /// <summary>
+        /// 連接失敗
+        /// </summary>
+        public event NetworkEventHandler ConnectionFailed;
+        /// <summary>
+        /// 被踢了，哭哭喔
+        /// </summary>
+        public event NetworkEventHandler Kicked;
+        /// <summary>
+        /// 鈴~!
+        /// </summary>
+        public event NetworkEventHandler Belled;
+
+        protected virtual void OnScreenUpdated(object sender, ScreenEventArgs e)
         {
-#if DEBUG
-            ScreenDrawn?.Invoke(this, new ScreenEventArgs(e));
-#endif
+            ScreenUpdated?.Invoke(sender, e);
         }
 
-        public event EventHandler Connected;
-
-        protected void OnPTTConnected()
+        protected virtual void OnScreenDrawn(object sender, ScreenEventArgs e)
         {
-            Connected?.Invoke(this, new EventArgs());
+            ScreenDrawn?.Invoke(sender, e);
         }
 
-        public event EventHandler Disconnected;
-
-        protected void OnPTTDisconnected()
+        protected virtual void OnPTTConnected(object sender, NetworkEventArgs e)
         {
-            Disconnected?.Invoke(this, new EventArgs());
+            Connected?.Invoke(sender, e);
         }
 
-        public event EventHandler Kicked;
-
-        protected void OnPTTKicked()
+        protected virtual void OnPTTDisconnected(object sender, NetworkEventArgs e)
         {
-            Kicked?.Invoke(this, new EventArgs());
+            Disconnected?.Invoke(sender, e);
         }
 
-        public event ConnectionFailedEventHandler ConnectionFailed;
-
-        protected void OnPTTConnectionFailed(ConnectionType e)
+        protected virtual void OnPTTKicked(object sender, NetworkEventArgs e)
         {
-            ConnectionFailed?.Invoke(this, new ConnectionFailedEventArgs(e));
+            Kicked?.Invoke(sender, e);
         }
 
-        public event EventHandler Belled;
-
-        protected void OnBellPlayed()
+        protected virtual void OnPTTConnectionFailed(object sender, NetworkEventArgs e)
         {
-            Debug.WriteLine("燈!");
-            Belled?.Invoke(this, new EventArgs());
+            ConnectionFailed?.Invoke(sender, e);
         }
-        #endregion 事件一堆堆
 
-        #region 各種屬性
-        public bool Security
+        protected virtual void OnBellPlayed(object sender, NetworkEventArgs e)
+        {
+            Belled?.Invoke(sender, e);
+        }
+        #endregion 事件
+
+        #region 屬性
+
+        private bool connectionSecurity;
+
+        public bool ConnectionSecurity
         {
             get
             {
-                return ConnectionSecurity;
+                return connectionSecurity;
             }
             set
             {
-                ConnectionSecurity = value;
+                connectionSecurity = value;
             }
         }
 
-        public string Host
+        protected string Host
         {
             get
             {
@@ -129,7 +151,15 @@ namespace LiPTT
             }
         }
 
-        public int Port
+        protected string WebSocketHost
+        {
+            get
+            {
+                return "wss://ws.ptt.cc/bbs";
+            }
+        }
+
+        protected int Port
         {
             get
             {
@@ -137,7 +167,7 @@ namespace LiPTT
             }
         }
 
-        public ScreenBuffer Screen
+        protected ScreenBuffer Screen
         {
             get
             {
@@ -145,15 +175,7 @@ namespace LiPTT
             }
         }
 
-        public ScreenBuffer PreviousScreen
-        {
-            get
-            {
-                return screenCache;
-            }
-        }
-
-        public bool IsExit
+        public bool IsAppExit
         {
             get
             {
@@ -165,17 +187,9 @@ namespace LiPTT
             }
         }
 
-        public bool PTTWrongResponse { set; get; }
+        protected bool PTTWrongResponse { set; get; }
 
-        public string WebSocketHost
-        {
-            get
-            {
-                return "wss://ws.ptt.cc/bbs";
-            }
-        }
-
-        public bool IsConnected
+        protected bool IsConnected
         {
             get
             {
@@ -208,7 +222,7 @@ namespace LiPTT
                 return DateTime.Now - connectDateTime;
             }
         }
-        #endregion 各種屬性
+        #endregion 屬性
 
         private ScreenBuffer screenBuffer;
         private ScreenBuffer screenCache;
@@ -219,19 +233,24 @@ namespace LiPTT
         ThreadPoolTimer KeepAliveTimer;
         private bool exit;
         private Stream stream;
-        private bool ConnectionSecurity;
+        private bool security;
         protected bool isConnected;
         private DateTime connectDateTime;
         private DateTime websockRecvTime;
         private TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(10);
         private TimeSpan keepAlivePeriod = TimeSpan.FromMinutes(5);
 
+        private void KeepAlive(ThreadPoolTimer timer)
+        {
+            Send(0x0C); //^L
+        }
+
         public PTTClient()
         {
             DefaultState();
         }
 
-        public void Dispose()
+        protected void Dispose()
         {
             if (tcpClient != null)
             {
@@ -247,21 +266,20 @@ namespace LiPTT
 
             isConnected = false;
             DefaultState();
-            OnScreenDrawn(screenBuffer);
-            OnScreenUpdated(screenBuffer);
+            OnScreenDrawn(this, new ScreenEventArgs { Screen = screenBuffer });
         }
 
-        public void Disconnect()
+        protected void Disconnect()
         {
             if (isConnected)
             {
                 TestWebSocketRecvTimer?.Cancel();
                 Dispose();
-                OnPTTDisconnected();
+                OnPTTDisconnected(this, new NetworkEventArgs { ConnectionType = security ? PTTConnectionType.WebSocket : PTTConnectionType.TCP, Event = PTTNetworkEventType.Disconnected });
             }
         }
 
-        public void Connect()
+        protected void Connect()
         {
             Task.Run(() =>
             {
@@ -271,15 +289,11 @@ namespace LiPTT
             });
         }
 
-        private void KeepAlive(ThreadPoolTimer timer)
-        {
-            LiPTT.PressKeepAlive();
-        } 
-
         private void ConnectPTT()
         {
-            screensem = new SemaphoreSlim(1, 1);
-            if (ConnectionSecurity)
+            screenSemaphore = new SemaphoreSlim(1, 1);
+            security = ConnectionSecurity;
+            if (security)
                 ConnectWithWebSocket();
             else
                 ConnectWithTCP();
@@ -295,14 +309,14 @@ namespace LiPTT
             {
                 if (!tcpClient.ConnectAsync(Host, Port).Wait(ConnectionTimeout))
                 {
-                    Debug.WriteLine("TCP: 連線失敗");
-                    OnPTTConnectionFailed(ConnectionType.TCP);
+                    Debug.WriteLine("TCP: 連線失敗 等太久了");
+                    OnPTTConnectionFailed(this, new NetworkEventArgs { ConnectionType = PTTConnectionType.TCP, Event = PTTNetworkEventType.Failed });
                 }
                 else if (tcpClient.Connected)
                 {
-                    isConnected = true;
-                    OnPTTConnected();
                     Debug.WriteLine("TCP: 已連線");
+                    isConnected = true;
+                    OnPTTConnected(this, new NetworkEventArgs { ConnectionType = PTTConnectionType.TCP, Event = PTTNetworkEventType.Connected });
 
                     TestKickTimer = ThreadPoolTimer.CreatePeriodicTimer((source) => {
 
@@ -316,11 +330,11 @@ namespace LiPTT
                                 Debug.WriteLine("TCP: 有錯誤訊息");
                                 Dispose();
                             }
-                            else if (!IsExit)
+                            else if (!IsAppExit)
                             {
                                 Debug.WriteLine(string.Format("TCP: 被踢下線 於 {0}", DateTime.Now.ToString()));
                                 Debug.WriteLine(string.Format(@"總連線時間: {0:hh\:mm\:ss}", ConnectTimeInterval));
-                                OnPTTKicked();
+                                OnPTTKicked(this, new NetworkEventArgs { ConnectionType = PTTConnectionType.TCP, Event = PTTNetworkEventType.Kicked });
                                 Dispose();
                             }
                             else
@@ -338,10 +352,10 @@ namespace LiPTT
                     StartRecv();
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Debug.WriteLine("TCP: 連線失敗");
-                OnPTTConnectionFailed(ConnectionType.TCP);
+                Debug.WriteLine(string.Format("TCP: 連線失敗 {0}", e.ToString()));
+                OnPTTConnectionFailed(this, new NetworkEventArgs { ConnectionType = PTTConnectionType.TCP, Event = PTTNetworkEventType.Failed });
             }
         }
 
@@ -368,12 +382,12 @@ namespace LiPTT
                     Debug.WriteLine("WebSocket: 有錯誤訊息");
                     Dispose();
                 }
-                else if (!IsExit)
+                else if (!IsAppExit)
                 {
                     Debug.WriteLine(string.Format("WebSocket: 被踢下線 於 {0}", DateTime.Now.ToString()));
                     Debug.WriteLine(string.Format(@"總連線時間: {0:hh\:mm\:ss}", ConnectTimeInterval));
                     Dispose();
-                    OnPTTKicked();
+                    OnPTTKicked(this, new NetworkEventArgs { ConnectionType = PTTConnectionType.WebSocket, Event = PTTNetworkEventType.Kicked });
                 }
                 else
                 {
@@ -389,12 +403,12 @@ namespace LiPTT
                 if (!WebSocket.ConnectAsync(new Uri(WebSocketHost)).AsTask().Wait(ConnectionTimeout))
                 {
                     Debug.WriteLine("WebSocket: 連線失敗");
-                    OnPTTConnectionFailed(ConnectionType.WebSocket);
+                    OnPTTConnectionFailed(this, new NetworkEventArgs { ConnectionType = PTTConnectionType.WebSocket, Event = PTTNetworkEventType.Failed });
                 }
                 else
                 {
                     isConnected = true;
-                    OnPTTConnected();
+                    OnPTTConnected(this, new NetworkEventArgs { ConnectionType = PTTConnectionType.WebSocket, Event = PTTNetworkEventType.Connected });
                     Debug.WriteLine("WebSocket: 已連線");
                     KeepAliveTimer = ThreadPoolTimer.CreatePeriodicTimer(KeepAlive, KeepAlivePeriod);
                 }
@@ -402,11 +416,11 @@ namespace LiPTT
             catch (Exception e)
             {
                 Debug.WriteLine(string.Format("WebSocket: 連線失敗 {0}", e.ToString()));
-                OnPTTConnectionFailed(ConnectionType.WebSocket);
+                OnPTTConnectionFailed(this, new NetworkEventArgs { ConnectionType = PTTConnectionType.WebSocket, Event = PTTNetworkEventType.Failed });
             }
         }
 
-        SemaphoreSlim screensem;
+        SemaphoreSlim screenSemaphore;
 
         bool hasNumber;
         bool ESC;
@@ -447,17 +461,16 @@ namespace LiPTT
                     r = stream.Read(buffer, 0, buffer.Length);
                     if (r > 0)
                     {
-                        screensem.Wait();
+                        screenSemaphore.Wait();
                         Parse(buffer, 0, r);
-                        OnScreenDrawn(screenBuffer);
-                        OnScreenUpdated(screenBuffer);
-                        CacheScreen();
-                        screensem.Release();
+                        OnScreenUpdated(this, new ScreenEventArgs { Screen = screenBuffer });
+                        OnScreenDrawn(this, new ScreenEventArgs { Screen = screenBuffer });
+                        screenSemaphore.Release();
                     }
                 }
                 catch (ObjectDisposedException)
                 {
-                    if (IsExit)
+                    if (IsAppExit)
                     {
                         Debug.WriteLine("TCP: 連線關閉");
                     }
@@ -482,12 +495,11 @@ namespace LiPTT
         {
             byte[] msg = ms.ToArray();
             ms = new MemoryStream();
-            screensem.Wait();
+            screenSemaphore.Wait();
             Parse(msg);
-            OnScreenDrawn(screenBuffer);
-            OnScreenUpdated(screenBuffer);
-            CacheScreen();
-            screensem.Release();
+            OnScreenUpdated(this, new ScreenEventArgs { Screen = screenBuffer });
+            OnScreenDrawn(this, new ScreenEventArgs { Screen = screenBuffer });
+            screenSemaphore.Release();
         }
 
         private async void WebSocket_MessageReceived(MessageWebSocket sender, MessageWebSocketMessageReceivedEventArgs args)
@@ -516,7 +528,7 @@ namespace LiPTT
                         else
                         {
                             TestWebSocketRecvTimer?.Cancel();
-                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer((timer) => { WebSocketUpdateScreen(); }, TimeSpan.FromTicks(testTimespan.Ticks * 5) );
+                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer((timer) => { WebSocketUpdateScreen(); }, TimeSpan.FromTicks(testTimespan.Ticks * 5));
                         }
                     }
                 }
@@ -529,7 +541,7 @@ namespace LiPTT
             {
                 //發生意外了?
                 Debug.WriteLine(e.ToString());
-                IsExit = true;
+                IsAppExit = true;
                 WebSocket?.Dispose();
             }
         }
@@ -802,7 +814,7 @@ namespace LiPTT
 #if DEBUG
                             RAW_Message.Append("(BEL)");
 #endif
-                            OnBellPlayed();
+                            OnBellPlayed(this, new NetworkEventArgs { ConnectionType = security ? PTTConnectionType.WebSocket : PTTConnectionType.TCP, Event = PTTNetworkEventType.Belled });
                             break;
                         case 0x08: //BS  - backspace
 #if DEBUG
@@ -1003,14 +1015,14 @@ namespace LiPTT
 #endif
         }
 
-        public void Send(string message)
+        protected void Send(string message)
         {
             byte[] msg = PTTEncoding.GetEncoding().GetBytes(message);
             Debug.WriteLine("==>" + message);
             Send(msg);
         }
 
-        public async void Send(byte[] message)
+        protected async void Send(byte[] message)
         {
             try
             {
@@ -1033,7 +1045,7 @@ namespace LiPTT
             }
         }
 
-        public async void Send(char c)
+        protected async void Send(char c)
         {
             try
             {
@@ -1059,7 +1071,7 @@ namespace LiPTT
             }
         }
 
-        public async void Send(byte b)
+        protected async void Send(byte b)
         {
             try
             {
@@ -1083,7 +1095,7 @@ namespace LiPTT
             }
         }
 
-        public async void Send(params object[] list)
+        protected async void Send(params object[] list)
         {
             List<byte> msg = new List<byte>();
 
@@ -1130,62 +1142,19 @@ namespace LiPTT
                 Debug.WriteLine(ex.ToString());
             }
         }
-
-        private void CacheScreen()
-        {
-            screenCache = new ScreenBuffer(screenBuffer);
-        }
-
-        public int ComparePrevious()
-        {
-            var ps = screenCache.ToStringArray();
-            var cs = screenBuffer.ToStringArray();
-
-            for (int i = 0; i < ps.Length; i++)
-            {
-                ps[i] = ps[i].Replace('\0', ' ');
-                cs[i] = cs[i].Replace('\0', ' ');
-            }
-
-            for (int i = 0; i < screenBuffer.Height - 1; i++)
-            {
-                if (Intersect(ps, cs, i) == true)
-                {
-                    return i;
-                }
-            }
-
-            return screenBuffer.Height;
-        }
-
-        private bool Intersect(string[] prev, string[] current, int intersect)
-        {
-            int height = screenBuffer.Height - 1;
-            int range = height - intersect;
-
-            for (int pi = intersect; pi < height; pi++)
-            {
-                if (prev[pi] != current[pi - intersect])
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
     }
 
     [Flags]
     public enum AttributeMode
     {
-        None            = 0b0000_0000,
-        Bold            = 0b0000_0001,
-        LowIntensity    = 0b0000_0010,
+        None = 0b0000_0000,
+        Bold = 0b0000_0001,
+        LowIntensity = 0b0000_0010,
         // 0b0000_0100
-        Underline       = 0b0000_1000,
-        Blink           = 0b0001_0000,
-        Reverse         = 0b0100_0000,
-        Invisible       = 0b1000_0000,
+        Underline = 0b0000_1000,
+        Blink = 0b0001_0000,
+        Reverse = 0b0100_0000,
+        Invisible = 0b1000_0000,
     }
 
     public class Block
@@ -1281,7 +1250,7 @@ namespace LiPTT
                     return new SharpDX.Color(0xFFC0C0C0);
                 default: //black
                     return new SharpDX.Color(0xFF000000);
-            } 
+            }
         }
 
         public int BackgroundColor
@@ -1441,7 +1410,7 @@ namespace LiPTT
             if (row < 0 || row >= Height) return "";
             if (begin_x < 0 || begin_x + length - 1 >= Width) return "";
             byte[] mssage = new byte[length];
-            for (int j = 0; j < length; j++) mssage[j] = Screen[row][j+ begin_x].Content;
+            for (int j = 0; j < length; j++) mssage[j] = Screen[row][j + begin_x].Content;
             return PTTEncoding.GetEncoding().GetString(mssage);
         }
 
@@ -1456,7 +1425,7 @@ namespace LiPTT
         public override string ToString()
         {
 
-            byte[] mssage = new byte[(Width + 1)*Height];
+            byte[] mssage = new byte[(Width + 1) * Height];
 
             int k = 0;
 
@@ -1465,7 +1434,7 @@ namespace LiPTT
                 for (int j = 0; j < Width; j++) mssage[k++] = Screen[i][j].Content;
                 mssage[k++] = 0x0A;
             }
- 
+
             return PTTEncoding.GetEncoding().GetString(mssage);
         }
 
@@ -1480,7 +1449,7 @@ namespace LiPTT
             for (int i = 0; i < Height; i++)
             {
                 for (int j = 0; j < Width; j++) mssage[j] = Screen[i][j].Content;
-                list.Add(PTTEncoding.GetEncoding().GetString(mssage));
+                list.Add(PTTEncoding.GetEncoding().GetString(mssage).Replace('\0', ' '));
             }
 
             return list.ToArray();

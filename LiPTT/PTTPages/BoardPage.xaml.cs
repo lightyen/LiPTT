@@ -27,12 +27,11 @@ namespace LiPTT
     {
         public BoardPage()
         {
-            
             InitializeComponent();
+            
             CurrentBoard = new Board();
             LiPTT.ArticleCollection = ContentCollection;
             clipboardsem = new SemaphoreSlim(1, 1);
-            ContentCollection.BeginLoaded += ContentCollection_BeginLoaded;
         }
 
         public Board CurrentBoard
@@ -85,37 +84,51 @@ namespace LiPTT
             }
         }
 
-        private void ReadBoardInfomation()
-        {
-            if (LiPTT.State == PttState.Board)
-            {
-                string str = LiPTT.Screen.ToString(2);
-                Regex regex = new Regex(@"\d+");
-                Match match = regex.Match(str);
-
-                if (match.Success)
-                {
-                    int popu = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                    var Board = CurrentBoard;
-                    CurrentBoard.Popularity = popu;
-                    NotifyPropertyChanged("CurrentBoard");
-                }
-            }
-
-            LiPTT.PttEventEchoed += ReadBoardInfo;
-            LiPTT.PressI();
-        }
-
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+
             ControlVisible = false;
             //冷靜一下，先喝杯咖啡
             await Task.Delay(100);
 
-            ReadBoardInfomation();
+            if (!LiPTT.CacheBoard)
+            {
+                ContentCollection.Clear();
+
+                ptt.BoardInfomationUpdated += async (a, b) =>
+                {
+                    CurrentBoard = b.BoardInfomation;
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                        NotifyPropertyChanged("CurrentBoard");
+
+                        ControlVisible = true;
+                        Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+                        Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
+                    });
+                };
+
+                ptt.LoadBoardInfomation();
+            }
+
             //追蹤剪貼簿
             //Clipboard.ContentChanged += Clipboard_ContentChanged;
 
+        }
+
+        private async void Ptt_ArticlesReceived(object sender, ArticlesReceivedEventArgs e)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                PTT ptt = Application.Current.Resources["PTT"] as PTT;
+                ptt.ArticlesReceived -= Ptt_ArticlesReceived;
+                foreach (var a in e.Articles)
+                    ContentCollection.Add(a);
+
+                if (ArticleListView.Items.Count > 0)
+                    ArticleListView.ScrollIntoView(ArticleListView.Items[0]);
+                
+
+            });
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -123,133 +136,6 @@ namespace LiPTT
             //Clipboard.ContentChanged -= Clipboard_ContentChanged;
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed -= Board_PointerPressed;
-        }
-
-        private void ReadBoardInfo(PTTClient client, LiPttEventArgs e)
-        {
-            ScreenBuffer screen = client.Screen;
-
-            if (e.State == PttState.BoardInfomation)
-            {
-                LiPTT.PttEventEchoed -= ReadBoardInfo;
-
-                var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    var Board = CurrentBoard;
-
-                    //看板名稱
-                    string str = screen.ToString(3);
-                    Match match = new Regex(LiPTT.bracket_regex).Match(str);
-                    if (match.Success)
-                    {
-                        Board.Name = str.Substring(match.Index + 1, match.Length - 2);
-                        Board.Nick = LiPTT.GetBoardNick(Board.Name);
-                    }
-
-                    //看板分類 中文敘述
-                    Board.Category = screen.ToString(5, 15, 4);
-                    Board.Description = client.Screen.ToString(5, 22, screen.Width - 22).Replace('\0', ' ').Trim();
-
-                    //版主名單
-                    str = screen.ToString(6, 15, screen.Width - 15).Replace('\0', ' ').Trim();
-                    if (!new Regex(LiPTT.bound_regex).Match(str).Success) //(無)
-                    {
-                        Board.Leaders = str.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                    }
-
-                    if (screen.ToString(7, 25, 4) == "公開")
-                        Board.公開 = true;
-
-                    if (screen.ToString(8, 12, 4) == "可以")
-                        Board.可進入十大排行榜 = true;
-
-                    if (screen.ToString(9, 5, 4) == "開放")
-                        Board.開放非看板會員發文 = true;
-
-                    if (screen.ToString(10, 5, 4) == "開放")
-                        Board.開放回文 = true;
-
-                    if (screen.ToString(11, 5, 4) == "開放")
-                        Board.開放自刪 = true;
-
-                    if (screen.ToString(12, 5, 4) == "開放")
-                        Board.開放推文 = true;
-
-                    if (screen.ToString(13, 5, 4) == "開放")
-                        Board.開放噓文 = true;
-
-                    if (screen.ToString(14, 5, 4) == "開放")
-                        Board.開放快速連推 = true;
-
-                    if (screen.ToString(15, 12, 4) == "自動")
-                        Board.IPVisible = true;
-
-                    if (screen.ToString(16, 12, 4) == "對齊")
-                        Board.自動對齊 = true;
-
-                    if (screen.ToString(17, 10, 2) == "可")
-                        Board.板主可刪除違規文字 = true;
-
-                    if (screen.ToString(18, 14, 2) == "會")
-                        Board.轉文自動記錄 = true;
-
-                    if (screen.ToString(19, 5, 2) == "已")
-                        Board.冷靜模式 = true;
-
-                    if (screen.ToString(20, 5, 4) == "允許")
-                        Board.允許十八歲進入 = true;
-
-                    //發文限制 - 登入次數
-                    str = screen.ToString(12);
-                    match = new Regex(@"\d+").Match(str);
-                    if (match.Success)
-                    {
-                        try
-                        {
-                            Board.LimitLogin = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                        }
-                        catch { Debug.WriteLine(str.Substring(match.Index, match.Length)); }
-                    }
-
-                    //發文限制 - 退文篇數
-                    str = screen.ToString(13);
-                    match = new Regex(@"\d+").Match(str);
-                    if (match.Success)
-                    {
-                        try
-                        {
-                            Board.LimitReject = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                        }
-                        catch { Debug.WriteLine(str.Substring(match.Index, match.Length)); }
-                    }                 
-
-                    if (LiPTT.CacheBoard)
-                    {
-                        ControlVisible = true;
-                        Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
-                        Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
-                    }
-                    else
-                    {
-                        ContentCollection.Clear();
-                        LiPTT.PttEventEchoed += InitBoard;
-                    }
-
-                    LiPTT.PressAnyKey();
-                });
-            }
-        }
-
-        private void InitBoard(PTTClient sender, LiPttEventArgs e)
-        {
-            if (e.State == PttState.Board)
-            {
-                LiPTT.PttEventEchoed -= InitBoard;
-                var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    ContentCollection.BeginLoad();
-                });
-            }
         }
 
         private void ContentCollection_BeginLoaded(object sender, EventArgs e)
@@ -265,6 +151,8 @@ namespace LiPTT
         //進入文章
         private void ArticleList_ItemClick(object sender, ItemClickEventArgs e)
         {
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+
             Article article = e.ClickedItem as Article;
             if (article.Deleted) return;
 
@@ -273,31 +161,16 @@ namespace LiPTT
 
             if (article.AID is string s && s.Length > 0)
             {
-                LiPTT.SendMessage(article.AID, 0x0D);
+                ptt.GoToArticle(article.AID);
             }
             else
             {
                 if (article.ID != uint.MaxValue)
                 {
-                    LiPTT.SendMessage(article.ID.ToString(), 0x0D);
+                    ptt.GoToArticle(article.ID);
                 }
-                else //GoTo置底文
-                {
-                    //LiPTT.PageEnd();
-                    List<byte> m = new List<byte>
-                {
-                    (byte)'$'
-                };
-
-                    for (int i = 0; i < article.Star; i++)
-                    {
-                        //LiPTT.Up();
-                        m.Add(0x1B);
-                        m.Add(0x5B);
-                        m.Add(0x41);
-                    }
-                    LiPTT.SendMessage(m.ToArray());
-                }
+                else
+                    return;
             }
 
             LiPTT.Frame.Navigate(typeof(ArticlePage));
@@ -305,10 +178,20 @@ namespace LiPTT
 
         private void GoBack()
         {
-            if (!control_visible || LiPTT.Frame.CurrentSourcePageType != typeof(BoardPage)) return;
+            if (!control_visible || ContentCollection.Loading || LiPTT.Frame.CurrentSourcePageType != typeof(BoardPage)) return;
             LiPTT.CacheBoard = false;
-            LiPTT.Left();
-            LiPTT.Frame.Navigate(typeof(PTTPage));
+
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+            ptt.StateChangedCompleted += async (a, b) =>
+            {
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                    LiPTT.Frame.Navigate(typeof(PTTPage));
+                });
+            };
+
+            ptt.GoToMain();
+
+            
         }
 
         private bool pressRight = false;
@@ -331,16 +214,16 @@ namespace LiPTT
 
                         if (ClipboardText.StartsWith("#"))
                         {
-                            LiPTT.SendMessage(ClipboardText, 0x0D);
-                            LiPTT.PttEventEchoed += SearchIDEnter;
+                            //LiPTT.SendMessage(ClipboardText, 0x0D);
+                            //LiPTT.PttEventEchoed += SearchIDEnter;
                         }
                         else
                         {
                             try
                             {
                                 uint id = Convert.ToUInt32(ClipboardText);
-                                LiPTT.SendMessage(id.ToString(), 0x0D);
-                                LiPTT.PttEventEchoed += SearchIDEnter;
+                                //LiPTT.SendMessage(id.ToString(), 0x0D);
+                                //LiPTT.PttEventEchoed += SearchIDEnter;
                             }
                             catch { }
                         }
@@ -426,17 +309,17 @@ namespace LiPTT
 
                 if (SearchIDTextBox.Text.StartsWith("#"))
                 {
-                    LiPTT.SendMessage(SearchIDTextBox.Text, 0x0D);
-                    LiPTT.PttEventEchoed += SearchIDEnter;
+                    //LiPTT.SendMessage(SearchIDTextBox.Text, 0x0D);
+                    //LiPTT.PttEventEchoed += SearchIDEnter;
                 }
                 else
                 {
                     try
                     {
                         uint id = Convert.ToUInt32(SearchIDTextBox.Text);
-                        LiPTT.SendMessage(id.ToString(), 0x0D);
+                        //LiPTT.SendMessage(id.ToString(), 0x0D);
 
-                        LiPTT.PttEventEchoed += SearchIDEnter;
+                        //LiPTT.PttEventEchoed += SearchIDEnter;
                     }
                     catch { }
                 }
@@ -447,15 +330,17 @@ namespace LiPTT
         {
             Match match;
 
-            ScreenBuffer screen = sender.Screen;
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+
+            ScreenBuffer screen = null;
 
             if ((match = new Regex("請按任意鍵繼續").Match(screen.ToString(23))).Success)
             {
-                LiPTT.PressAnyKey();
+                //LiPTT.PressAnyKey();
             }
             else
             {
-                LiPTT.PttEventEchoed -= SearchIDEnter;
+                //LiPTT.PttEventEchoed -= SearchIDEnter;
 
                 Article article = ParseArticleTag(screen.CurrentBlocks);
 
@@ -503,7 +388,7 @@ namespace LiPTT
             {
                 article.ID = uint.MaxValue;
                 article.Star = star++;
-                LiPTT.ArticleCollection.StarCount = article.Star;
+                //LiPTT.ArticleCollection.StarCount = article.Star;
             }
             else
             {

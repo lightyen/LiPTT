@@ -117,8 +117,8 @@ namespace LiPTT
             LoadingExtraData = false;
             pressAny = false;
 
-            LiPTT.PttEventEchoed += ReadAIDandExtra;
-            LiPTT.Right();            
+            //LiPTT.PttEventEchoed += ReadAIDandExtra;
+            //LiPTT.Right();            
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -247,19 +247,19 @@ namespace LiPTT
             if (e.State == PttState.Article && !LoadingExtraData)
             {
                 LoadingExtraData = true;
-                LiPTT.SendMessage('Q');
+                //LiPTT.SendMessage('Q');
             }
             else if (!pressAny && e.State == PttState.AID && LoadingExtraData)
             {
                 pressAny = true;
-                ReadExtraData(client.Screen, (int)e.Others);
-                LiPTT.PressAnyKey();
+                //ReadExtraData(client.Screen, (int)e.Others);
+                //LiPTT.PressAnyKey();
             }
             else if (e.State == PttState.Board && LoadingExtraData)
             {
-                LiPTT.PttEventEchoed -= ReadAIDandExtra;
-                LiPTT.PttEventEchoed += BrowseArticle;
-                LiPTT.Right();
+                //LiPTT.PttEventEchoed -= ReadAIDandExtra;
+                //LiPTT.PttEventEchoed += BrowseArticle;
+                //LiPTT.Right();
             }
         }
 
@@ -268,7 +268,7 @@ namespace LiPTT
             switch (e.State)
             {
                 case PttState.Article:
-                    LiPTT.PttEventEchoed -= BrowseArticle;
+                    //LiPTT.PttEventEchoed -= BrowseArticle;
                     LoadArticle();                   
                     break;
             }
@@ -278,7 +278,7 @@ namespace LiPTT
         {
             var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                ContentCollection.BeginLoad(LiPTT.CurrentArticle); 
+                //ContentCollection.BeginLoad(LiPTT.CurrentArticle); 
                 ArticleHeader.DataContext = LiPTT.CurrentArticle;
                 SplitViewPaneContent.DataContext = LiPTT.CurrentArticle;
 
@@ -371,19 +371,19 @@ namespace LiPTT
             if (back) return;
             back = true;
             StopVideo();
-            LiPTT.PttEventEchoed += PttEventEchoed_UpdateArticleTag;
-            LiPTT.Left();
+            //LiPTT.PttEventEchoed += PttEventEchoed_UpdateArticleTag;
+            //LiPTT.Left();
         }
 
         private void PttEventEchoed_UpdateArticleTag(PTTClient client, LiPttEventArgs e)
         {
             if (e.State == PttState.Board)
             {
-                LiPTT.PttEventEchoed -= PttEventEchoed_UpdateArticleTag;
+                //LiPTT.PttEventEchoed -= PttEventEchoed_UpdateArticleTag;
 
-                ReLoadArticleTag(client.Screen);
-                LiPTT.PageEnd();
-                //LiPTT.SendMessage(LiPTT.ArticleCollection.CurrentIndex.ToString(), 0x0D);
+                //ReLoadArticleTag(client.Screen);
+                //LiPTT.PageEnd();
+
                 var action = LiPTT.RunInUIThread(() =>
                 {
                     LiPTT.Frame.Navigate(typeof(BoardPage));

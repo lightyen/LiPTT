@@ -21,12 +21,16 @@ namespace LiPTT
     /// </summary>
     public sealed partial class PttMainPage : Page
     {
+        PTT ptt;
+
         public PttMainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
+
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
 
             LiPTT.Frame = PTTFrame;
-            LiPTT.Client.Kicked += async (o, e) =>
+            ptt.Kicked += async (o, e) =>
             {
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
                     PTTFrame.Navigate(typeof(LoginPage));
@@ -38,8 +42,7 @@ namespace LiPTT
         {
             if (PTTFrame.CurrentSourcePageType != typeof(LoginPage))
             {
-                if (!LiPTT.Client.IsConnected)
-                    PTTFrame.Navigate(typeof(LoginPage));
+                PTTFrame.Navigate(typeof(LoginPage));
             }
         }
     }

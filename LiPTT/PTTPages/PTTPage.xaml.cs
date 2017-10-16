@@ -26,6 +26,7 @@ namespace LiPTT
         {
             InitializeComponent();
             //LiPTT.GamepadPollTimer = ThreadPoolTimer.CreatePeriodicTimer(GamepadUpdate, TimeSpan.FromMilliseconds(50));
+            
         }
 
         private static void GamepadUpdate(ThreadPoolTimer timer)
@@ -46,15 +47,17 @@ namespace LiPTT
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            LiPTT.IsExit = false;
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+            ptt.IsAppExit = false;
             MainFuncFrame.Navigate(typeof(MainFunctionPage));
-            LiPTT.PttEventEchoed += Updated;
+            ptt.PTTStateUpdated += Updated;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            LiPTT.PttEventEchoed -= Updated;
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+            ptt.PTTStateUpdated -= Updated;
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         }
 
@@ -64,7 +67,7 @@ namespace LiPTT
                 Exit();
         }
 
-        private async void Updated(PTTClient sender, LiPttEventArgs e)
+        private async void Updated(object sender, PTTStateUpdatedEventArgs e)
         {
 
             switch(e.State)
@@ -85,47 +88,24 @@ namespace LiPTT
             });
         }
 
-        private void Exit()
+        private async void Exit()
         {
-            LiPTT.PttEventEchoed -= Updated;
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+            ptt.PTTStateUpdated -= Updated;
 
-            if (LiPTT.IsExit == false)
-            {
-                LiPTT.IsExit = true;
-                LiPTT.PttEventEchoed += Exit_echoed;
-
-                if (pivot.SelectedIndex == 1)
-                {
-                    LiPTT.SendMessage(0x71, 0x47, 0x0D);
-                }
-                else
-                {
-                    LiPTT.SendMessage(0x47, 0x0D);
-                }
-            }
+            await ptt.ExitPTT();
+            LiPTT.Logined = false;
+            LiPTT.Frame.Navigate(typeof(LoginPage));
         }
 
-        private void Exit_echoed(PTTClient sender, LiPttEventArgs e)
-        {
-            if (e.State == PttState.Exit)
-            {
-                LiPTT.SendMessage('y', 0x0D); 
-            }
-            else if (e.State == PttState.PressAny)
-            {
-                LiPTT.PttEventEchoed -= Exit_echoed;
-                LiPTT.RemoveHandlerStateChecker();
-                LiPTT.PressAnyKey();
-                LiPTT.Client.Disconnected += GoToLogin;
-            }
-        }
 
         private async void GoToLogin(object o, EventArgs e)
         {
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                 LiPTT.Logined = false;
                 LiPTT.Frame.Navigate(typeof(LoginPage));
-                LiPTT.Client.Disconnected -= GoToLogin;
+                ptt.Disconnected -= GoToLogin;
             });
         }
 
@@ -133,13 +113,14 @@ namespace LiPTT
 
         private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
             if (pivot.SelectedIndex == 1)
             {
-                LiPTT.GoToFavorite();
+                ptt.GoToFavorite();
             }
             else
             {
-                if (pivot_index == 1) LiPTT.Left();
+                if (pivot_index == 1) ptt.Left();
 
                 switch (pivot.SelectedIndex)
                 {

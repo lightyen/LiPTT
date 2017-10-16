@@ -26,10 +26,15 @@ namespace LiPTT
     {
         bool resume = false;
 
+        PTT ptt;
+
         public LoginPage()
         {
-            this.InitializeComponent();
-            Application.Current.Suspending += (a, b) => { SaveUserAccount(LiPTT.UserName, LiPTT.Password); };
+            InitializeComponent();
+
+            ptt = Application.Current.Resources["PTT"] as PTT;
+
+            Application.Current.Suspending += (a, b) => { SaveUserAccount(ptt.User, ptt.Password); };
             Application.Current.Resuming += (a, b) => 
             {
                 resume = true;
@@ -56,7 +61,7 @@ namespace LiPTT
                 MemoAcount.IsEnabled = false;
                 AutoLogin.IsEnabled = false;
             }
-            else if (LiPTT.AlwaysAlive && LiPTT.State == PttState.Kicked)
+            else if (LiPTT.AlwaysAlive && ptt.State == PttState.Kicked)
             {
                 if (Resources["ViewModel"] is PttPageViewModel viewmodel)
                 {
@@ -136,16 +141,6 @@ namespace LiPTT
             }
         }
 
-        private void Enter()
-        {
-            start = false;
-            LiPTT.IsExit = false;
-            SaveUserAccount(UserText.Text, PasswordText.Password);
-            enterAlreadyLogin = enterWrongLog = enteruser = enterpswd = false;
-            LiPTT.PttEventEchoed += EnterAccount;
-            LiPTT.TryConnect();
-        }
-
         private void UserText_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == VirtualKey.Enter && UserText.Text.Length >= 0)
@@ -155,43 +150,28 @@ namespace LiPTT
             }
         }
 
+        private void Enter()
+        {
+            start = false;
+            ptt.IsAppExit = false;
+            SaveUserAccount(UserText.Text, PasswordText.Password);
+            enterAlreadyLogin = enterWrongLog = enteruser = enterpswd = false;
+            ptt.PTTStateUpdated += EnterAccount;
+            ptt.Login(UserText.Text, PasswordText.Password);
+        }
+
         private bool enteruser;
         private bool enterpswd;
         private bool enterWrongLog;
         private bool enterAlreadyLogin;
     
-        private void EnterAccount(PTTClient sender, LiPttEventArgs e)
+        private async void EnterAccount(object sender, PTTStateUpdatedEventArgs e)
         {
             switch (e.State)
             {
-                case PttState.Login:
-                    if (!enteruser)
-                    {
-                        enteruser = true;
-                        var action = LiPTT.RunInUIThread(() =>
-                        {
-                            LiPTT.UserName = UserText.Text;
-                            LiPTT.EnterUserName();
-                        });
-                    }
-                    break;
-                case PttState.Password:
-                    if (!enterpswd)
-                    {
-                        enterpswd = true;
-                        var action = LiPTT.RunInUIThread(() =>
-                        {
-                            LiPTT.Password = PasswordText.Password;
-                            LiPTT.EnterPassword();
-                        });            
-                    }
-                    
-                    break;
                 case PttState.WrongPassword:
                     {
-                        LiPTT.Client.Dispose();
-
-                        var action = LiPTT.RunInUIThread(() => {
+                        await LiPTT.RunInUIThread(() => {
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
@@ -203,14 +183,14 @@ namespace LiPTT
                     if (!enterAlreadyLogin)
                     {
                         enterAlreadyLogin = true;
-                        LiPTT.Yes();
+                        ptt.Yes();
                     }
                     break;
                 case PttState.WrongLog:
                     if (!enterWrongLog)
                     {
                         enterWrongLog = true;
-                        LiPTT.Yes();
+                        ptt.Yes();
                     }                    
                     break;
                 case PttState.Accept:
@@ -224,9 +204,7 @@ namespace LiPTT
                     break;
                 case PttState.LoginSoMany:
                     {
-                        LiPTT.Client.Dispose();
-
-                        var action = LiPTT.RunInUIThread(() => {
+                        await LiPTT.RunInUIThread(() => {
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
@@ -236,9 +214,7 @@ namespace LiPTT
                     break;
                 case PttState.OverLoading:
                     {
-                        LiPTT.Client.Dispose();
-
-                        var action = LiPTT.RunInUIThread(() => {
+                        await LiPTT.RunInUIThread(() => {
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
@@ -258,17 +234,15 @@ namespace LiPTT
                     }
                     break;
                 case PttState.PressAny:
-                    LiPTT.PressAnyKey();
+                    ptt.PressAnyKey();
                     break;
                 case PttState.MainPage:
-                    LiPTT.PttEventEchoed -= EnterAccount;
+                    ptt.PTTStateUpdated -= EnterAccount;
                     { 
-                        var action = LiPTT.RunInUIThread(() =>
+                        await LiPTT.RunInUIThread(() =>
                         {
                             LiPTT.Frame.Navigate(typeof(PTTPage));
                         });
-
-                        action.AsTask().Wait();
                     }
                     break;
             }
@@ -326,17 +300,17 @@ namespace LiPTT
                     MemoAcount.IsChecked = memo;
                     if (memo)
                     {
-                        LiPTT.UserName = (string)container["username"];
-                        LiPTT.Password = (string)container["password"];
+                        ptt.User = (string)container["username"];
+                        ptt.Password = (string)container["password"];
 
-                        if (LiPTT.UserName != null)
+                        if (ptt.User != null)
                         {
-                            UserText.Text = LiPTT.UserName;
+                            UserText.Text = ptt.User;
                         }
 
-                        if (LiPTT.Password != null)
+                        if (ptt.Password != null)
                         {
-                            PasswordText.Password = LiPTT.Password;
+                            PasswordText.Password = ptt.Password;
                         }
 
                         bool auto = (bool)container["autoLogin"];

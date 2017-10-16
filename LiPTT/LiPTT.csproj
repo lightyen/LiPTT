@@ -73,7 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;CODE_ANALYSIS;CODE_ANALYSIS;CODE_ANALYSIS</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;CODE_ANALYSIS;CODE_ANALYSIS;CODE_ANALYSIS;CODE_ANALYSIS</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -113,6 +113,7 @@
     <Compile Include="Compoments\EchoContentDialog.xaml.cs">
       <DependentUpon>EchoContentDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Compoments\PTT.cs" />
     <Compile Include="Compoments\PTTUri.cs" />
     <Compile Include="Compoments\Settings.cs" />
     <Compile Include="Compoments\VisualTreeHelperExtensions.cs" />

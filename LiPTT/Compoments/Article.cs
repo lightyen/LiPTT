@@ -193,195 +193,14 @@ namespace LiPTT
             if (InitialLoaded)
             {
                 await Task.Run(() => {
-                    LiPTT.PttEventEchoed += PttUpdated;
-                    LiPTT.PageDown();
+                    //LiPTT.PttEventEchoed += PttUpdated;
+                    //LiPTT.PageDown();
                 });
 
                 await sem.WaitAsync();
             }
 
             return new LoadMoreItemsResult { Count = (uint)this.Count };
-        }
-
-        private void PttUpdated(PTTClient client, LiPttEventArgs e)
-        {
-            LiPTT.PttEventEchoed -= PttUpdated;
-
-            IAsyncAction action;
-
-            ScreenBuffer screen = client.Screen;
-
-            if (e.State == PttState.Article)
-            {
-                bound = LiPTT.Bound;
-
-                int newline = LiPTT.Client.ComparePrevious();
-
-                if (newline == 0)
-                {
-                    for (int i = 0; i < 23; i++)
-                    {
-                        RawLines.Add(LiPTT.Copy(screen[i]));
-                    }
-                }
-                else if (newline < 23)
-                {
-                    for (int i = 23 - newline; i < 23; i++)
-                    {
-                        RawLines.Add(LiPTT.Copy(screen[i]));
-                    }
-                }
-                else if (line_bug == false)
-                {
-                    Debug.WriteLine(string.Format("PTT BUG?"));
-                    line_bug = true;
-                    BugAlarmed?.Invoke(this, new EventArgs());
-                }
-
-                action = LiPTT.RunInUIThread(() =>
-                {
-                    Parse();
-                    if (bound.Progress == 100) FlushTextBlock();
-                    if (!isBeginLoad)
-                    {
-                        if (Count > 0)
-                        {
-                            isBeginLoad = true;
-                            BeginLoaded?.Invoke(this, new EventArgs());
-                        }
-                    }
-                    sem.Release();
-                });
-
-                if (bound.Progress == 100)
-                    more = false;
-            }
-        }
-
-        public void BeginLoad(Article article)
-        {
-            Clear();
-
-            isBeginLoad = false;
-
-            ArticleTag = article;
-
-            IAsyncAction action = null;
-
-            ScreenBuffer screen = LiPTT.Screen;
-
-            bound = LiPTT.Bound;
-            //progress = ReadProgress(screen.ToString(23));
-
-            Regex regex;
-            Match match;
-            string tmps;
-
-            line_bug = false;
-            header = false;
-
-            tmps = screen.ToString(3);
-
-            if (tmps.StartsWith("───────────────────────────────────────"))
-            {
-                header = true;
-            }
-
-            if (header)
-            {
-                //作者
-                tmps = screen.ToString(0);
-                regex = new Regex(@"作者  [A-Za-z0-9]+ ");
-                match = regex.Match(tmps);
-                if (match.Success)
-                {
-                    ArticleTag.Author = tmps.Substring(match.Index + 4, match.Length - 5);
-                }
-
-                //匿稱
-                ArticleTag.AuthorNickname = "";
-                regex = new Regex(@"\([\S\s^\(^\)]+\)");
-                match = regex.Match(tmps);
-                if (match.Success)
-                {
-                    ArticleTag.AuthorNickname = tmps.Substring(match.Index + 1, match.Length - 2);
-                }
-
-                //內文標題
-                tmps = screen.ToString(1).Replace('\0', ' ').Trim();
-                match = new Regex(LiPTT.bracket_regex).Match(tmps);
-                if (match.Success)
-                {
-                    if (match.Index + match.Length + 1 < tmps.Length)
-                    {
-                        ArticleTag.InnerTitle = tmps.Substring(match.Index + match.Length + 1);
-                    }
-                    else
-                    {
-                        ArticleTag.InnerTitle = ArticleTag.Title;
-                    }
-                }
-                else
-                {
-                    if (tmps.StartsWith("標題 "))
-                        tmps = tmps.Substring(3).Trim();
-
-                    if (tmps != "")
-                        ArticleTag.InnerTitle = tmps;
-                    else
-                        ArticleTag.InnerTitle = ArticleTag.Title;
-                }
-
-                //時間
-                //https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
-                System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
-                tmps = screen.ToString(2, 7, 24);
-                if (tmps[8] == ' ') tmps = tmps.Remove(8, 1);
-
-                try
-                {
-                    ArticleTag.Date = DateTimeOffset.ParseExact(tmps, "ddd MMM d HH:mm:ss yyyy", provider);
-                }
-                catch (FormatException)
-                {
-                    Debug.WriteLine("時間格式有誤? " + tmps);
-                }
-
-                line = 3;
-            }
-            else
-            {
-                line = 0;
-                Debug.WriteLine("沒有文章標頭? " + tmps);
-                ArticleTag.InnerTitle = ArticleTag.Title;
-            }
-
-            //////////////////////////////////////////////////////////////////////////////////////////
-            //第一頁文章內容
-            //////////////////////////////////////////////////////////////////////////////////////////
-            for (int i = header ? 4 : 0; i < 23; i++, line++)
-            {
-                RawLines.Add(LiPTT.Copy(screen[i]));
-            }
-
-            action = LiPTT.RunInUIThread(() =>
-            {
-                Parse();
-                if (bound.Progress == 100)
-                {
-                    FlushTextBlock();
-                }
-                    
-                if (Count > 0)
-                {
-                    isBeginLoad = true;
-                    BeginLoaded?.Invoke(this, new EventArgs());
-                }
-            });
-
-            InitialLoaded = true;
-            if (bound.Progress < 100) more = true;
-            else more = false;
         }
 
         public void Parse()
@@ -676,7 +495,7 @@ namespace LiPTT
 
             Echo echo = new Echo() { Floor = Floor++ };
 
-            string str = LiPTT.GetString(block, 0, LiPTT.Screen.Width - 13).Replace('\0', ' ').Trim();
+            string str = LiPTT.GetString(block, 0, 80 - 13).Replace('\0', ' ').Trim();
 
             int index = 2;
             int end = str.IndexOf(':');

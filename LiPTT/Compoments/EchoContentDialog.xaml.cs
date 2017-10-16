@@ -54,12 +54,7 @@ namespace LiPTT
 
         private void DialogOpen_PttEventEchoed(PTTClient sender, LiPttEventArgs e)
         {
-            var x = LiPTT.Screen.ToStringArray();
-            if (e.State == PttState.EchoType)
-            {
-                LiPTT.PttEventEchoed -= DialogOpen_PttEventEchoed;
-                LiPTT.Send(new byte[] { 0x0D, 0x0D });
-            }
+
         }
 
         private void CancelClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)

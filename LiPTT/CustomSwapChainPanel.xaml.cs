@@ -23,6 +23,8 @@ namespace LiPTT
         private TextFormat LeftFormat;
         private TextFormat RightFormat;
 
+        PTT ptt;
+
         public float FontSize
         {
             get; set;
@@ -35,9 +37,10 @@ namespace LiPTT
 
         public CustomSwapChainPanel()
         {
-            this.InitializeComponent();
+            InitializeComponent();
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
             Loaded += CustomSwapChainPanel_Loaded;
-            LiPTT.ScreenDrawn += Draw;
+            ptt.ScreenDrawn += Draw;
             Colorful = true;
         }
 
@@ -45,7 +48,6 @@ namespace LiPTT
         {
             AdjustFontSize();
             CreateDirectXSwapChain();
-            DrawPTT();
             this.SizeChanged += CustomSwapChainPanel_SizeChanged;
         }
 
@@ -88,7 +90,6 @@ namespace LiPTT
             }
 
             AdjustFontSize();
-            DrawPTT();
         }
 
         public void CreateDirectXSwapChain()
@@ -225,9 +226,9 @@ namespace LiPTT
 
         private async void Draw(object sender, ScreenEventArgs e)
         {
-            await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                if (DirectXFactory.Ready) DrawPTT();
+                if (DirectXFactory.Ready && d2d1DC != null) DrawPTT(e.Screen);
             });
         }
 
@@ -352,11 +353,6 @@ namespace LiPTT
             
                 swapChain.Present(1, PresentFlags.None);
             }
-        }
-
-        public void DrawPTT()
-        {
-            if (d2d1DC != null) DrawPTT(LiPTT.Screen);
         }
 
         private void AdjustFontSize()

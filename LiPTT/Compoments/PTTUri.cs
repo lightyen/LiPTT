@@ -102,6 +102,11 @@ namespace LiPTT
             }
         }
 
+        public int YoutubeStartSeconds
+        {
+            get; set;
+        }
+
         public PTTUri Expand()
         {
             if (!IsShort) return this;
@@ -251,21 +256,71 @@ namespace LiPTT
 
         private void GetYoutube()
         {
+            YoutubeStartSeconds = 0;
+
             if (Host == "youtu.be")
             {
                 youtubeID = LocalPath.Substring(1);
             }
             else if (Host == "youtube.com" || Host == "www.youtube.com" || Host == "m.youtube.com" || Host == "tw.youtube.com")
             {
-                string[] query = Query.Split(new char[] { '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] q = Query.Split(new char[] { '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
 
-                foreach (string s in query)
+                foreach (string s in q)
                 {
                     if (s.StartsWith("v"))
                     {
                         youtubeID = s.Substring(s.IndexOf("=") + 1);
                         break;
                     }
+                }
+            }
+
+            string[] query = Query.Split(new char[] { '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string str in query)
+            {
+                if (str.StartsWith("t"))
+                {
+                    string time = str.Substring(str.IndexOf("=") + 1);
+
+                    Regex regex = new Regex(@"(?<Hour>\d*h)?(?<Minute>\d*m)?(?<Second>\d*s)?");
+
+                    Match match = regex.Match(time);
+
+                    if (match.Success)
+                    {
+                        string h = match.Groups["Hour"].Value.TrimEnd('h');
+                        string m = match.Groups["Minute"].Value.TrimEnd('m');
+                        string s = match.Groups["Second"].Value.TrimEnd('s');
+
+                        try
+                        {
+                            int hh = h.Length > 0 ? int.Parse(h) : 0;
+                            int mm = m.Length > 0 ? int.Parse(m) : 0;
+                            int ss = s.Length > 0 ? int.Parse(s) : 0;
+
+                            YoutubeStartSeconds = hh;
+                            YoutubeStartSeconds = YoutubeStartSeconds * 60 + mm;
+                            YoutubeStartSeconds = YoutubeStartSeconds * 60 + ss;
+                        }
+                        catch (FormatException)
+                        {
+
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            YoutubeStartSeconds = int.Parse(time);
+                        }
+                        catch (FormatException)
+                        {
+
+                        }
+                    }                    
+                    break;
                 }
             }
         }

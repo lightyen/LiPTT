@@ -99,6 +99,8 @@ namespace LiPTT
 
         public Article CurrentArticle { get; set; }
 
+        public Board CurrentBoard { get; set; }
+
         ScreenBuffer Cache;
 
         Bound Bound;
@@ -148,6 +150,15 @@ namespace LiPTT
 
     public partial class PTT
     {
+        public PTT()
+        {
+            Kicked += (a, b) =>
+            {
+                State = PttState.Kicked;
+                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
+            };
+        }
+
         /// <summary>
         /// 開始連PTT囉
         /// </summary>
@@ -924,7 +935,6 @@ namespace LiPTT
 
         private void CacheScreen()
         {
-            Cache?.Dispose();
             Cache = new ScreenBuffer(Screen);
         }
 

@@ -527,7 +527,7 @@ namespace LiPTT
                         else
                         {
                             TestWebSocketRecvTimer?.Cancel();
-                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer((timer) => { WebSocketUpdateScreen(); }, TimeSpan.FromTicks(testTimespan.Ticks * 5));
+                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer((timer) => { WebSocketUpdateScreen(); }, TimeSpan.FromTicks(testTimespan.Ticks * 10));
                         }
                     }
                 }
@@ -1027,7 +1027,7 @@ namespace LiPTT
             {
                 for (int i = 0; i < message.Length; i++) Debug.WriteLine("==>0x{0:X2}", message[i]);
 
-                if (ConnectionSecurity)
+                if (security)
                 {
                     await WebSocket.OutputStream.WriteAsync(message.AsBuffer());
                 }
@@ -1053,7 +1053,7 @@ namespace LiPTT
 
                 Debug.WriteLine("==>" + c);
 
-                if (ConnectionSecurity)
+                if (security)
                 {
                     await WebSocket.OutputStream.WriteAsync(msg.AsBuffer());
                 }
@@ -1077,7 +1077,7 @@ namespace LiPTT
                 bufOneByte[0] = b;
                 Debug.WriteLine("==>0x{0:X2}", b);
 
-                if (ConnectionSecurity)
+                if (security)
                 {
                     await WebSocket.OutputStream.WriteAsync(bufOneByte.AsBuffer());
                 }
@@ -1124,7 +1124,7 @@ namespace LiPTT
 
             try
             {
-                if (ConnectionSecurity)
+                if (security)
                 {
                     var os = WebSocket.OutputStream;
                     await os.WriteAsync(message.AsBuffer());
@@ -1720,12 +1720,6 @@ namespace LiPTT
             CurrentBlock.BackgroundColor = CurrentBackground;
             CurrentBlock.Content = 0x20;
             NextBlock();
-        }
-
-        public void Dispose()
-        {
-            Screen = null;
-            GC.Collect();
         }
     }
 

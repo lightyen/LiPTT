@@ -58,11 +58,6 @@ namespace LiPTT
 
         private Paragraph Paragraph;
 
-        /// <summary>
-        /// Load完成。(給ScrollViewer在Load完成後捲到頂部用)
-        /// </summary>
-        public event EventHandler BeginLoaded;
-
         public delegate void FullScreenEventHandler(Grid sender, FullScreenEventArgs e);
 
         public event FullScreenEventHandler FullScreenEntered;
@@ -524,21 +519,30 @@ namespace LiPTT
         {
             FlushTextBlock();
 
+            Match match;
+            Regex regex;
+
             Echo echo = new Echo() { Floor = Floor++ };
 
-            string str = LiPTT.GetString(block, 0, 80 - 13).Replace('\0', ' ').Trim();
 
-            int index = 2;
-            int end = str.IndexOf(':');
+            //IP
+            string ip = LiPTT.GetString(block, 51, 15);
+            regex = new Regex(LiPTT.ValidIpAddressRegex);
+            match = regex.Match(ip);
+            int ip_space;
+            if (ptt.CurrentBoard.IPVisible && match.Success)
+            {
+                ip = match.ToString();
+                ip_space = 16;
+            }
+            else
+            {
+                ip = "";
+                ip_space = 0;
+            }
 
-            string auth = str.Substring(index, end - index);
-
-            echo.Author = auth.Trim();
-
-            echo.Content = str.Substring(end + 1);
-
-            string time = LiPTT.GetString(block, 67, 11);
             //自訂日期和時間格式字串 https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
+            string time = LiPTT.GetString(block, 67, 11);
             try
             {
                 System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
@@ -549,6 +553,18 @@ namespace LiPTT
             {
                 Debug.WriteLine(ex.ToString());
             }
+
+            //
+            string str = LiPTT.GetString(block, 0, 80 - 13 - ip_space).Replace('\0', ' ').Trim();
+
+            int index = 2;
+            int end = str.IndexOf(':');
+
+            string auth = str.Substring(index, end - index);
+
+            echo.Author = auth.Trim();
+
+            echo.Content = str.Substring(end + 1);
 
             if (str.StartsWith("推")) echo.Evaluation = Evaluation.推;
             else if (str.StartsWith("噓")) echo.Evaluation = Evaluation.噓;
@@ -656,8 +672,7 @@ namespace LiPTT
             g1.Children.Add(tb2);
 
             //推文內容////////////////////////////////////////////
-            Match match;
-            Regex regex = new Regex(LiPTT.http_regex);
+            regex = new Regex(LiPTT.http_regex);
             index = 0; //for string
             RelativePanel panel = new RelativePanel()
             {
@@ -1115,7 +1130,7 @@ namespace LiPTT
             return new DownloadResult() { Index = index, Item = ImgGrid };
         }
 
-        private void AddVideoView(string tag, string ID, Uri uri)
+        private void AddVideoView(string tag, string ID, PTTUri uri)
         {
             Grid MainGrid = new Grid() { Tag = tag, HorizontalAlignment = HorizontalAlignment.Stretch, };
 
@@ -1250,6 +1265,12 @@ namespace LiPTT
                 {
                     bool autoplay = !setting.AutoLoad;
                     await webview.InvokeScriptAsync("LoadVideoByID", new string[] { ID, autoplay.ToString() });
+                    if (tag == "youtube" && uri.YoutubeStartSeconds > 0)
+                    {
+                        Debug.WriteLine(string.Format("youtube start time: {0}", uri.YoutubeStartSeconds));
+                        await webview.InvokeScriptAsync("AddStartSecond", new string[] { uri.YoutubeStartSeconds.ToString() });
+                    }
+                    
                 }
                 catch (Exception ex)
                 {

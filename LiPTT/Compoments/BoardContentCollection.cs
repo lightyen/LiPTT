@@ -25,11 +25,6 @@ namespace LiPTT
 {
     public class BoardContentCollection : ObservableCollection<Article>, ISupportIncrementalLoading
     {
-        /// <summary>
-        /// Load完成。(給ScrollViewer在Load完成後捲到頂部用)
-        /// </summary>
-        public event EventHandler BeginLoaded;
-
         PTT ptt;
         SemaphoreSlim Semaphore;
         public bool Loading;

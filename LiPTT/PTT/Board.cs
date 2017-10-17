@@ -156,8 +156,6 @@ namespace LiPTT
             }
         }
 
-        private Board CurrentBoard;
-
         private void ReadArticleTag()
         {
             //Find Cursor

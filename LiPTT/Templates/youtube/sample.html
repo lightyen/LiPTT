@@ -44,21 +44,26 @@
 
 		var options = { 
 			events: {
-				'onError': onPlayerError
+				'onError': onPlayerError,
 			}
 		};
 
 		document.getElementById('youtube_div').setAttribute("style", "position: absolute; top: 0px; left: 0px; width: 100%; height: 100%;");
 
-		var event = new Event('build');
+		var buildEvent = new Event('build');
 
 		var ready = false;
 
-		function onYouTubeIframeAPIReady() {
-
+		function onYouTubePlayerAPIReady ()
+		{
 			ready = true;
 
-			document.getElementById('youtube_div').dispatchEvent(event);
+			document.getElementById('youtube_div').dispatchEvent(buildEvent);
+      	}
+
+      	function Ready(event)
+      	{
+
       	}
 
       	function Init(videoID, autoplay)
@@ -66,10 +71,10 @@
       		options.videoId = videoID;
       		options.playerVars = new Object();
       		options.playerVars.autoplay = 0;
-console.log(options);
-      		if (autoplay == "True") options.playerVars.autoplay = 1;
 
+			if (autoplay == "True") options.playerVars.autoplay = 1;if (autoplay == "True") options.playerVars.autoplay = 1;
 			player = new YT.Player('youtube_div', options);
+			player.addEventListener('onReady', 'Ready');
       	}
 
       	function onPlayerError(e)
@@ -103,7 +108,27 @@ console.log(options);
       		player.playVideo();
       	}
 
-      	LoadVideoByID('QWBYdZbrSOo', 'True');
+      	var startSeconds;
+
+      	function CueVideoById()
+      	{
+			player.cueVideoById(options.videoId, startSeconds, 'highres');
+      	}
+
+      	function AddStartSecond(startSec)
+		{
+			startSeconds = startSec;
+			document.getElementById('youtube_div').addEventListener('build', function (e) {
+					player.addEventListener('onReady', 'CueVideoById');
+      		}, false);
+		}
+
+		///////////
+		///TEST
+		///////////
+      	LoadVideoByID('1jUpr14BLVY', 'False');
+		AddStartSecond(5);
+
 
 	</script>
 

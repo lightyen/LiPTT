@@ -2,6 +2,7 @@
 using System.Linq;
 using Windows.System;
 using Windows.System.Threading;
+using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -97,6 +98,7 @@ namespace LiPTT
                     SplitViewPaneContent.DataContext = b.Article;
                     RingActive = false;
                     ControlVisible = true;
+                    back = false;
                 });
             };
 
@@ -115,6 +117,7 @@ namespace LiPTT
                 }, TimeSpan.FromMilliseconds(2000));
             };
 
+            Debug.WriteLine("Article 訂閱事件");
             Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             ContentCollection.FullScreenEntered += EnterFullScreen;
@@ -125,6 +128,7 @@ namespace LiPTT
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            Debug.WriteLine("Article 取消訂閱");
             ContentCollection.FullScreenEntered -= EnterFullScreen;
             ContentCollection.FullScreenExited -= ExitFullScreen;
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
@@ -179,6 +183,7 @@ namespace LiPTT
 
         private void EnterFullScreen(Grid youtuGrid, FullScreenEventArgs e)
         {
+            Debug.WriteLine("Article 取消訂閱");
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed -= ArticlePage_PointerPressed;
 
@@ -194,6 +199,7 @@ namespace LiPTT
             app.FullScreen = true;
             youtuGrid.Children.Remove(e.WebView);
             VideoGrid.Children.Add(e.WebView);
+            e.WebView.Focus(FocusState.Programmatic);
         }
 
         private void ExitFullScreen(Grid youtuGrid, FullScreenEventArgs e)
@@ -214,6 +220,7 @@ namespace LiPTT
                 });
             }
 
+            Debug.WriteLine("Article 訂閱事件");
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
         }
@@ -225,14 +232,14 @@ namespace LiPTT
             if (args.CurrentPoint.Properties.IsRightButtonPressed) GoBack();
         }
 
-        private bool back = false;
+        private bool back;
 
         private void GoBack()
         {
             if (!control_visible || 
                 !ContentCollection.InitialLoaded ||
                 ContentCollection.Loading ||
-                ContentCollection.VideoRun != 0 ||
+                ContentCollection.VideoRun > 0 ||
                 LiPTT.Frame.CurrentSourcePageType != typeof(ArticlePage)) return;
 
             if (back) return;
@@ -250,26 +257,32 @@ namespace LiPTT
             {
                 if (o is Grid grid)
                 {
-                    if (GetUIElement<Button>(grid) is Button button)
+                    if (GetUIElement<WebView>(grid) is WebView webview)
                     {
-                        if (button.Visibility == Visibility.Collapsed)
+                        if (GetUIElement<Button>(grid) is Button button)
                         {
-                            if (GetUIElement<WebView>(grid) is WebView webview)
+                            if (button.Visibility == Visibility.Visible)
                             {
-                                try
-                                {
-                                    string returnStr = await webview.InvokeScriptAsync("StopVideo", new string[] { });
-                                    //webview.Navigate(new Uri("ms-appx-web:///Templates/blank.html"));
-                                    grid.Children.Remove(webview);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Debug.WriteLine("Script Error" + ex.ToString());
-                                }
+                                return;
                             }
                         }
+                        await TryStopVideo(webview);
                     }
                 }
+            }
+        }
+
+        private async Task TryStopVideo(WebView webview)
+        {
+            try
+            {
+                Debug.WriteLine(string.Format("StopVideo"));
+                string returnStr = await webview.InvokeScriptAsync("StopVideo", new string[] { });
+                webview.Navigate(new Uri("ms-appx-web:///Templates/blank.html"));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Script Error" + ex.ToString());
             }
         }
 

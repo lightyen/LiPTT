@@ -203,18 +203,19 @@ namespace LiPTT
                         e.Article.PttCoin = Convert.ToInt32(p.Substring(match2.Index, match2.Length));
                     else
                         e.Article.PttCoin = 0;
+
+                    ReadArticleInfomationCompleted = true;
                 });
 
-                ReadArticleInfomationCompleted = true;
                 PressAnyKey();
             }
-            else if (e.State == PttState.PressAny && !BackToArticle)
+            else if (e.State == PttState.PressAny && !BackToArticle && ReadArticleInfomationCompleted)
             {
                 BackToArticle = true;
                 Bound = new Bound();
                 Right();
             }
-            else if (e.State == PttState.Board && !BackToArticle)
+            else if (e.State == PttState.Board && !BackToArticle && ReadArticleInfomationCompleted)
             {
                 BackToArticle = true;
                 Bound = new Bound();

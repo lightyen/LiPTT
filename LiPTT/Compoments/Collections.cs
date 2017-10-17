@@ -36,8 +36,8 @@ namespace LiPTT
     public enum ArticleType
     {
         無,
-        一般,
-        回覆,
+        一般文,
+        回覆文,
         轉文,
     }
 
@@ -78,7 +78,7 @@ namespace LiPTT
     }
 
     /// <summary>
-    /// 看板資訊
+    /// 看板
     /// </summary>
     public class Board : INotifyPropertyChanged
     {
@@ -423,8 +423,10 @@ namespace LiPTT
         }
     }
 
-
-    public class Article : IComparable<Article>, INotifyPropertyChanged
+    /// <summary>
+    /// 文章
+    /// </summary>
+    public class Article : INotifyPropertyChanged
     {
         /// <summary>
         /// 文章流水編號
@@ -459,19 +461,20 @@ namespace LiPTT
         }
 
         /// <summary>
-        /// 置底文index
+        /// 
         /// </summary>
-        public int Star
+        public bool HasHeader
         {
             get
             {
-                return star;
+                return header;
             }
             set
             {
-                star = value;
-                NotifyPropertyChanged("Star");
+                header = value;
+                NotifyPropertyChanged("HasHeader");
             }
+            
         }
 
         /// <summary>
@@ -665,7 +668,7 @@ namespace LiPTT
 
         private uint id;
         private string aid;
-        private int star;
+        private bool header;
         private bool deleted;
         private int like;
         private DateTimeOffset date;
@@ -684,28 +687,6 @@ namespace LiPTT
         private void NotifyPropertyChanged([CallerMemberName]string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        public int CompareTo(Article other)
-        {
-            if (this.ID != uint.MaxValue && other.ID != uint.MaxValue)
-            {
-                if (this.ID > other.ID) return -1; //大的排前面
-                else if (this.ID < other.ID) return 1;
-                else return 0;
-            }
-            else if (this.ID == uint.MaxValue && other.ID == uint.MaxValue)
-            {
-                if (this.Star > other.Star) return -1;
-                else if (this.Star < other.Star) return 1;
-                else return 0;
-            }
-            else
-            {
-                if (this.ID == uint.MaxValue) return -1;
-                else if (other.ID == uint.MaxValue) return 1;
-                else return 0;
-            }
         }
     }
 

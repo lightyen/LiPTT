@@ -24,8 +24,6 @@ namespace LiPTT
     /// </summary>
     public sealed partial class BBSPage : Page
     {
-        PTT ptt;
-
         public BBSPage()
         {
             InitializeComponent();

@@ -23,7 +23,7 @@ namespace LiPTT
 {
     public partial class ArticleContentCollection : ObservableCollection<object>, ISupportIncrementalLoading
     {
-        private bool more;
+        PTT ptt;
 
         public bool InitialLoaded { get; private set; }
 
@@ -36,27 +36,14 @@ namespace LiPTT
         {
             InitialLoaded = false;
             RichTextBlock = null;
-            line = 0;
-            header = false;
             ParsedLine = 0;
             RawLines.Clear();
-            more = false;
-            bound = new Bound();
             base.ClearItems();
         }
 
         public List<Block[]> RawLines { get; set; } //文章生肉串
 
         public List<Task<DownloadResult>> DownloadImageTasks { get; set; }
-
-        private bool header;
-
-        private bool line_bug;
-
-        /// <summary>
-        /// 已讀的行數(包含標題頭)
-        /// </summary>
-        private int line;
 
         /// <summary>
         /// 已過濾的行數(不包含標題頭)
@@ -71,21 +58,17 @@ namespace LiPTT
 
         private Paragraph Paragraph;
 
-        private Bound bound;
-
         /// <summary>
         /// Load完成。(給ScrollViewer在Load完成後捲到頂部用)
         /// </summary>
         public event EventHandler BeginLoaded;
-
-        public event EventHandler BugAlarmed;
 
         public delegate void FullScreenEventHandler(Grid sender, FullScreenEventArgs e);
 
         public event FullScreenEventHandler FullScreenEntered;
         public event FullScreenEventHandler FullScreenExited;
 
-        private SemaphoreSlim sem = new SemaphoreSlim(0, 1);
+        private SemaphoreSlim Semaphore;
 
         object videorunkey = new object();
 
@@ -107,7 +90,6 @@ namespace LiPTT
         }
 
         private uint Floor = 1;
-        public bool isBeginLoad;
 
         private Binding ImageButtonFontSizeBinding;
         private Binding SmallFontSizeBinding;
@@ -116,11 +98,10 @@ namespace LiPTT
 
         public ArticleContentCollection()
         {
-            header = false;
-            line = 0;
+            ptt = Application.Current.Resources["PTT"] as PTT;
+            Semaphore = new SemaphoreSlim(0, 1);
             RawLines = new List<Block[]>();
             DownloadImageTasks = new List<Task<DownloadResult>>();
-            bound = new Bound();
 
             ImageButtonFontSizeBinding = new Binding
             {
@@ -160,26 +141,24 @@ namespace LiPTT
             });
         }
 
+        uint LoadMoreItemsResult;
+
         public bool Loading
         {
-            get
-            {
-                return sem.CurrentCount == 0;
-            }
+            get; set;
         }
 
         public bool HasMoreItems
         {
             get
             {
-                if (InitialLoaded)
-                    return more;
+                if (InitialLoaded && !Loading && ptt.HasMoreArticleContent)
+                {
+                    Loading = true;
+                    return true;
+                }   
                 else
                     return false;
-            }
-            private set
-            {
-                more = value;
             }
         }
 
@@ -190,17 +169,67 @@ namespace LiPTT
 
         private async Task<LoadMoreItemsResult> InnerLoadMoreItemsAsync(uint count)
         {
-            if (InitialLoaded)
-            {
-                await Task.Run(() => {
-                    //LiPTT.PttEventEchoed += PttUpdated;
-                    //LiPTT.PageDown();
-                });
+            ptt.ArticleContentUpdated += ArticleContentUpdated;
 
-                await sem.WaitAsync();
+            ptt.GetArticleContent();
+            await Semaphore.WaitAsync();
+
+            ptt.ArticleContentUpdated -= ArticleContentUpdated;
+
+            Loading = false;
+
+            return new LoadMoreItemsResult { Count = LoadMoreItemsResult };
+        }
+
+        private async void ArticleContentUpdated(object sender, ArticleContentUpdatedEventArgs e)
+        {
+            await LiPTT.RunInUIThread(() => {
+
+                foreach (var line in e.Lines)
+                {
+                    RawLines.Add(line);
+                }
+
+                LoadMoreItemsResult = (uint)e.Lines.Count;
+
+                Parse();
+
+                if (e.Bound.Progress == 100)
+                {
+                    FlushTextBlock();
+                }
+
+                Semaphore.Release();
+            });
+        }
+
+        public void BeginLoad(ArticleContentUpdatedEventArgs e)
+        {
+            ArticleTag = e.Article;
+
+            if (ArticleTag.HasHeader)
+            {
+                for (int i = 4; i < e.Lines.Count; i++)
+                {
+                    RawLines.Add(e.Lines[i]);
+                }
+            }
+            else
+            {
+                foreach (var line in e.Lines)
+                {
+                    RawLines.Add(line);
+                }
             }
 
-            return new LoadMoreItemsResult { Count = (uint)this.Count };
+            Parse();
+
+            if (e.Bound.Progress == 100)
+            {
+                FlushTextBlock();
+            }
+            
+            InitialLoaded = true;
         }
 
         public void Parse()

@@ -1,27 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
 using Windows.System;
 using Windows.System.Threading;
-using Windows.Foundation.Collections;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using Windows.UI.Xaml.Documents;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 
 namespace LiPTT
@@ -81,26 +70,40 @@ namespace LiPTT
 
         private double VerticalScrollOffset;
 
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        private async void ArticleContentBeginLoad(object sender, ArticleContentUpdatedEventArgs e)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                PTT ptt = Application.Current.Resources["PTT"] as PTT;
+                ptt.ArticleContentUpdated -= ArticleContentBeginLoad;
+                ContentCollection.BeginLoad(e);
+            });
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
 
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+
             ControlVisible = false;
             RingActive = true;
-            //冷靜一下，先喝杯咖啡
-            await Task.Delay(50);
-            article = LiPTT.CurrentArticle;
 
-            ContentCollection.BeginLoaded += (a, b) =>
+            article = ptt.CurrentArticle;
+
+            ptt.ArticleInfomationCompleted += async (a, b) =>
             {
-                if (ArticleListView.Items.Count > 0)
-                    ArticleListView.ScrollIntoView(ArticleListView.Items[0]);
-                Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
-                Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
-                RingActive = false;
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                    ArticleHeader.DataContext = b.Article;
+                    SplitViewPaneContent.DataContext = b.Article;
+                    RingActive = false;
+                    ControlVisible = true;
+                });
             };
 
-            ContentCollection.BugAlarmed += (a, b) => {
+            ptt.ArticleContentUpdated += ArticleContentBeginLoad;
+
+            ptt.ParseBugAlarmed += (a, b) =>
+            {
                 var act = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                     FlyoutBase.ShowAttachedFlyout(RingGrid);
                 });
@@ -112,13 +115,12 @@ namespace LiPTT
                 }, TimeSpan.FromMilliseconds(2000));
             };
 
+            Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             ContentCollection.FullScreenEntered += EnterFullScreen;
             ContentCollection.FullScreenExited += ExitFullScreen;
-            LoadingExtraData = false;
-            pressAny = false;
 
-            //LiPTT.PttEventEchoed += ReadAIDandExtra;
-            //LiPTT.Right();            
+            ptt.GoToCurrentArticle();       
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -127,6 +129,8 @@ namespace LiPTT
             ContentCollection.FullScreenExited -= ExitFullScreen;
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed -= ArticlePage_PointerPressed;
+
+            base.OnNavigatedFrom(e);
         }
 
         private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
@@ -214,119 +218,30 @@ namespace LiPTT
             Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
         }
 
-        private bool RightPress = false;
-
         private void ArticlePage_PointerPressed(CoreWindow sender, PointerEventArgs args)
         {
             if (EchoDialog.Showing) return;
 
-            if (RightPress == false && args.CurrentPoint.Properties.IsRightButtonPressed)
-            {
-                RightPress = true;
-                Window.Current.CoreWindow.PointerReleased += ArticlePage_PointerReleased;
-            }
+            if (args.CurrentPoint.Properties.IsRightButtonPressed) GoBack();
         }
 
-        private void ArticlePage_PointerReleased(CoreWindow sender, PointerEventArgs args)
+        private bool back = false;
+
+        private void GoBack()
         {
-            if (RightPress)
-            {
-                RightPress = false;
-                Window.Current.CoreWindow.PointerPressed -= ArticlePage_PointerPressed;
-                Window.Current.CoreWindow.PointerReleased -= ArticlePage_PointerReleased;
-                GoBack();
-            }
-        }
+            if (!control_visible || 
+                !ContentCollection.InitialLoaded ||
+                ContentCollection.Loading ||
+                ContentCollection.VideoRun != 0 ||
+                LiPTT.Frame.CurrentSourcePageType != typeof(ArticlePage)) return;
 
-        private bool LoadingExtraData;
+            if (back) return;
+            back = true;
+            StopVideo();
 
-        private bool pressAny;
-
-        private void ReadAIDandExtra(PTTClient client, LiPttEventArgs e)
-        {
-            if (e.State == PttState.Article && !LoadingExtraData)
-            {
-                LoadingExtraData = true;
-                //LiPTT.SendMessage('Q');
-            }
-            else if (!pressAny && e.State == PttState.AID && LoadingExtraData)
-            {
-                pressAny = true;
-                //ReadExtraData(client.Screen, (int)e.Others);
-                //LiPTT.PressAnyKey();
-            }
-            else if (e.State == PttState.Board && LoadingExtraData)
-            {
-                //LiPTT.PttEventEchoed -= ReadAIDandExtra;
-                //LiPTT.PttEventEchoed += BrowseArticle;
-                //LiPTT.Right();
-            }
-        }
-
-        private void BrowseArticle(PTTClient sender, LiPttEventArgs e)
-        {
-            switch (e.State)
-            {
-                case PttState.Article:
-                    //LiPTT.PttEventEchoed -= BrowseArticle;
-                    LoadArticle();                   
-                    break;
-            }
-        }
-
-        private void LoadArticle()
-        {
-            var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                //ContentCollection.BeginLoad(LiPTT.CurrentArticle); 
-                ArticleHeader.DataContext = LiPTT.CurrentArticle;
-                SplitViewPaneContent.DataContext = LiPTT.CurrentArticle;
-
-                ControlVisible = true;
-            });
-            
-        }
-
-        private void ReadExtraData(ScreenBuffer screen, int line)
-        {
-            var x = screen.ToStringArray();
-            //AID
-            var a = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                article.AID = screen.ToString(line, 18, 9);
-            });
-            
-            //網頁版網址
-            string str = screen.ToString(line + 1);
-            Regex regex = new Regex(LiPTT.http_regex);
-            Match match1 = regex.Match(str);
-            if (match1.Success)
-            {
-                string aaa = str.Substring(match1.Index, match1.Length);
-
-                try
-                {
-                    var b = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                        string url = str.Substring(match1.Index, match1.Length);
-                        article.WebUri = new Uri(url);
-                    });
-                }
-                catch (UriFormatException ex)
-                {
-                    Debug.WriteLine(ex.ToString());
-                }
-            }
-
-            //P幣
-            string p = screen.ToString(line + 2);
-            regex = new Regex(@"\d+");
-            Match match2 = regex.Match(p);
-            var c = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                if (match2.Success)
-                    article.PttCoin = Convert.ToInt32(p.Substring(match2.Index, match2.Length));
-                else
-                    article.PttCoin = -1;
-            });
-
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+            ptt.GoBack();
+            ptt.GoBackCompleted += GoBackCompleted;  
         }
 
         private async void StopVideo()
@@ -358,56 +273,13 @@ namespace LiPTT
             }
         }
 
-        private bool back = false;
-
-        private void GoBack()
+        private async void GoBackCompleted(object sender, PTTStateUpdatedEventArgs e)
         {
-            if (!control_visible && 
-                !ContentCollection.InitialLoaded &&
-                ContentCollection.Loading &&
-                ContentCollection.VideoRun == 0 &&
-                LiPTT.Frame.CurrentSourcePageType != typeof(ArticlePage)) return;
-
-            if (back) return;
-            back = true;
-            StopVideo();
-            //LiPTT.PttEventEchoed += PttEventEchoed_UpdateArticleTag;
-            //LiPTT.Left();
-        }
-
-        private void PttEventEchoed_UpdateArticleTag(PTTClient client, LiPttEventArgs e)
-        {
-            if (e.State == PttState.Board)
-            {
-                //LiPTT.PttEventEchoed -= PttEventEchoed_UpdateArticleTag;
-
-                //ReLoadArticleTag(client.Screen);
-                //LiPTT.PageEnd();
-
-                var action = LiPTT.RunInUIThread(() =>
-                {
-                    LiPTT.Frame.Navigate(typeof(BoardPage));
-                });
-            }
-        }
-
-        private void ReLoadArticleTag(ScreenBuffer screen)
-        {
-            if (LiPTT.CurrentArticle.ID != int.MaxValue)
-            {
-                Article article = LiPTT.ArticleCollection.Single(i => i.AID == LiPTT.CurrentArticle.AID);  
-            }
-            else //置底文
-            {
-                Article article = LiPTT.ArticleCollection.Single(i => (i.ID == int.MaxValue) && (i.Star == LiPTT.CurrentArticle.Star));
-            }
-
-            if (article != null)
-            {
-                var act = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                    article.State = LiPTT.GetReadSate((char)screen.CurrentBlocks[8].Content);
-                });
-            }
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                PTT ptt = Application.Current.Resources["PTT"] as PTT;
+                ptt.GoBackCompleted -= GoBackCompleted;
+                LiPTT.Frame.Navigate(typeof(BoardPage));
+            });
         }
 
         private DependencyObject GetUIElement<T>(DependencyObject depObj)

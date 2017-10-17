@@ -155,14 +155,11 @@ namespace LiPTT
             start = false;
             ptt.IsAppExit = false;
             SaveUserAccount(UserText.Text, PasswordText.Password);
-            enterAlreadyLogin = enterWrongLog = enteruser = enterpswd = false;
+            enterAlreadyLogin = false;
             ptt.PTTStateUpdated += EnterAccount;
             ptt.Login(UserText.Text, PasswordText.Password);
         }
 
-        private bool enteruser;
-        private bool enterpswd;
-        private bool enterWrongLog;
         private bool enterAlreadyLogin;
     
         private async void EnterAccount(object sender, PTTStateUpdatedEventArgs e)
@@ -187,11 +184,10 @@ namespace LiPTT
                     }
                     break;
                 case PttState.WrongLog:
-                    if (!enterWrongLog)
-                    {
-                        enterWrongLog = true;
-                        ptt.Yes();
-                    }                    
+                    ptt.Yes();
+                    break;
+                case PttState.ArticleNotCompleted:
+                    ptt.SendQ();
                     break;
                 case PttState.Accept:
                     {

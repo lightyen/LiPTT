@@ -108,12 +108,14 @@
     <Compile Include="ColorPage.xaml.cs">
       <DependentUpon>ColorPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Compoments\Article.cs" />
-    <Compile Include="Compoments\Board.cs" />
+    <Compile Include="Compoments\ArticleContentCollection.cs" />
+    <Compile Include="Compoments\BoardContentCollection.cs" />
     <Compile Include="Compoments\EchoContentDialog.xaml.cs">
       <DependentUpon>EchoContentDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Compoments\PTT.cs" />
+    <Compile Include="PTT\Article.cs" />
+    <Compile Include="PTT\Board.cs" />
+    <Compile Include="PTT\PTT.cs" />
     <Compile Include="Compoments\PTTUri.cs" />
     <Compile Include="Compoments\Settings.cs" />
     <Compile Include="Compoments\VisualTreeHelperExtensions.cs" />

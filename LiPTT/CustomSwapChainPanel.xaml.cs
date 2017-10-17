@@ -23,8 +23,6 @@ namespace LiPTT
         private TextFormat LeftFormat;
         private TextFormat RightFormat;
 
-        PTT ptt;
-
         public float FontSize
         {
             get; set;

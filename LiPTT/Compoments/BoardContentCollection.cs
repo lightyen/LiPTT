@@ -65,6 +65,20 @@ namespace LiPTT
 
         private SemaphoreSlim sem = new SemaphoreSlim(0, 1);
 
+        public bool HasMoreItems
+        {
+            get
+            {
+                if (ptt.HasMoreArticle && !Loading)
+                {
+                    Loading = true;
+                    return true;
+                }
+                else
+                    return false;
+            }
+        }
+
         public IAsyncOperation<LoadMoreItemsResult> LoadMoreItemsAsync(uint count)
         {
             return InnerLoadMoreItemsAsync(count).AsAsyncOperation();
@@ -94,22 +108,6 @@ namespace LiPTT
             });       
         }
 
-        private bool more;
-
         public bool InitialLoaded { get; private set; }
-
-        public bool HasMoreItems
-        {
-            get
-            {
-                if (ptt.HasArticle() && !Loading)
-                {
-                    Loading = true;
-                    return true;
-                }
-                else
-                    return false;
-            }
-        }
     }
 }

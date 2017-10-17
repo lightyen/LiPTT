@@ -72,6 +72,9 @@ namespace LiPTT
                 case PttState.AlreadyLogin:
                     State = "有重複登入，踢掉中...";
                     break;
+                case PttState.ArticleNotCompleted:
+                    State = "您有一篇文章尚未完成";
+                    break;
                 case PttState.OverLoading:
                     State = "PTT被你玩壞惹?";
                     break;

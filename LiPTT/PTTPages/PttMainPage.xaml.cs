@@ -21,14 +21,11 @@ namespace LiPTT
     /// </summary>
     public sealed partial class PttMainPage : Page
     {
-        PTT ptt;
-
         public PttMainPage()
         {
             InitializeComponent();
 
             PTT ptt = Application.Current.Resources["PTT"] as PTT;
-
             LiPTT.Frame = PTTFrame;
             ptt.Kicked += async (o, e) =>
             {

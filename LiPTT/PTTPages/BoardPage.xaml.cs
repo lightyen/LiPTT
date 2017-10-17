@@ -101,19 +101,32 @@ namespace LiPTT
                     CurrentBoard = b.BoardInfomation;
                     await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                         NotifyPropertyChanged("CurrentBoard");
-
                         ControlVisible = true;
-                        Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
-                        Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
                     });
                 };
 
                 ptt.LoadBoardInfomation();
             }
+            else
+            {
+                ControlVisible = true;
+            }
+
+            Debug.WriteLine("Board 訂閱事件");
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+            Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
 
             //追蹤剪貼簿
             //Clipboard.ContentChanged += Clipboard_ContentChanged;
+        }
 
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            Debug.WriteLine("Board 取消訂閱");
+            //取消訂閱剪貼簿
+            //Clipboard.ContentChanged -= Clipboard_ContentChanged;
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            Window.Current.CoreWindow.PointerPressed -= Board_PointerPressed;
         }
 
         private async void Ptt_ArticlesReceived(object sender, ArticlesReceivedEventArgs e)
@@ -126,27 +139,8 @@ namespace LiPTT
 
                 if (ArticleListView.Items.Count > 0)
                     ArticleListView.ScrollIntoView(ArticleListView.Items[0]);
-                
-
             });
         }
-
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
-        {
-            //Clipboard.ContentChanged -= Clipboard_ContentChanged;
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-            Window.Current.CoreWindow.PointerPressed -= Board_PointerPressed;
-        }
-
-        private void ContentCollection_BeginLoaded(object sender, EventArgs e)
-        {
-            if (ArticleListView.Items.Count > 0)
-                ArticleListView.ScrollIntoView(ArticleListView.Items[0]);
-            ControlVisible = true;
-            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
-            Window.Current.CoreWindow.PointerPressed += Board_PointerPressed;
-        }
-
 
         //進入文章
         private void ArticleList_ItemClick(object sender, ItemClickEventArgs e)
@@ -156,16 +150,10 @@ namespace LiPTT
             Article article = e.ClickedItem as Article;
             if (article.Deleted) return;
 
-            LiPTT.CurrentArticle = article;
+            ptt.CurrentArticle = article;
             LiPTT.CacheBoard = true;
 
-            ptt.ArticleInfomationCompleted += async (a, b) =>
-            {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                    LiPTT.Frame.Navigate(typeof(ArticlePage));
-                });
-            };
-            ptt.GoToArticle(article);
+            LiPTT.Frame.Navigate(typeof(ArticlePage));
         }
 
         private void GoBack()
@@ -182,11 +170,11 @@ namespace LiPTT
             };
 
             ptt.GoToMain();
-
-            
         }
 
         private bool pressRight = false;
+
+        private bool ctrlv = false;
 
         private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
         {
@@ -195,14 +183,19 @@ namespace LiPTT
 
             if (Control_Down)
             {               
-                if (args.VirtualKey == VirtualKey.V && SearchIDTextBox != FocusManager.GetFocusedElement())
+                if (!ctrlv && args.VirtualKey == VirtualKey.V && SearchIDTextBox != FocusManager.GetFocusedElement())
                 {
+                    ctrlv = true;
                     await clipboardsem.WaitAsync();
                     DataPackageView dataPackageView = Clipboard.GetContent();
                     if (dataPackageView.Contains(StandardDataFormats.Text))
                     {
                         string ClipboardText = await dataPackageView.GetTextAsync();
                         Debug.WriteLine("Clipboard now contains: " + ClipboardText);
+
+                        PTT ptt = Application.Current.Resources["PTT"] as PTT;
+                        ptt.NavigateToIDorAIDCompleted += SearchIDEnter;
+                        ptt.NavigateToIDorAID(ClipboardText);
 
                         if (ClipboardText.StartsWith("#"))
                         {
@@ -213,7 +206,7 @@ namespace LiPTT
                         {
                             try
                             {
-                                uint id = Convert.ToUInt32(ClipboardText);
+                                //uint id = Convert.ToUInt32(ClipboardText);
                                 //LiPTT.SendMessage(id.ToString(), 0x0D);
                                 //LiPTT.PttEventEchoed += SearchIDEnter;
                             }
@@ -283,11 +276,10 @@ namespace LiPTT
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
         }
 
-        
-
-        
         private void SearchIDTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+
             if (e.Key == VirtualKey.Escape)
             {
                 SearchIDTextBox.Text = "";
@@ -299,200 +291,29 @@ namespace LiPTT
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Previous);
 
-                if (SearchIDTextBox.Text.StartsWith("#"))
-                {
-                    //LiPTT.SendMessage(SearchIDTextBox.Text, 0x0D);
-                    //LiPTT.PttEventEchoed += SearchIDEnter;
-                }
-                else
-                {
-                    try
-                    {
-                        uint id = Convert.ToUInt32(SearchIDTextBox.Text);
-                        //LiPTT.SendMessage(id.ToString(), 0x0D);
-
-                        //LiPTT.PttEventEchoed += SearchIDEnter;
-                    }
-                    catch { }
-                }
+                ptt.NavigateToIDorAIDCompleted += SearchIDEnter;
+                ptt.NavigateToIDorAID(SearchIDTextBox.Text);
             }
         }
 
-        private void SearchIDEnter(PTTClient sender, LiPttEventArgs e)
+        private async void SearchIDEnter(object sender, PTTStateUpdatedEventArgs e)
         {
-            Match match;
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                PTT ptt = Application.Current.Resources["PTT"] as PTT;
+                ptt.NavigateToIDorAIDCompleted -= SearchIDEnter;
 
-            PTT ptt = Application.Current.Resources["PTT"] as PTT;
-
-            ScreenBuffer screen = null;
-
-            if ((match = new Regex("請按任意鍵繼續").Match(screen.ToString(23))).Success)
-            {
-                //LiPTT.PressAnyKey();
-            }
-            else
-            {
-                //LiPTT.PttEventEchoed -= SearchIDEnter;
-
-                Article article = ParseArticleTag(screen.CurrentBlocks);
-
-                if (article != null && !article.Deleted)
+                if (e.State == PttState.PressAny)
                 {
-                    LiPTT.CurrentArticle = article;
-
-                    var b = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        LiPTT.Frame.Navigate(typeof(ArticlePage));
-                    });
-
+                    ptt.PressAnyKey();
                 }
-
-                var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                else if (e.State == PttState.Board && e.Article != null)
                 {
-                    SearchIDTextBox.Text = "";
-                });
-            }
-
-            
+                    ptt.CurrentArticle = e.Article;
+                    ctrlv = false;
+                    LiPTT.Frame.Navigate(typeof(ArticlePage));
+                }
+            });
 
         }
-
-        int star;
-
-        private Article ParseArticleTag(Block[] b)
-        {
-            string str;
-
-            //ID流水號
-            str = LiPTT.GetString(b, 0, 8);
-            Regex regex = new Regex(@"(\d+)");
-            Match match = regex.Match(str);
-
-            Article article = new Article();
-
-            uint id;
-
-            if (match.Success)
-            {
-                article.ID = id = Convert.ToUInt32(str.Substring(match.Index, match.Length));
-            }
-            else if (str.IndexOf('★') != -1)
-            {
-                article.ID = uint.MaxValue;
-                article.Star = star++;
-                //LiPTT.ArticleCollection.StarCount = article.Star;
-            }
-            else
-            {
-                return null;
-            }
-
-            //推文數
-            str = LiPTT.GetString(b, 9, 2);
-
-            if (str[0] == '爆')
-            {
-                article.Like = 100;
-            }
-            else if (str[0] == 'X')
-            {
-                if (str[1] == 'X')
-                {
-                    article.Like = -100;
-                }
-                else
-                {
-                    article.Like = Convert.ToInt32(str[1].ToString());
-                    article.Like = -article.Like * 10;
-                }
-            }
-            else
-            {
-                regex = new Regex(@"(\d+)");
-                match = regex.Match(str);
-                if (match.Success) article.Like = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                else article.Like = 0;
-            }
-
-            //ReadType
-            char c = (char)b[8].Content;
-            article.State = LiPTT.GetReadSate(c);
-
-            //日期
-            str = LiPTT.GetString(b, 11, 5);
-            try
-            {
-                article.Date = DateTimeOffset.Parse(str);
-            }
-            catch
-            {
-                return null;
-            }
-
-            //作者
-            str = LiPTT.GetString(b, 17, 13).Replace('\0', ' ');
-            regex = new Regex(@"[\w\S]+");
-            match = regex.Match(str);
-            if (match.Success) article.Author = str.Substring(match.Index, match.Length);
-
-            //文章類型
-            str = LiPTT.GetString(b, 30, 2).Replace('\0', ' ');
-            if (str.StartsWith("R:")) article.Type = ArticleType.回覆;
-            else if (str.StartsWith("□")) article.Type = ArticleType.一般;
-            else if (str.StartsWith("轉")) article.Type = ArticleType.轉文;
-            else article.Type = ArticleType.無;
-            str = LiPTT.GetString(b, 30, b.Length - 30).Replace('\0', ' ');
-
-            //是否被刪除?
-            if (article.Author == "-") article.Deleted = true;
-            else article.Deleted = false;
-
-            if (article.Deleted)
-            {
-                article.Title = str;
-                regex = new Regex(@"\[\S+\]");
-                match = regex.Match(str);
-                if (match.Success)
-                {
-                    //刪除的人
-                    article.Author = str.Substring(match.Index + 1, match.Length - 2);
-                    article.Title = "(本文已被刪除)";
-                }
-                else
-                {
-                    //被其他人刪除
-                    regex = new Regex(@"\(已被\S+刪除\)");
-                    match = regex.Match(str);
-                    if (match.Success)
-                    {
-                        article.Author = str.Substring(match.Index + 3, match.Length - 6);
-                    }
-                    article.Title = str.Substring(1);
-                }
-            }
-            else
-            {
-                //標題, 分類
-                regex = new Regex(@"\[\S+\]");
-                match = regex.Match(str);
-                if (match.Success)
-                {
-                    article.Category = str.Substring(match.Index + 1, match.Length - 2);
-                    str = str.Substring(match.Index + match.Length);
-                    int k = 0;
-                    while (k < str.Length && str[k] == ' ') k++;
-                    int j = str.Length - 1;
-                    while (j >= 0 && str[j] == ' ') j--;
-                    if (k <= j) article.Title = str.Substring(k, j - k + 1);
-                }
-                else
-                {
-                    article.Title = str.Substring(2);
-                }
-            }
-
-            return article;
-        }
-
     }
 }

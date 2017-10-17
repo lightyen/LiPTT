@@ -51,6 +51,11 @@ namespace LiPTT
 
     public class ArticleContentUpdatedEventArgs : EventArgs
     {
+        public Article Article
+        {
+            get; set;
+        }
+
         public Bound Bound
         {
             get; set;
@@ -92,7 +97,7 @@ namespace LiPTT
 
         public bool IsKicked { get { return State == PttState.Kicked; } }
 
-        private Article CurrentArticle { get; set; }
+        public Article CurrentArticle { get; set; }
 
         ScreenBuffer Cache;
 
@@ -110,11 +115,7 @@ namespace LiPTT
 
         public event PTTStateUpdatedHandler PTTStateUpdated;
 
-        public event PTTStateUpdatedHandler LoginStateUpdated;
-
         public event EventHandler GoToBoardCompleted;
-
-        public event EventHandler GoToArticleCompleted;
 
         public delegate void SearchBoardUpdatedHandler(object sender, SearchBoardUpdatedEventArgs e);
 
@@ -138,16 +139,15 @@ namespace LiPTT
 
         public event ArticlesReceivedHandler ArticlesReceived;
 
+        public event PTTStateUpdatedHandler NavigateToIDorAIDCompleted;
+
         public event PTTStateUpdatedHandler StateChangedCompleted;
+
+        public event PTTStateUpdatedHandler GoBackCompleted;
     }
 
     public partial class PTT
     {
-        public PTT()
-        {
-
-        }
-
         /// <summary>
         /// 開始連PTT囉
         /// </summary>
@@ -157,7 +157,6 @@ namespace LiPTT
             if (Setting.ConnectionSecurity is bool security)
                 ConnectionSecurity = security;
             State = PttState.Connecting;
-            Bound = new Bound();
             this.Connect();
         }
 
@@ -180,7 +179,7 @@ namespace LiPTT
                     Bound = b;
                     Debug.WriteLine("瀏覽文章");
                     State = PttState.Article;
-                    PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
+                    PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, Screen = Screen, Article = CurrentArticle });
 
                     List<Block[]> linelist = new List<Block[]>();
 
@@ -215,7 +214,7 @@ namespace LiPTT
                     }
 
                     if (!ParseLineBugAlarmed)
-                        ArticleContentUpdated?.Invoke(this, new ArticleContentUpdatedEventArgs { Bound = b, Lines = linelist });
+                        ArticleContentUpdated?.Invoke(this, new ArticleContentUpdatedEventArgs { Bound = b, Lines = linelist, Article = CurrentArticle });
                 }
             }
             else if (Match("您確定要離開", 22))
@@ -254,7 +253,7 @@ namespace LiPTT
             {
                 Debug.WriteLine("熱門看板");
                 State = PttState.Popular;
-                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
+                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, Screen = Screen, Article = CurrentArticle });
             }
             else if (Match("相關資訊一覽表", 2))
             {
@@ -283,7 +282,7 @@ namespace LiPTT
                 {
                     Debug.WriteLine("AID文章代碼");
                     State = PttState.AID;
-                    PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, AIDLine = line, Article = CurrentArticle });
+                    PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, AIDLine = line, Screen = Screen, Article = CurrentArticle });
                 }
             }
             else if (Match(@"文章選讀  \(y\)回應\(X\)推文\(\^X\)轉錄", 23))
@@ -292,7 +291,14 @@ namespace LiPTT
                 Bound = new Bound();
                 State = PttState.Board;
                 
-                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
+                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, Screen = Screen, Article = CurrentArticle });
+            }
+            else if (Match(@"\[←\]離開 \[→\]閱讀 \[Ctrl-P\]發表文章 \[d\]刪除 \[z\]精華區 \[i\]看板資訊\/設定", 1))
+            {
+                Debug.WriteLine("看板");
+                Bound = new Bound();
+                State = PttState.Board;
+                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, Screen = Screen, Article = CurrentArticle });
             }
             else if (Match("您想刪除其他重複登入的連線嗎", 22))
             {
@@ -398,6 +404,15 @@ namespace LiPTT
                     PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
                 }
             }
+            else if (Match(@"您有一篇文章尚未完成，\(S\)寫入暫存檔 \(Q\)算了", 1))
+            {
+                if (State != PttState.ArticleNotCompleted)
+                {
+                    Debug.WriteLine("您有一篇文章尚未完成，(S)寫入暫存檔 (Q)算了");
+                    State = PttState.ArticleNotCompleted;
+                    PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
+                }
+            }
             else if (Match("您覺得這篇文章", 23))
             {
                 Bound = new Bound();
@@ -447,396 +462,39 @@ namespace LiPTT
             }
         }
 
-        public void LoadBoardInfomation()
+        public void GoBack()
         {
+            if (State == PttState.Article)
+            {
+                PTTStateUpdated += GoBackBoardCompleted;
+                Left();
+            }
+            else if (State == PttState.Board)
+            {
+
+            }
+        }
+
+        private async void GoBackBoardCompleted(object sender, PTTStateUpdatedEventArgs e)
+        {
+            PTTStateUpdated -= GoBackBoardCompleted;
+
             if (State == PttState.Board)
             {
-                LiPTT.CacheBoard = true;
+                Article article = LiPTT.ArticleCollection.FirstOrDefault(i => i.AID == e.Article.AID);
 
-                CurrentBoard = new Board();
+                if (article == null)
+                    article = LiPTT.ArticleCollection.FirstOrDefault(i => i.ID == e.Article.ID);
 
-                //人氣
-                string str = Screen.ToString(2);
-                Regex regex = new Regex(@"\d+");
-                Match match = regex.Match(str);
-                if (match.Success)
+                if (article != null)
                 {
-                    int popu = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                    CurrentBoard.Popularity = popu;
+                    await LiPTT.RunInUIThread(() => {
+                        article.State = LiPTT.GetReadSate((char)e.Screen.CurrentBlocks[8].Content);
+                    });
                 }
 
-                PTTStateUpdated += ReadBoardInfo;
-                PressI();
+                GoBackCompleted?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, Screen = Screen });
             }
-        }
-
-        private void ReadBoardInfo(object sender, PTTStateUpdatedEventArgs e)
-        {
-            if (State == PttState.BoardInfomation)
-            {
-                var Board = CurrentBoard;
-
-                //看板名稱
-                string str = Screen.ToString(3);
-                Match match = new Regex(LiPTT.bracket_regex).Match(str);
-                if (match.Success)
-                {
-                    Board.Name = str.Substring(match.Index + 1, match.Length - 2);
-                    Board.Nick = LiPTT.GetBoardNick(Board.Name);
-                }
-
-                //看板分類 中文敘述
-                Board.Category = Screen.ToString(5, 15, 4);
-                Board.Description = Screen.ToString(5, 22, Screen.Width - 22).Replace('\0', ' ').Trim();
-
-                //版主名單
-                str = Screen.ToString(6, 15, Screen.Width - 15).Replace('\0', ' ').Trim();
-                if (!new Regex(LiPTT.bound_regex).Match(str).Success) //(無)
-                {
-                    Board.Leaders = str.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                }
-
-                if (Screen.ToString(7, 25, 4) == "公開")
-                    Board.公開 = true;
-
-                if (Screen.ToString(8, 12, 4) == "可以")
-                    Board.可進入十大排行榜 = true;
-
-                if (Screen.ToString(9, 5, 4) == "開放")
-                    Board.開放非看板會員發文 = true;
-
-                if (Screen.ToString(10, 5, 4) == "開放")
-                    Board.開放回文 = true;
-
-                if (Screen.ToString(11, 5, 4) == "開放")
-                    Board.開放自刪 = true;
-
-                if (Screen.ToString(12, 5, 4) == "開放")
-                    Board.開放推文 = true;
-
-                if (Screen.ToString(13, 5, 4) == "開放")
-                    Board.開放噓文 = true;
-
-                if (Screen.ToString(14, 5, 4) == "開放")
-                    Board.開放快速連推 = true;
-
-                if (Screen.ToString(15, 12, 4) == "自動")
-                    Board.IPVisible = true;
-
-                if (Screen.ToString(16, 12, 4) == "對齊")
-                    Board.自動對齊 = true;
-
-                if (Screen.ToString(17, 10, 2) == "可")
-                    Board.板主可刪除違規文字 = true;
-
-                if (Screen.ToString(18, 14, 2) == "會")
-                    Board.轉文自動記錄 = true;
-
-                if (Screen.ToString(19, 5, 2) == "已")
-                    Board.冷靜模式 = true;
-
-                if (Screen.ToString(20, 5, 4) == "允許")
-                    Board.允許十八歲進入 = true;
-
-                //發文限制 - 登入次數
-                str = Screen.ToString(12);
-                match = new Regex(@"\d+").Match(str);
-                if (match.Success)
-                {
-                    try
-                    {
-                        Board.LimitLogin = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                    }
-                    catch { Debug.WriteLine(str.Substring(match.Index, match.Length)); }
-                }
-
-                //發文限制 - 退文篇數
-                str = Screen.ToString(13);
-                match = new Regex(@"\d+").Match(str);
-                if (match.Success)
-                {
-                    try
-                    {
-                        Board.LimitReject = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                    }
-                    catch { Debug.WriteLine(str.Substring(match.Index, match.Length)); }
-                }
-
-
-                PressAnyKey();
-            }
-            else if (e.State == PttState.Board)
-            {
-                PTTStateUpdated -= ReadBoardInfo;
-                BoardInfomationCompleted?.Invoke(this, new BoardInfomationCompletedEventArgs { BoardInfomation = CurrentBoard });
-            }
-        }
-
-        public bool HasArticle()
-        {
-            if (State == PttState.Board)
-            {
-                if (CurrentIndex > 0) return true;
-            }
-
-            return false;
-        }
-
-        private Board CurrentBoard;
-
-        private void ReadArticleTag()
-        {
-            //Find Cursor
-            //read Tag
-            //press Q any
-            //add list
-
-            //event
-
-        }
-
-        public void GetArticles()
-        {
-            if (State == PttState.Board)
-            {
-                PTTStateUpdated += ReadBoard;
-                if (CurrentIndex != uint.MaxValue)
-                    Send(CurrentIndex.ToString(), 0x0D);
-                else
-                    PageEnd();
-            }
-        }
-
-        private uint CurrentIndex;
-
-        private async void ReadBoard(object sender, PTTStateUpdatedEventArgs e)
-        {
-            PTTStateUpdated -= ReadBoard;
-
-            if (e.State == PttState.Board)
-            {
-                List<Article> ArticleTags = new List<Article>();
-
-                Regex regex;
-                Match match;
-                string str;
-                uint id = 0;
-
-                /////////////////////////////
-                ///置底文 and 其他文章
-                ///
-                for (int i = 22; i >= 3; i--)
-                {
-                    Article article = new Article();
-
-                    //ID流水號
-                    str = Screen.ToString(i, 0, 8);
-                    if (str.IndexOf('★') != -1)
-                    {
-                        article.ID = uint.MaxValue;
-
-                        await Task.Run(() => {
-                            article.AID = GetFooterAID(i);
-                        });
-                    }
-                    else
-                    {
-                        regex = new Regex(@"(\d+)");
-                        match = regex.Match(str);
-
-                        if (match.Success)
-                        {
-                            id = Convert.ToUInt32(str.Substring(match.Index, match.Length));
-                            article.ID = id;
-
-                            if (id > CurrentIndex) continue;
-
-                            if (id != CurrentIndex && CurrentIndex != uint.MaxValue) //id 被游標遮住
-                                article.ID = CurrentIndex;
-
-                            CurrentIndex = article.ID - 1;
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
-
-                    //推文數
-                    str = Screen.ToString(i, 9, 2);
-
-                    if (str[0] == '爆')
-                    {
-                        article.Like = 100;
-                    }
-                    else if (str[0] == 'X')
-                    {
-                        if (str[1] == 'X')
-                        {
-                            article.Like = -100;
-                        }
-                        else
-                        {
-                            article.Like = Convert.ToInt32(str[1].ToString());
-                            article.Like = -article.Like * 10;
-                        }
-                    }
-                    else
-                    {
-                        regex = new Regex(@"(\d+)");
-                        match = regex.Match(str);
-                        if (match.Success) article.Like = Convert.ToInt32(str.Substring(match.Index, match.Length));
-                        else article.Like = 0;
-                    }
-
-                    //未讀、已讀、M文 等等等
-                    article.State = LiPTT.GetReadSate((char)Screen[i][8].Content);
-
-                    //文章日期
-                    str = Screen.ToString(i, 11, 5);
-                    try
-                    {
-                        article.Date = DateTimeOffset.Parse(str);
-                    }
-                    catch
-                    {
-                        continue;
-                    }
-
-                    //作者
-                    str = Screen.ToString(i, 17, 13).Replace('\0', ' ');
-                    regex = new Regex(@"[\w\S]+");
-                    match = regex.Match(str);
-                    if (match.Success) article.Author = str.Substring(match.Index, match.Length);
-
-                    //文章類型
-                    str = Screen.ToString(i, 30, 2).Replace('\0', ' ');
-                    if (str.StartsWith("R:")) article.Type = ArticleType.回覆;
-                    else if (str.StartsWith("□")) article.Type = ArticleType.一般;
-                    else if (str.StartsWith("轉")) article.Type = ArticleType.轉文;
-                    else article.Type = ArticleType.無;
-                    //是否被刪除
-                    if (article.Author == "-") article.Deleted = true;
-                    else article.Deleted = false;
-
-                    str = Screen.ToString(i, 30, Screen.Width - 30).Replace('\0', ' ');
-
-                    if (article.Deleted)
-                    {
-                        article.Title = str;
-                        regex = new Regex(LiPTT.bracket_regex);
-                        match = regex.Match(str);
-                        string s = str.Substring(1);
-                        if (match.Success)
-                        {
-                            article.Author = str.Substring(match.Index + 1, match.Length - 2);
-                            s = s.Replace(match.ToString(), "");
-                        }
-                        article.Title = s;
-                        article.Type = ArticleType.無;
-                    }
-                    else
-                    {
-                        //標題, 分類
-                        regex = new Regex(LiPTT.bracket_regex);
-                        match = regex.Match(str);
-                        if (match.Success)
-                        {
-                            article.Category = str.Substring(match.Index + 1, match.Length - 2).Trim();
-                            str = str.Substring(match.Index + match.Length);
-                            int k = 0;
-                            while (k < str.Length && str[k] == ' ') k++;
-                            int j = str.Length - 1;
-                            while (j >= 0 && str[j] == ' ') j--;
-                            if (k <= j) article.Title = str.Substring(k, j - k + 1);
-                        }
-                        else
-                        {
-                            article.Title = str.Substring(2);
-                        }
-                    }
-
-                    ArticleTags.Add(article);
-                }
-
-                CurrentIndex = id - 1;
-                ArticlesReceived?.Invoke(this, new ArticlesReceivedEventArgs { Articles = ArticleTags });
-            }
-        }
-
-        private SemaphoreSlim GetAIDsem = new SemaphoreSlim(1, 1);
-
-        private string GetFooterAID(int i)
-        {
-            string AID = "";
-
-            string[] screen = Screen.ToStringArray();
-            SemaphoreSlim sem = new SemaphoreSlim(0, 1);
-            int cursor = IndexOfCursor(screen);
-            List<byte> command = new List<byte>();
-
-            if (cursor != i)
-            {
-                if (cursor > i) //Up
-                {
-                    for (int k = 0; k < (cursor - i); k++)
-                    {
-                        command.Add(0x1B);
-                        command.Add(0x5B);
-                        command.Add(0x41);
-                    }
-                }
-                else if (cursor < i) //Down
-                {
-                    for (int k = 0; k < (i - cursor); k++)
-                    {
-                        command.Add(0x1B);
-                        command.Add(0x5B);
-                        command.Add(0x42);
-                    }
-                }
-            }
-
-            command.Add((byte)'Q');
-            PTTStateUpdated += GetAID;
-
-            void GetAID(object sender, PTTStateUpdatedEventArgs e)
-            {
-                if (e.State == PttState.AID)
-                {
-                    int row = GetAIDStartRow();
-
-                    AID = Screen.ToString(row, 18, 9);
-
-                    PressAnyKey();
-                }
-                else if (e.State == PttState.Board && AID.Length == 9)
-                {
-                    PTTStateUpdated -= GetAID;
-                    Debug.WriteLine(string.Format("AID {0}", AID));
-                    sem.Release();
-                }
-            }
-
-            Send(command.ToArray());
-            sem.Wait();
-
-            return AID;
-        }
-
-        
-
-        private int IndexOfCursor(string[] screen)
-        {
-            if (State == PttState.Board)
-            {
-                for(int i = 0; i < screen.Length; i++)
-                {
-                    if (screen[i].StartsWith(">") || screen[i].StartsWith("●")) return i;
-                }
-            }
-
-            return -1;
         }
     }
 
@@ -968,8 +626,7 @@ namespace LiPTT
                     }
                     else if (!enterboardcompleted)
                     {
-                        var screen = Screen.ToStringArray();
-                        int corsur = IndexOfCursor(screen);
+                        int corsur = IndexOfCursor();
 
                         if (corsur == 3)
                         {
@@ -1096,6 +753,11 @@ namespace LiPTT
             Send('n', 0x0D);
         }
 
+        public void SendQ()
+        {
+            Send('q', 0x0D);
+        }
+
         public void PressSpace()
         {
             Send(0x20); // ' '
@@ -1128,8 +790,8 @@ namespace LiPTT
 
         public void Right()
         {
-            Send('r');
-            //Send(new byte[] { 0x1B, 0x5B, 0x43 }); //ESC[C
+            //Send('r');
+            Send(new byte[] { 0x1B, 0x5B, 0x43 }); //ESC[C
         }
 
         public void Left()
@@ -1166,6 +828,84 @@ namespace LiPTT
 
     public partial class PTT
     {
+        private SemaphoreSlim GetAIDsem = new SemaphoreSlim(1, 1);
+
+        private string GetFooterAID(int i)
+        {
+            string AID = "";
+
+
+            SemaphoreSlim sem = new SemaphoreSlim(0, 1);
+            int cursor = IndexOfCursor();
+            List<byte> command = new List<byte>();
+
+            if (cursor != i)
+            {
+                if (cursor > i) //Up
+                {
+                    for (int k = 0; k < (cursor - i); k++)
+                    {
+                        command.Add(0x1B);
+                        command.Add(0x5B);
+                        command.Add(0x41);
+                    }
+                }
+                else if (cursor < i) //Down
+                {
+                    for (int k = 0; k < (i - cursor); k++)
+                    {
+                        command.Add(0x1B);
+                        command.Add(0x5B);
+                        command.Add(0x42);
+                    }
+                }
+            }
+
+            command.Add((byte)'Q');
+            PTTStateUpdated += GetAID;
+
+            void GetAID(object sender, PTTStateUpdatedEventArgs e)
+            {
+                if (e.State == PttState.AID)
+                {
+                    int row = GetAIDStartRow();
+
+                    AID = Screen.ToString(row, 18, 9);
+
+                    PressAnyKey();
+                }
+                else if (e.State == PttState.Board && AID.Length == 9)
+                {
+                    PTTStateUpdated -= GetAID;
+                    Debug.WriteLine(string.Format("AID {0}", AID));
+                    sem.Release();
+                }
+            }
+
+            Send(command.ToArray());
+            sem.Wait();
+
+            return AID;
+        }
+
+        private int IndexOfCursor()
+        {
+            var x = Screen.ToStringArray();
+            for (int i = 3; i < Screen.Height - 1; i++)
+            {
+                if (Screen[i][0].Content == '>')
+                {
+                    return i;
+                }
+                else if (Screen[i][0].Content == 0xA1 || Screen[i][1].Content == 0xB4) //U+25CF '●'
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
         private Block[] CopyLine(int row)
         {
             Block[] src = Screen[row];
@@ -1289,92 +1029,4 @@ namespace LiPTT
         }
     }
 
-    public partial class PTT
-    {
-
-        private bool ReadArticleInfomationCompleted;
-
-        public void GoToArticle(Article article)
-        {
-            PTTStateUpdated += ReadArticleInfomation;
-            ReadArticleInfomationCompleted = false;
-
-            if (article.AID?.Length == 9)
-            {
-                CurrentArticle = article;
-                Debug.WriteLine(string.Format("Go To {0}", article.AID));
-                Send(article.AID, 0x0D, 'r');
-            }
-            else if (article.ID != uint.MaxValue)
-            {
-                CurrentArticle = article;
-                Debug.WriteLine(string.Format("Go To {0}", article.ID));
-                Send(article.ID.ToString(), 0x0D, 'r');
-            }
-            else
-            {
-                CurrentArticle = null;
-                PTTStateUpdated -= ReadArticleInfomation;
-            }     
-        }
-
-        private async void ReadArticleInfomation(object sender, PTTStateUpdatedEventArgs e)
-        {
-            if (e.State == PttState.Article)
-            {
-                if(!ReadArticleInfomationCompleted)
-                    Send('Q');
-                else
-                {
-                    PTTStateUpdated -= ReadArticleInfomation;
-                    ArticleInfomationCompleted?.Invoke(this, new ArticleInfomationCompletedEventArgs { Article = e.Article });
-                }
-            }
-            else if (e.State == PttState.AID)
-            {
-                await LiPTT.RunInUIThread(() => 
-                {
-                    //AID
-                    if (e.Article.AID?.Length != 9)
-                    {
-                        e.Article.AID = Screen.ToString(e.AIDLine, 18, 9);
-                    }
-                    //網頁版網址
-                    string str = Screen.ToString(e.AIDLine + 1);
-                    Regex regex = new Regex(LiPTT.http_regex);
-                    Match match1 = regex.Match(str);
-                    if (match1.Success)
-                    {
-                        string aaa = str.Substring(match1.Index, match1.Length);
-
-                        try
-                        {
-                            string url = str.Substring(match1.Index, match1.Length);
-                            e.Article.WebUri = new Uri(url);
-                        }
-                        catch (UriFormatException ex)
-                        {
-                            Debug.WriteLine(ex.ToString());
-                        }
-                    }
-
-                    //P幣
-                    string p = Screen.ToString(e.AIDLine + 2);
-                    regex = new Regex(@"\d+");
-                    Match match2 = regex.Match(p);
-                    if (match2.Success)
-                        e.Article.PttCoin = Convert.ToInt32(p.Substring(match2.Index, match2.Length));
-                    else
-                        e.Article.PttCoin = 0;
-                });
-
-                ReadArticleInfomationCompleted = true;
-                PressAnyKey();
-            }
-            else if (e.State == PttState.Board)
-            {
-                Right();
-            }
-        }
-    }
 }

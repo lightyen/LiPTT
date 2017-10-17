@@ -225,7 +225,6 @@ namespace LiPTT
         #endregion 屬性
 
         private ScreenBuffer screenBuffer;
-        private ScreenBuffer screenCache;
         private TcpClient tcpClient;
         private MessageWebSocket WebSocket;
 
@@ -1449,7 +1448,7 @@ namespace LiPTT
             for (int i = 0; i < Height; i++)
             {
                 for (int j = 0; j < Width; j++) mssage[j] = Screen[i][j].Content;
-                list.Add(PTTEncoding.GetEncoding().GetString(mssage).Replace('\0', ' '));
+                list.Add( PTTEncoding.GetEncoding().GetString(mssage) );
             }
 
             return list.ToArray();

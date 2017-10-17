@@ -324,13 +324,13 @@ namespace LiPTT
             {
                 switch(type)
                 {
-                    case ArticleType.一般:
+                    case ArticleType.一般文:
                         color = Colors.DarkGoldenrod;
                         break;
                     case ArticleType.轉文:
                         color = Colors.Gray;
                         break;
-                    case ArticleType.回覆:
+                    case ArticleType.回覆文:
                         color = Colors.Red;
                         break;
                     default:
@@ -386,11 +386,11 @@ namespace LiPTT
             {
                 switch(type)
                 {
-                    case ArticleType.回覆:
+                    case ArticleType.回覆文:
                         return "Re:";
                     case ArticleType.轉文:
                         return "轉";
-                    case ArticleType.一般:
+                    case ArticleType.一般文:
                         return "●";
                     default:
                         return "";

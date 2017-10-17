@@ -132,6 +132,10 @@ namespace LiPTT
         /// AID文章代碼
         /// </summary>
         AID,
+        /// <summary>
+        /// 有文章尚未完成
+        /// </summary>
+        ArticleNotCompleted,
         EchoType, //推文類型
         Angel, //小天使廣告
         BoardArt, //進版畫面
@@ -183,11 +187,6 @@ namespace LiPTT
         }
 
         public static BoardContentCollection ArticleCollection
-        {
-            get; set;
-        }
-
-        public static Article CurrentArticle
         {
             get; set;
         }

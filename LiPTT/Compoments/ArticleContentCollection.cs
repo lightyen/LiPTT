@@ -205,6 +205,8 @@ namespace LiPTT
 
         public void BeginLoad(ArticleContentUpdatedEventArgs e)
         {
+            Clear();
+
             ArticleTag = e.Article;
 
             if (ArticleTag.HasHeader)
@@ -234,7 +236,7 @@ namespace LiPTT
 
         public void Parse()
         {
-            for (int row = ParsedLine; row < RawLines.Count; row++, ParsedLine++)
+            for (int row = ParsedLine; row < RawLines.Count; row++)
             {
                 string str = LiPTT.GetString(RawLines[row]);
 
@@ -268,6 +270,8 @@ namespace LiPTT
                 }
             }
 
+            ParsedLine = RawLines.Count;
+
             var t = Task.Run(async () => {
 
                 if (DownloadImageTasks.Count > 0)
@@ -288,8 +292,6 @@ namespace LiPTT
                     }
                 }
             });
-
-            
         }
 
         public void AddLine(Block[] blocks, string str)

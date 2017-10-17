@@ -1721,6 +1721,12 @@ namespace LiPTT
             CurrentBlock.Content = 0x20;
             NextBlock();
         }
+
+        public void Dispose()
+        {
+            Screen = null;
+            GC.Collect();
+        }
     }
 
 }

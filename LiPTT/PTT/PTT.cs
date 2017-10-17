@@ -890,7 +890,6 @@ namespace LiPTT
 
         private int IndexOfCursor()
         {
-            var x = Screen.ToStringArray();
             for (int i = 3; i < Screen.Height - 1; i++)
             {
                 if (Screen[i][0].Content == '>')
@@ -925,6 +924,7 @@ namespace LiPTT
 
         private void CacheScreen()
         {
+            Cache?.Dispose();
             Cache = new ScreenBuffer(Screen);
         }
 
@@ -1013,7 +1013,6 @@ namespace LiPTT
 
         private int GetAIDStartRow()
         {
-            var x = Screen.ToStringArray();
             Regex regex = new Regex(@"文章代碼\(AID\)");
             for (int i = 0; i < Screen.Height - 4; i++)
             {

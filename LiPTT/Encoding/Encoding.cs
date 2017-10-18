@@ -37,8 +37,8 @@ namespace LiPTT
     
     public class Big5_UAO : Encoding
     {
-        private static Hashtable b2u_table;
-        private static Hashtable u2b_table;
+        private static Dictionary<int, int> b2u_table;
+        private static Dictionary<int, int> u2b_table;
 
         public override string EncodingName
         {
@@ -52,8 +52,8 @@ namespace LiPTT
         {
             if (b2u_table == null || u2b_table == null)
             {
-                b2u_table = new Hashtable();
-                u2b_table = new Hashtable();
+                b2u_table = new Dictionary<int, int>();
+                u2b_table = new Dictionary<int, int>();
                 
                 Task task = LoadEncoding();
                 task.Wait();
@@ -206,7 +206,7 @@ namespace LiPTT
                             int v = (int)b2u_table[k];
                             sb.Append((char)v);
                         }
-                        catch (NullReferenceException)
+                        catch (Exception)
                         {
                             sb.Append('☐');
                             Debug.WriteLine("找不到編碼? ☐☐☐");
@@ -284,7 +284,7 @@ namespace LiPTT
                         int v = (int)b2u_table[k];
                         chars[c + charIndex] = (char)v;
                     }
-                    catch (NullReferenceException)
+                    catch (Exception)
                     {
                         chars[c + charIndex] = '☐';
                         Debug.WriteLine("找不到編碼? ☐☐☐");

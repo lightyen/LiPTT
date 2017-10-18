@@ -22,7 +22,7 @@
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
-    <PackageCertificateThumbprint>A2BC3737B1967A14E976F9D388DAD2788A428F82</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>DD984D956695C8E0FDBA694CDEEFBAA7A8993D67</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -785,9 +785,6 @@
     <PackageReference Include="SharpDX.Direct3D11">
       <Version>4.0.1</Version>
     </PackageReference>
-    <PackageReference Include="SharpDX.Direct3D12">
-      <Version>4.0.1</Version>
-    </PackageReference>
     <PackageReference Include="SharpDX.DXGI">
       <Version>4.0.1</Version>
     </PackageReference>
@@ -798,7 +795,6 @@
   <ItemGroup>
     <None Include="LiPTT_TemporaryKey.pfx" />
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

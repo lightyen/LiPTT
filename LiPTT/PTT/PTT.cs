@@ -18,6 +18,129 @@ using Windows.Storage;
 
 namespace LiPTT
 {
+    public enum PttState
+    {
+        /// <summary>
+        /// 無
+        /// </summary>
+        None,
+        /// <summary>
+        /// 未連線
+        /// </summary>
+        Disconnected,
+        /// <summary>
+        /// 連線中
+        /// </summary>
+        Connecting,
+        /// <summary>
+        /// TCP連線失敗
+        /// </summary>
+        ConnectFailedTCP,
+        /// <summary>
+        /// WebSocket連線失敗
+        /// </summary>
+        ConnectFailedWebSocket,
+        /// <summary>
+        /// 斷線中
+        /// </summary>
+        Disconnecting,
+        /// <summary>
+        /// 被踢下線
+        /// </summary>
+        Kicked,
+        /// <summary>
+        /// PTT系統過載
+        /// </summary>
+        OverLoading,
+        /// <summary>
+        /// 登入畫面
+        /// </summary>
+        Login,
+        /// <summary>
+        /// 請輸入密碼
+        /// </summary>
+        Password,
+        /// <summary>
+        /// 密碼錯誤或無此帳號
+        /// </summary>
+        WrongPassword,
+        /// <summary>
+        /// 密碼正確
+        /// </summary>
+        Accept,
+        /// <summary>
+        /// 登入中
+        /// </summary>
+        Loginning,
+        /// <summary>
+        /// 同步處理中
+        /// </summary>
+        Synchronizing,
+        /// <summary>
+        /// 登入太頻繁
+        /// </summary>
+        LoginSoMany,
+        /// <summary>
+        /// 重複登入
+        /// </summary>
+        AlreadyLogin,
+        /// <summary>
+        /// 主功能表
+        /// </summary>
+        MainPage,
+        /// <summary>
+        /// 熱門看板列表
+        /// </summary>
+        Popular,
+        /// <summary>
+        /// 按任意鍵繼續
+        /// </summary>
+        PressAny,
+        /// <summary>
+        /// 登入警告資訊
+        /// </summary>
+        WrongLog,
+        /// <summary>
+        /// 離開嗎?
+        /// </summary>
+        Exit,
+        /// <summary>
+        /// 最愛看板列表
+        /// </summary>
+        Favorite,
+        /// <summary>
+        /// s搜尋看板
+        /// </summary>
+        SearchBoard,
+        /// <summary>
+        /// 相關資訊一覽表
+        /// </summary>
+        RelatedBoard,
+        /// <summary>
+        /// 文章列表
+        /// </summary>
+        Board, //文章列表
+        /// <summary>
+        /// 看板資訊
+        /// </summary>
+        BoardInfomation,
+        /// <summary>
+        /// 閱覽文章
+        /// </summary>
+        Article,
+        /// <summary>
+        /// AID文章代碼
+        /// </summary>
+        AID,
+        /// <summary>
+        /// 有文章尚未完成
+        /// </summary>
+        ArticleNotCompleted,
+        EchoType, //推文類型
+        Angel, //小天使廣告
+        BoardArt, //進版畫面
+    }
+
     public class PTTStateUpdatedEventArgs : EventArgs
     {
         public PttState State
@@ -190,42 +313,46 @@ namespace LiPTT
                     Bound = b;
                     Debug.WriteLine("瀏覽文章");
                     State = PttState.Article;
-                    PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, Screen = Screen, Article = CurrentArticle });
+                    PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, Screen = e.Screen, Article = CurrentArticle });
 
-                    List<Block[]> linelist = new List<Block[]>();
-
-                    int start_row = 0;
-
-                    if (Bound.Begin != 1)
+                    if (IsArticleInfomationRead)
                     {
-                        int r = ComparePrevious();
-                        if (r != 0)
+                        List<Block[]> linelist = new List<Block[]>();
+
+                        int start_row = 0;
+
+                        if (Bound.Begin != 1)
                         {
-                            start_row = 23 - r;
-
-                            if (start_row <= 0)
+                            int r = ComparePrevious();
+                            if (r != 0)
                             {
-                                start_row = 23;
-                                if (!ParseLineBugAlarmed)
+                                start_row = 23 - r;
+
+                                if (start_row <= 0)
                                 {
-                                    ParseLineBugAlarmed = true;
-                                    ParseBugAlarmed?.Invoke(this, new EventArgs());
+                                    start_row = 23;
+                                    if (!ParseLineBugAlarmed)
+                                    {
+                                        ParseLineBugAlarmed = true;
+                                        Debug.WriteLine("Bug Alarmed");
+                                        ParseBugAlarmed?.Invoke(this, new EventArgs());
+                                    }
                                 }
-                            } 
+                            }
                         }
+                        else
+                            ParseLineBugAlarmed = false;
+
+                        CacheScreen(e.Screen);
+
+                        for (int i = start_row; i < 23; i++)
+                        {
+                            linelist.Add(CopyLine(i, e.Screen));
+                        }
+
+                        if (!ParseLineBugAlarmed)
+                            ArticleContentUpdated?.Invoke(this, new ArticleContentUpdatedEventArgs { Bound = b, Lines = linelist, Article = CurrentArticle });
                     }
-                    else
-                        ParseLineBugAlarmed = false;
-
-                    CacheScreen();
-
-                    for (int i = start_row; i < 23; i++)
-                    {
-                        linelist.Add(CopyLine(i));
-                    }
-
-                    if (!ParseLineBugAlarmed)
-                        ArticleContentUpdated?.Invoke(this, new ArticleContentUpdatedEventArgs { Bound = b, Lines = linelist, Article = CurrentArticle });
                 }
             }
             else if (Match("您確定要離開", 22))
@@ -801,8 +928,8 @@ namespace LiPTT
 
         public void Right()
         {
-            //Send('r');
-            Send(new byte[] { 0x1B, 0x5B, 0x43 }); //ESC[C
+            Send('r');
+            //Send(new byte[] { 0x1B, 0x5B, 0x43 }); //ESC[C
         }
 
         public void Left()
@@ -916,10 +1043,10 @@ namespace LiPTT
             return -1;
         }
 
-        private Block[] CopyLine(int row)
+        private Block[] CopyLine(int row, ScreenBuffer screen)
         {
-            Block[] src = Screen[row];
-            Block[] b = new Block[Screen.Width];
+            Block[] src = screen[row];
+            Block[] b = new Block[screen.Width];
             for (int i = 0; i < b.Length; i++)
             {
                 b[i] = new Block
@@ -933,9 +1060,9 @@ namespace LiPTT
             return b;
         }
 
-        private void CacheScreen()
+        private void CacheScreen(ScreenBuffer screen)
         {
-            Cache = new ScreenBuffer(Screen);
+            Cache = new ScreenBuffer(screen);
         }
 
         public int ComparePrevious()

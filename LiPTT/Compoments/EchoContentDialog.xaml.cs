@@ -50,12 +50,7 @@ namespace LiPTT
             //LiPTT.Send(new byte[] { 0x58 });
         }
 
-        char Echotype = '3';
-
-        private void DialogOpen_PttEventEchoed(PTTClient sender, LiPttEventArgs e)
-        {
-
-        }
+        //char Echotype = '3';
 
         private void CancelClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
@@ -70,13 +65,13 @@ namespace LiPTT
                 switch(echotype)
                 {
                     case "推":
-                        Echotype = '1';
+                        //Echotype = '1';
                         break;
                     case "噓":
-                        Echotype = '2';
+                        //Echotype = '2';
                         break;
                     case "箭頭":
-                        Echotype = '3';
+                        //Echotype = '3';
                         break;
                 }
             }

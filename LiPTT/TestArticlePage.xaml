@@ -5,20 +5,48 @@
     xmlns:local="using:LiPTT"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
     mc:Ignorable="d">
     <Page.Resources>
 
         <local:TestCollection x:Key="tCollection" x:Name="tCollection" />
+        <!--
+        <Flyout x:Key="myColorPickerFlyout">
+            <RelativePanel>
+                <ColorPicker x:Name="myColorPicker"
+                         IsColorChannelTextInputVisible="True"
+                        IsColorPreviewVisible ="True"
+                         IsHexInputVisible="True"/>
+
+                <Grid RelativePanel.Below="myColorPicker"
+                  RelativePanel.AlignLeftWithPanel="True"
+                  RelativePanel.AlignRightWithPanel="True">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Content="OK"
+                        Margin="0,12,2,0" HorizontalAlignment="Stretch"/>
+                    <Button Content="Cancel"
+                        Margin="2,12,0,0" HorizontalAlignment="Stretch"
+                        Grid.Column="1"/>
+                </Grid>
+            </RelativePanel>
+        </Flyout>
+        -->
     </Page.Resources>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="3*" />
-                <RowDefinition Height="8*" />
+                <RowDefinition Height="10*" />
+                <RowDefinition Height="1*" />
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
                 <StackPanel>
+                    <!--
+                    <Button x:Name="colorPickerButton"
+                    Content="Pick a color"
+                    Flyout="{StaticResource myColorPickerFlyout}"/>
+                    -->
                     <RelativePanel>
                         <TextBlock x:Name="hello" Text="hello" />
                         <TextBlock x:Name="world" Text="world" RelativePanel.RightOf="hello" />

@@ -18,144 +18,12 @@ using Windows.Storage;
 
 namespace LiPTT
 {
-    public enum PttState
-    {
-        /// <summary>
-        /// 無
-        /// </summary>
-        None,
-        /// <summary>
-        /// 未連線
-        /// </summary>
-        Disconnected,
-        /// <summary>
-        /// 連線中
-        /// </summary>
-        Connecting,
-        /// <summary>
-        /// TCP連線失敗
-        /// </summary>
-        ConnectFailedTCP,
-        /// <summary>
-        /// WebSocket連線失敗
-        /// </summary>
-        ConnectFailedWebSocket,
-        /// <summary>
-        /// 斷線中
-        /// </summary>
-        Disconnecting,
-        /// <summary>
-        /// 被踢下線
-        /// </summary>
-        Kicked,
-        /// <summary>
-        /// PTT系統過載
-        /// </summary>
-        OverLoading,
-        /// <summary>
-        /// 登入畫面
-        /// </summary>
-        Login,
-        /// <summary>
-        /// 請輸入密碼
-        /// </summary>
-        Password,
-        /// <summary>
-        /// 密碼錯誤或無此帳號
-        /// </summary>
-        WrongPassword,
-        /// <summary>
-        /// 密碼正確
-        /// </summary>
-        Accept,
-        /// <summary>
-        /// 登入中
-        /// </summary>
-        Loginning,
-        /// <summary>
-        /// 同步處理中
-        /// </summary>
-        Synchronizing,
-        /// <summary>
-        /// 登入太頻繁
-        /// </summary>
-        LoginSoMany,
-        /// <summary>
-        /// 重複登入
-        /// </summary>
-        AlreadyLogin,
-        /// <summary>
-        /// 主功能表
-        /// </summary>
-        MainPage,
-        /// <summary>
-        /// 熱門看板列表
-        /// </summary>
-        Popular,
-        /// <summary>
-        /// 按任意鍵繼續
-        /// </summary>
-        PressAny,
-        /// <summary>
-        /// 登入警告資訊
-        /// </summary>
-        WrongLog,
-        /// <summary>
-        /// 離開嗎?
-        /// </summary>
-        Exit,
-        /// <summary>
-        /// 最愛看板列表
-        /// </summary>
-        Favorite,
-        /// <summary>
-        /// s搜尋看板
-        /// </summary>
-        SearchBoard,
-        /// <summary>
-        /// 相關資訊一覽表
-        /// </summary>
-        RelatedBoard,
-        /// <summary>
-        /// 文章列表
-        /// </summary>
-        Board, //文章列表
-        /// <summary>
-        /// 看板資訊
-        /// </summary>
-        BoardInfomation,
-        /// <summary>
-        /// 閱覽文章
-        /// </summary>
-        Article,
-        /// <summary>
-        /// AID文章代碼
-        /// </summary>
-        AID,
-        /// <summary>
-        /// 有文章尚未完成
-        /// </summary>
-        ArticleNotCompleted,
-        EchoType, //推文類型
-        Angel, //小天使廣告
-        BoardArt, //進版畫面
-    }
 
     /// <summary>
     /// 全域功能
     /// </summary>
     public static partial class LiPTT
     {
-        /// <summary>
-        /// XBOX ONE 手把我有 希望無窮(來鬧的)
-        /// </summary>
-        public static List<Gamepad> Gamepads;
-        public static ThreadPoolTimer GamepadPollTimer;
-
-        public static Frame Frame { get; set; }
-
-        public static bool CacheBoard { get; set; } 
-
         //https://www.regexpal.com
         // '\w'會match到中文字，用[A-Za-z0-9_]替代
         public const string http_regex = @"(http|https)://([A-Za-z0-9_]+:??[A-Za-z0-9_]*@)?([A-Za-z0-9_#!:.?+=&%@!-/$^,;|*~'()]+)(/|/([A-Za-z0-9_#!:.?+=&%@!-/]))?";
@@ -169,6 +37,37 @@ namespace LiPTT
         public const string bracket_regex = @"[\u005b\u003c\uff3b\u300a]{1}[^\u005b\u003c\uff3b\u300a\u005d\u003e\uff3d\u300b]+[\u005d\u003e\uff3d\u300b]{1}";
         public const string bound_regex = @"[\u0028]{1}[^\u0028\u0029]+[\u0029]{1}";
 
+        public static ImageCache ImageCache { get; set; }
+
+        public static Frame Frame { get; set; }
+
+        public static bool CacheBoard { get; set; }
+
+        public static BoardContentCollection ArticleCollection
+        {
+            get; set;
+        }
+
+        public static bool Logined
+        {
+            get; set;
+        }
+
+        public static bool AlwaysAlive
+        {
+            get
+            {
+                SettingProperty Setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
+                return Setting.AlwaysAlive;
+            }
+        }
+
+        /// <summary>
+        /// XBOX ONE 手把我有 希望無窮(來鬧的)
+        /// </summary>
+        public static List<Gamepad> Gamepads;
+        public static ThreadPoolTimer GamepadPollTimer;
+
         /// <summary>
         /// WebView 暫存
         /// </summary>
@@ -177,38 +76,12 @@ namespace LiPTT
             get; set;
         }
 
-        public static ImageCache ImageCache { get; set; }
-
         /// <summary>
         /// 全螢幕模式
         /// </summary>
         public static bool IsYoutubeFullScreen
         {
             get; set;
-        }
-
-        public static BoardContentCollection ArticleCollection
-        {
-            get; set;
-        }
-
-        public static Bound Bound
-        {
-            get; private set;
-        }
-
-        public static bool Logined
-        {
-            get; set;
-        }
-        
-        public static bool AlwaysAlive
-        {
-            get
-            {
-                SettingProperty Setting = Application.Current.Resources["SettingProperty"] as SettingProperty;
-                return Setting.AlwaysAlive;
-            }
         }
 
         public static void CreateInstance()
@@ -325,18 +198,6 @@ namespace LiPTT
         }
     }
 
-    public class LiPttEventArgs : EventArgs
-    {
-        public PttState State
-        {
-            get; set;
-        }
-
-        public object Others
-        {
-            get; set;
-        }
-    }
 
     public class ApplicationProperty : INotifyPropertyChanged
     {

@@ -24,6 +24,8 @@ namespace LiPTT
 
         private bool BackToArticle;
 
+        private bool IsArticleInfomationRead;
+
         public bool HasMoreArticleContent
         {
             get
@@ -60,6 +62,7 @@ namespace LiPTT
                 PTTStateUpdated += ReadArticleInfomation;
                 ReadArticleInfomationCompleted = false;
                 BackToArticle = false;
+                IsArticleInfomationRead = false;
                 Debug.WriteLine(string.Format("Go To {0}", article.AID));
                 Send(article.AID, 0x0D, 'r');
             }
@@ -69,6 +72,7 @@ namespace LiPTT
                 PTTStateUpdated += ReadArticleInfomation;
                 ReadArticleInfomationCompleted = false;
                 BackToArticle = false;
+                IsArticleInfomationRead = false;
                 Debug.WriteLine(string.Format("Go To {0}", article.ID));
                 Send(article.ID.ToString(), 0x0D, 'r');
             }
@@ -165,6 +169,7 @@ namespace LiPTT
                 else
                 {
                     PTTStateUpdated -= ReadArticleInfomation;
+                    IsArticleInfomationRead = true;
                     ArticleInfomationCompleted?.Invoke(this, new ArticleInfomationCompletedEventArgs { Article = e.Article });
                 }
             }

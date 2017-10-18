@@ -185,13 +185,14 @@ namespace LiPTT
                     RawLines.Add(line);
                 }
 
-                LoadMoreItemsResult = (uint)e.Lines.Count;
+                LoadMoreItemsResult = 0;
 
                 Parse();
 
                 if (e.Bound.Progress == 100)
                 {
                     FlushTextBlock();
+                    LoadMoreItemsResult++;
                 }
 
                 Semaphore.Release();
@@ -389,8 +390,9 @@ namespace LiPTT
             if (RichTextBlock != null)
             {
                 Add(RichTextBlock);
+                LoadMoreItemsResult++;
             }
-                
+
             RichTextBlock = null;
         }
 
@@ -831,6 +833,7 @@ namespace LiPTT
             });
             /***/
             Add(button);
+            LoadMoreItemsResult++;
 
             if (ViewUri.Count > 0)
             {
@@ -870,6 +873,7 @@ namespace LiPTT
                 grid.SetBinding(FrameworkElement.HeightProperty, bindingHeight);
                 grid.Children.Add(ring);
                 Add(grid);
+                LoadMoreItemsResult++;
 
                 if (Application.Current.Resources["SettingProperty"] is SettingProperty setting && setting.AutoLoad)
                 {
@@ -1283,8 +1287,8 @@ namespace LiPTT
             if (!setting.AutoLoad)
                 youtuGrid.Children.Add(button);
 
-
             Add(MainGrid);
+            LoadMoreItemsResult++;
 
             if (setting.AutoLoad)
             {

@@ -71,15 +71,6 @@ namespace LiPTT
 
         private double VerticalScrollOffset;
 
-        private async void ArticleContentBeginLoad(object sender, ArticleContentUpdatedEventArgs e)
-        {
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                PTT ptt = Application.Current.Resources["PTT"] as PTT;
-                ptt.ArticleContentUpdated -= ArticleContentBeginLoad;
-                ContentCollection.BeginLoad(e);
-            });
-        }
-
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -96,9 +87,6 @@ namespace LiPTT
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                     ArticleHeader.DataContext = b.Article;
                     SplitViewPaneContent.DataContext = b.Article;
-                    RingActive = false;
-                    ControlVisible = true;
-                    back = false;
                 });
             };
 
@@ -126,6 +114,18 @@ namespace LiPTT
             ptt.GoToCurrentArticle();       
         }
 
+        private async void ArticleContentBeginLoad(object sender, ArticleContentUpdatedEventArgs e)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+                PTT ptt = Application.Current.Resources["PTT"] as PTT;
+                ptt.ArticleContentUpdated -= ArticleContentBeginLoad;
+                ContentCollection.BeginLoad(e);
+                RingActive = false;
+                ControlVisible = true;
+                back = false;
+            });
+        }
+
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             Debug.WriteLine("Article 取消訂閱");
@@ -151,6 +151,7 @@ namespace LiPTT
             {
                 case VirtualKey.PageDown:
                 case VirtualKey.Down:
+                case VirtualKey.Space:
                     scrollviewer?.ChangeView(0, scrollviewer.VerticalOffset + scrollviewer.ViewportHeight - 50.0, null);
                     break;
                 case VirtualKey.PageUp:

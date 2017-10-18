@@ -105,11 +105,6 @@ namespace LiPTT
             }
         }
 
-        private void LiPTT_PttEventEchoed(PTTClient sender, LiPttEventArgs e)
-        {
-            
-        }
-
         public string State
         {
             get

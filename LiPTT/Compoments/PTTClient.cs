@@ -517,17 +517,19 @@ namespace LiPTT
                         var now = DateTime.Now;
                         var testTimespan = now - websockRecvTime;
                         websockRecvTime = now;
-                        //Debug.WriteLine(string.Format("Test time = {0}", testTimespan));
 
                         if (buffer.Length != PTT_WEBSOCKET_BUFFERSIZE) //似乎一次訊息最多送 PTT_WEBSOCKET_BUFFERSIZE byte
                         {
                             TestWebSocketRecvTimer?.Cancel();
                             WebSocketUpdateScreen();
                         }
-                        else
+                        else if (testTimespan.Milliseconds > 0)
                         {
                             TestWebSocketRecvTimer?.Cancel();
-                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer((timer) => { WebSocketUpdateScreen(); }, TimeSpan.FromTicks(testTimespan.Ticks * 10));
+                            TestWebSocketRecvTimer = ThreadPoolTimer.CreateTimer((timer) => {
+                                Debug.WriteLine("WebSocket Recv Timeout Test {0}", testTimespan.Milliseconds);
+                                WebSocketUpdateScreen();
+                            }, TimeSpan.FromTicks(testTimespan.Ticks * 10));
                         }
                     }
                 }
@@ -1027,7 +1029,7 @@ namespace LiPTT
             {
                 for (int i = 0; i < message.Length; i++) Debug.WriteLine("==>0x{0:X2}", message[i]);
 
-                if (security)
+                if (ConnectionSecurity)
                 {
                     await WebSocket.OutputStream.WriteAsync(message.AsBuffer());
                 }
@@ -1053,7 +1055,7 @@ namespace LiPTT
 
                 Debug.WriteLine("==>" + c);
 
-                if (security)
+                if (ConnectionSecurity)
                 {
                     await WebSocket.OutputStream.WriteAsync(msg.AsBuffer());
                 }
@@ -1077,7 +1079,7 @@ namespace LiPTT
                 bufOneByte[0] = b;
                 Debug.WriteLine("==>0x{0:X2}", b);
 
-                if (security)
+                if (ConnectionSecurity)
                 {
                     await WebSocket.OutputStream.WriteAsync(bufOneByte.AsBuffer());
                 }
@@ -1124,7 +1126,7 @@ namespace LiPTT
 
             try
             {
-                if (security)
+                if (ConnectionSecurity)
                 {
                     var os = WebSocket.OutputStream;
                     await os.WriteAsync(message.AsBuffer());
@@ -1720,6 +1722,12 @@ namespace LiPTT
             CurrentBlock.BackgroundColor = CurrentBackground;
             CurrentBlock.Content = 0x20;
             NextBlock();
+        }
+
+        public void Dispose()
+        {
+            Screen = null;
+            GC.Collect();
         }
     }
 

@@ -1,118 +1,149 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Youtube Web</title>
-    <style type="text/css">
-        body {
-            margin: 0;
-            padding: 0;
-            border: 0;
-            width: 100%;
-            height: 100%;
-        }
+	<head>
+		<title>Youtube Web</title>
+		<style type="text/css">
+			body {
+				margin : 0;
+				padding : 0;
+				border : 0;
+				width : 100%;
+				height : 100%;
+			}
 
-        .auto-resizable-iframe {
-            max-width: 100%;
-            margin: 0px auto;
-        }
+			.auto-resizable-iframe {
+			  max-width: 100%;
+			  margin: 0px auto;
+			}
+			
+			.auto-resizable-iframe iframe {
+			  position: absolute;
+			  top: 0px;
+			  left: 0px;
+			  width: 100%;
+			  height: 100%;
+			}
+	  </style>
 
-            .auto-resizable-iframe iframe {
-                position: absolute;
-                top: 0px;
-                left: 0px;
-                width: 100%;
-                height: 100%;
-            }
-    </style>
+	</head>
 
-</head>
+	<body>
 
-<body>
-
-    <!-- https://developers.google.com/youtube/iframe_api_reference -->
+	<!-- https://developers.google.com/youtube/iframe_api_reference -->
 
     <div class="auto-resizable-iframe" id="youtube_div"></div>
 
     <script type="text/javascript">
 
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+		var tag = document.createElement('script');
+		tag.src = "https://www.youtube.com/iframe_api";
+		var firstScriptTag = document.getElementsByTagName('script')[0];
+		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        var player;
+		var player;
 
-        var options = {
-            events: {
-                'onError': onPlayerError,
-            }
-        };
+		var options = { 
+			events: {
+				'onStateChange': onPlayerStateChange,
+				'onError': onPlayerError,
+			}
+		};
 
-        document.getElementById('youtube_div').setAttribute("style", "position: absolute; top: 0px; left: 0px; width: 100%; height: 100%;");
+		document.getElementById('youtube_div').setAttribute("style", "position: absolute; top: 0px; left: 0px; width: 100%; height: 100%;");
 
-        var buildEvent = new Event('build');
+		var buildEvent = new Event('build');
 
-        var ready = false;
+		var ready = false;
 
-        function onYouTubePlayerAPIReady() {
-            ready = true;
+		var YTState;
+		
+		function onYouTubePlayerAPIReady ()
+		{
+			document.getElementById('youtube_div').dispatchEvent(buildEvent);
+      	}
 
-            document.getElementById('youtube_div').dispatchEvent(buildEvent);
-        }
+      	function Ready(event)
+      	{
 
-        function Ready(event) {
+      	}
 
-        }
+      	function Init(videoID, autoplay)
+      	{
+      		options.videoId = videoID;
+      		options.playerVars = new Object();
+      		options.playerVars.autoplay = 0;
 
-        function Init(videoID, autoplay) {
-            options.videoId = videoID;
-            options.playerVars = new Object();
-            options.playerVars.autoplay = 0;
+			if (autoplay == "True") options.playerVars.autoplay = 1;if (autoplay == "True") options.playerVars.autoplay = 1;
+			player = new YT.Player('youtube_div', options);
+			player.addEventListener('onReady', 'Ready');
+      	}
 
-            if (autoplay == "True") options.playerVars.autoplay = 1; if (autoplay == "True") options.playerVars.autoplay = 1;
-            player = new YT.Player('youtube_div', options);
-            player.addEventListener('onReady', 'Ready');
-        }
+      	function onPlayerError(e)
+      	{
+      		var err = e.data.toString();
+      		console.log(err);
+      		window.external.notify(err);
+      	}
+		
+		function onPlayerStateChange(e)
+		{
+			YTState = e.data;
+		}
 
-        function onPlayerError(e) {
-            var err = e.data.toString();
-            console.log(err);
-            window.external.notify(err);
-        }
+      	function LoadVideoByID(videoID, autoplay)
+      	{
+      		if (ready)
+      		{
+				Init(videoID, autoplay);
+      		}
+      		else
+      		{
+      			document.getElementById('youtube_div').addEventListener('build', function (e) {
+					Init(videoID, autoplay);
+      			}, false);
+      		}
+      	}
 
-        function LoadVideoByID(videoID, autoplay) {
-            if (ready) {
-                Init(videoID, autoplay);
-            }
-            else {
-                document.getElementById('youtube_div').addEventListener('build', function (e) {
-                    Init(videoID, autoplay);
-                }, false);
-            }
-        }
+      	function StopVideo()
+      	{
+			player.stopVideo();
+      	}
 
-        function StopVideo() {
-            player.stopVideo();
-        }
+      	function PlayVideo()
+      	{
+      		player.playVideo();
+      	}
 
-        function PlayVideo() {
-            player.playVideo();
-        }
+      	var startSeconds;
 
-        var startSeconds;
+      	function CueVideoById()
+      	{
+			ready = true;
+			player.cueVideoById(options.videoId, startSeconds, 'highres');
+      	}
 
-        function CueVideoById() {
-            player.cueVideoById(options.videoId, startSeconds, 'highres');
-        }
+      	function AddStartSecond(startSec)
+		{
+			startSeconds = startSec;
+			document.getElementById('youtube_div').addEventListener('build', function (e) {
+					player.addEventListener('onReady', 'CueVideoById');
+      		}, false);
+		}
+		
+		function IsPlaying()
+		{
+			if (YTState)
+			{
+				if (YTState == YT.PlayerState.PLAYING)
+					return 'True';
+				else
+					return 'False';
+			}
+			else
+				return 'null';
+		}
 
-        function AddStartSecond(startSec) {
-            startSeconds = startSec;
-            document.getElementById('youtube_div').addEventListener('build', function (e) {
-                player.addEventListener('onReady', 'CueVideoById');
-            }, false);
-        }
+	</script>
 
-    </script>
-
-</body>
+	</body>
 </html>

@@ -968,7 +968,7 @@ namespace LiPTT
     {
         private SemaphoreSlim GetAIDsem = new SemaphoreSlim(1, 1);
 
-        private string GetFooterAID(int i)
+        private string GetTargetAID(int i)
         {
             string AID = "";
 
@@ -1015,7 +1015,6 @@ namespace LiPTT
                 else if (e.State == PttState.Board && AID.Length == 9)
                 {
                     PTTStateUpdated -= GetAID;
-                    Debug.WriteLine(string.Format("AID {0}", AID));
                     sem.Release();
                 }
             }

@@ -37,6 +37,7 @@
 
 		var options = { autoplay : false };
 		var player;
+		var PlayerState;
 
 		function LoadVideoByID(twitchID, autoplay)
 		{	
@@ -46,13 +47,56 @@
 			player.setChannel(twitchID);
 			player.setVolume(0.5);
 			player.setQuality("chunked");
+			
+			player.addEventListener(Twitch.Player.ENDED, function(e) {
+				PlayerState = Twitch.Player.ENDED;
+			});
+			
+			player.addEventListener(Twitch.Player.PAUSE, function(e) {
+				PlayerState = Twitch.Player.PAUSE;
+			});
+			
+			player.addEventListener(Twitch.Player.PLAY, function(e) {
+				PlayerState = Twitch.Player.PLAY;
+				console.log(IsPlaying());
+			});
+			
+			player.addEventListener(Twitch.Player.OFFLINE, function(e) {
+				PlayerState = Twitch.Player.OFFLINE;
+			});
+			
+			player.addEventListener(Twitch.Player.ONLINE, function(e) {
+				PlayerState = Twitch.Player.ONLINE;
+			});
+			
+			player.addEventListener(Twitch.Player.READY, function(e) {
+				PlayerState = Twitch.Player.READY;
+			});
+			
+			console.log(IsPlaying());
 		}
 
 		function StopVideo()
 		{
 			player.pause();
 		}
+		
+		function IsPlaying()
+		{
+			if (PlayerState)
+			{
+				if (PlayerState == Twitch.Player.PLAY)
+					return 'True';
+				else
+					return 'False';
+			}
+			else
+				return 'null';
+		}
 
+		///////////
+		///TEST
+		///////////
 		LoadVideoByID("trackingthepros", 'False');
 
 	</script>

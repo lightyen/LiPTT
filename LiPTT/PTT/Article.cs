@@ -63,7 +63,6 @@ namespace LiPTT
                 ReadArticleInfomationCompleted = false;
                 BackToArticle = false;
                 IsArticleInfomationRead = false;
-                Debug.WriteLine(string.Format("Go To {0}", article.AID));
                 Send(article.AID, 0x0D, 'r');
             }
             else if (article.ID != uint.MaxValue)
@@ -73,7 +72,6 @@ namespace LiPTT
                 ReadArticleInfomationCompleted = false;
                 BackToArticle = false;
                 IsArticleInfomationRead = false;
-                Debug.WriteLine(string.Format("Go To {0}", article.ID));
                 Send(article.ID.ToString(), 0x0D, 'r');
             }
         }
@@ -180,10 +178,11 @@ namespace LiPTT
                     //AID
                     if (e.Article.AID?.Length != 9)
                     {
-                        e.Article.AID = Screen.ToString(e.AIDLine, 18, 9);
+                        e.Article.AID = Screen.ToString(19, 18, 9);
+                        Debug.WriteLine(string.Format("文章代碼: {0}", e.Article.AID));
                     }
                     //網頁版網址
-                    string str = Screen.ToString(e.AIDLine + 1);
+                    string str = Screen.ToString(20);
                     Regex regex = new Regex(LiPTT.http_regex);
                     Match match1 = regex.Match(str);
                     if (match1.Success)
@@ -193,6 +192,7 @@ namespace LiPTT
                         try
                         {
                             e.Article.WebUri = new Uri(url);
+                            Debug.WriteLine(string.Format("網頁版網址: {0}", e.Article.WebUri.OriginalString));
                         }
                         catch (UriFormatException ex)
                         {
@@ -201,7 +201,7 @@ namespace LiPTT
                     }
 
                     //P幣
-                    string p = Screen.ToString(e.AIDLine + 2);
+                    string p = Screen.ToString(21);
                     regex = new Regex(@"\d+");
                     Match match2 = regex.Match(p);
                     if (match2.Success)

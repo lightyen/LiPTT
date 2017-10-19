@@ -210,7 +210,8 @@ namespace LiPTT
                         if (string.IsNullOrEmpty(article.AID))
                         {
                             await Task.Run(() => {
-                                article.AID = GetFooterAID(i);
+                                article.AID = GetTargetAID(i);
+                                Debug.WriteLine(string.Format("置底文章代碼: {0}", article.AID));
                             });
                         }
 
@@ -404,7 +405,8 @@ namespace LiPTT
             {
                 await Task.Run(() =>
                 {
-                    article.AID = GetFooterAID(i);
+                    article.AID = GetTargetAID(i);
+                    Debug.WriteLine(string.Format("NavigateTo 文章代碼: {0}", article.AID));
                 });
 
                 if (string.IsNullOrEmpty(article.AID)) return null;

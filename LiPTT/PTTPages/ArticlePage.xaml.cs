@@ -245,6 +245,7 @@ namespace LiPTT
 
             if (back) return;
             back = true;
+            Debug.WriteLine("Article Page: 離開文章瀏覽");
             StopVideo();
 
             PTT ptt = Application.Current.Resources["PTT"] as PTT;
@@ -277,13 +278,17 @@ namespace LiPTT
         {
             try
             {
-                Debug.WriteLine(string.Format("StopVideo"));
-                string returnStr = await webview.InvokeScriptAsync("StopVideo", new string[] { });
-                webview.Navigate(new Uri("ms-appx-web:///Templates/blank.html"));
+                string IsPlaying = await webview.InvokeScriptAsync("IsPlaying", new string[] { });
+                if (IsPlaying == "True")
+                {
+                    Debug.WriteLine(string.Format("StopVideo"));
+                    string returnStr = await webview.InvokeScriptAsync("StopVideo", new string[] { });
+                }
+                //webview.Navigate(new Uri("ms-appx-web:///Templates/blank.html"));
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Script Error" + ex.ToString());
+                Debug.WriteLine("JavaScript Exception: " + ex.ToString());
             }
         }
 

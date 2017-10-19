@@ -138,18 +138,31 @@ namespace LiPTT
 
         uint LoadMoreItemsResult;
 
+        private bool loading;
+        private object loadingLocker = new object();
         public bool Loading
         {
-            get; set;
+            get
+            {
+                return loading;
+            }
+            set
+            {
+                lock(loadingLocker)
+                {
+                    loading = value;
+                }
+            }
         }
 
         public bool HasMoreItems
         {
             get
             {
-                if (InitialLoaded && !Loading && ptt.HasMoreArticleContent)
+                if (Loading) return false;
+
+                if (InitialLoaded && ptt.HasMoreArticleContent)
                 {
-                    Loading = true;
                     return true;
                 }   
                 else
@@ -162,15 +175,33 @@ namespace LiPTT
             return InnerLoadMoreItemsAsync(count).AsAsyncOperation();
         }
 
+        ///目前已知Fall creators update(16299)的問題，但在15063不會有的現象:
+        ///如果RichTextBlock內容積太多會發生記憶體錯誤
+        ///目前暫時做法是最高讀取16頁就flush出去 (因為我讀到17頁就GG了)
+        const int MaxLoadPage = 16;
+        private object MaxLoadPagelocker = new object();
+        private int pageCount;
+        private int LoadPageCount
+        {
+            get
+            {
+                return pageCount;
+            }
+            set
+            {
+                lock (MaxLoadPagelocker)
+                {
+                    pageCount = value;
+                }
+            }
+}
         private async Task<LoadMoreItemsResult> InnerLoadMoreItemsAsync(uint count)
         {
             ptt.ArticleContentUpdated += ArticleContentUpdated;
-
+            Loading = true;
+            LoadMoreItemsResult = 0;
             ptt.GetArticleContent();
             await Semaphore.WaitAsync();
-
-            ptt.ArticleContentUpdated -= ArticleContentUpdated;
-
             Loading = false;
 
             return new LoadMoreItemsResult { Count = LoadMoreItemsResult };
@@ -178,25 +209,37 @@ namespace LiPTT
 
         private async void ArticleContentUpdated(object sender, ArticleContentUpdatedEventArgs e)
         {
+            foreach (var line in e.Lines)
+            {
+                RawLines.Add(line);
+            }
+
             await LiPTT.RunInUIThread(() => {
 
-                foreach (var line in e.Lines)
-                {
-                    RawLines.Add(line);
-                }
-
-                LoadMoreItemsResult = 0;
-
                 Parse();
+                LoadPageCount++;
 
-                if (e.Bound.Progress == 100)
+                if (LoadPageCount >= MaxLoadPage || e.Bound.Progress == 100)
                 {
                     FlushTextBlock();
-                    LoadMoreItemsResult++;
                 }
-
-                Semaphore.Release();
             });
+
+            if (LoadPageCount >= MaxLoadPage || e.Bound.Progress == 100)
+            {
+                LoadPageCount = 0;
+                ptt.ArticleContentUpdated -= ArticleContentUpdated;
+                Semaphore.Release();
+            }
+            else if (LoadMoreItemsResult == 0)
+            {
+                ptt.GetArticleContent();
+            }
+            else
+            {
+                ptt.ArticleContentUpdated -= ArticleContentUpdated;
+                Semaphore.Release();
+            }
         }
 
         public void BeginLoad(ArticleContentUpdatedEventArgs e)
@@ -221,6 +264,8 @@ namespace LiPTT
             }
 
             Parse();
+
+            LoadPageCount = 1;
 
             if (e.Bound.Progress == 100)
             {
@@ -281,7 +326,14 @@ namespace LiPTT
                         if (item != null)
                         {
                             await LiPTT.RunInUIThread(() => {
-                                this[firstFinishedTask.Result.Index] = item;
+                                try
+                                {
+                                    this[firstFinishedTask.Result.Index] = item;
+                                }
+                                catch (IndexOutOfRangeException)
+                                {
+                                    Debug.WriteLine(string.Format("DownloadImageTasks: index {0} IndexOutOfRangeException", firstFinishedTask.Result.Index));
+                                }
                             });
                         }
                         DownloadImageTasks.Remove(firstFinishedTask);
@@ -378,7 +430,7 @@ namespace LiPTT
                 }
                 else
                 {
-                    Paragraph.LineStackingStrategy = LineStackingStrategy.MaxHeight;
+                    //Paragraph.LineStackingStrategy = LineStackingStrategy.MaxHeight;
                 }
 
                 RichTextBlock.Blocks.Add(Paragraph);
@@ -1276,9 +1328,19 @@ namespace LiPTT
                     }
                     
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Debug.WriteLine("Script Error" + ex.ToString());
+                    if (tag == "youtube")
+                    {
+                        if (uri.YoutubeStartSeconds > 0)
+                            Debug.WriteLine(string.Format("JavaScript Exception: {0} StartSecond={1} AutoPlay={2}", ID, uri.YoutubeStartSeconds, (!setting.AutoLoad).ToString()));
+                        else
+                            Debug.WriteLine(string.Format("JavaScript Exception: {0} AutoPlay={1}", ID, (!setting.AutoLoad).ToString()));
+                    }
+                    else
+                    {
+                        Debug.WriteLine(string.Format("JavaScript Exception: twitchID={0}", ID));
+                    }
                 }
             };
 

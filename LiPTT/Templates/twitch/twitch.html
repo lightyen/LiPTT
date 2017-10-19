@@ -81,7 +81,7 @@
 		
 		function IsPlaying()
 		{
-			if (PlayerState)
+			if (typeof PlayerState != 'undefined')
 			{
 				if (PlayerState == Twitch.Player.PLAY)
 					return 'True';
@@ -89,7 +89,7 @@
 					return 'False';
 			}
 			else
-				return 'null';
+				return 'undefined';
 		}
 
 	</script>

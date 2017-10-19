@@ -160,6 +160,7 @@ namespace LiPTT
         {
             if (!control_visible || ContentCollection.Loading || LiPTT.Frame.CurrentSourcePageType != typeof(BoardPage)) return;
             LiPTT.CacheBoard = false;
+            Debug.WriteLine("Board Page: 離開看板");
 
             PTT ptt = Application.Current.Resources["PTT"] as PTT;
             ptt.StateChangedCompleted += async (a, b) =>

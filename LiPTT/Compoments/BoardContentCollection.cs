@@ -52,7 +52,7 @@ namespace LiPTT
         {
             NotifyCollectionChangedEventArgs args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, sender, sender, IndexOf((Article)sender));
 
-            var t = LiPTT.RunInUIThread(() =>
+            var t = PTT.RunInUIThread(() =>
             {
                 OnCollectionChanged(args);
             });
@@ -91,7 +91,7 @@ namespace LiPTT
 
         private async void Ptt_ArticlesReceived(object sender, ArticlesReceivedEventArgs e)
         {
-            await LiPTT.RunInUIThread(() => {
+            await PTT.RunInUIThread(() => {
 
                 foreach (var art in e.Articles)
                 {

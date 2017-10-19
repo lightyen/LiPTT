@@ -51,7 +51,7 @@ namespace LiPTT
 
                 //看板名稱
                 string str = Screen.ToString(3);
-                Match match = new Regex(LiPTT.bracket_regex).Match(str);
+                Match match = new Regex(BracketRegex).Match(str);
                 if (match.Success)
                 {
                     Board.Name = str.Substring(match.Index + 1, match.Length - 2);
@@ -64,7 +64,7 @@ namespace LiPTT
 
                 //版主名單
                 str = Screen.ToString(6, 15, Screen.Width - 15).Replace('\0', ' ').Trim();
-                if (!new Regex(LiPTT.bound_regex).Match(str).Success) //(無)
+                if (!new Regex(BracketRegex).Match(str).Success) //(無)
                 {
                     Board.Leaders = str.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                 }
@@ -267,7 +267,7 @@ namespace LiPTT
                     }
 
                     //未讀、已讀、M文 等等等
-                    article.State = LiPTT.GetReadSate((char)Screen[i][8].Content);
+                    article.State = PTT.GetReadSate((char)Screen[i][8].Content);
 
                     //文章日期
                     str = Screen.ToString(i, 11, 5);
@@ -301,7 +301,7 @@ namespace LiPTT
                     if (article.Deleted)
                     {
                         article.Title = str;
-                        regex = new Regex(LiPTT.bracket_regex);
+                        regex = new Regex(BracketRegex);
                         match = regex.Match(str);
                         string s = str.Substring(1);
                         if (match.Success)
@@ -315,7 +315,7 @@ namespace LiPTT
                     else
                     {
                         //標題, 分類
-                        regex = new Regex(LiPTT.bracket_regex);
+                        regex = new Regex(BracketRegex);
                         match = regex.Match(str);
                         if (match.Success)
                         {
@@ -470,7 +470,7 @@ namespace LiPTT
             }
 
             //未讀、已讀、M文 等等等
-            article.State = LiPTT.GetReadSate((char)Screen[i][8].Content);
+            article.State = PTT.GetReadSate((char)Screen[i][8].Content);
 
             //文章日期
             str = Screen.ToString(i, 11, 5);
@@ -504,7 +504,7 @@ namespace LiPTT
             if (article.Deleted)
             {
                 article.Title = str;
-                regex = new Regex(LiPTT.bracket_regex);
+                regex = new Regex(BracketRegex);
                 match = regex.Match(str);
                 string s = str.Substring(1);
                 if (match.Success)
@@ -518,7 +518,7 @@ namespace LiPTT
             else
             {
                 //標題, 分類
-                regex = new Regex(LiPTT.bracket_regex);
+                regex = new Regex(BracketRegex);
                 match = regex.Match(str);
                 if (match.Success)
                 {

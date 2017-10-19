@@ -130,7 +130,7 @@ namespace LiPTT
                 ConverterParameter = ArticleFontSize - 2,
             };
 
-            var action = LiPTT.RunInUIThread(() =>
+            var action = PTT.RunInUIThread(() =>
             {
                 ArticleFontFamily = new FontFamily("Noto Sans Mono CJK TC");
             });
@@ -214,7 +214,7 @@ namespace LiPTT
                 RawLines.Add(line);
             }
 
-            await LiPTT.RunInUIThread(() => {
+            await PTT.RunInUIThread(() => {
 
                 Parse();
                 LoadPageCount++;
@@ -227,7 +227,6 @@ namespace LiPTT
 
             if (LoadPageCount >= MaxLoadPage || e.Bound.Progress == 100)
             {
-                LoadPageCount = 0;
                 ptt.ArticleContentUpdated -= ArticleContentUpdated;
                 Semaphore.Release();
             }
@@ -279,7 +278,7 @@ namespace LiPTT
         {
             for (int row = ParsedLine; row < RawLines.Count; row++)
             {
-                string str = LiPTT.GetString(RawLines[row]);
+                string str = PTT.GetString(RawLines[row]);
 
                 if (str.StartsWith("※"))
                 {
@@ -325,7 +324,7 @@ namespace LiPTT
 
                         if (item != null)
                         {
-                            await LiPTT.RunInUIThread(() => {
+                            await PTT.RunInUIThread(() => {
                                 try
                                 {
                                     this[firstFinishedTask.Result.Index] = item;
@@ -345,7 +344,7 @@ namespace LiPTT
         public void AddLine(Block[] blocks, string str)
         {
             Match match;
-            Regex regex = new Regex(LiPTT.http_regex);
+            Regex regex = new Regex(PTT.HttpRegex);
             int index = 0; //for string
             int i = 0; //for block
             PrepareAddText();
@@ -413,6 +412,7 @@ namespace LiPTT
         {
             if (RichTextBlock == null)
             {
+                LoadPageCount = 0;
                 RichTextBlock = new RichTextBlock()
                 {
                     IsTextSelectionEnabled = true,
@@ -457,7 +457,7 @@ namespace LiPTT
                 Block b = blocks[i];
                 if (color != b.ForegroundColor)
                 {
-                    string text = LiPTT.GetString(blocks, idx, i - idx);
+                    string text = PTT.GetString(blocks, idx, i - idx);
                     //目前UWP沒有可以畫半個字的API，而且也沒有可以把不同景色的文字放在同一個TextBlock的功能
                     //因為選字的時候，只有在同一個TextBlock底下才有可能
                     /***
@@ -494,7 +494,7 @@ namespace LiPTT
 
                 if (i == index + count - 1)
                 {
-                    string text = LiPTT.GetString(blocks, idx, index + count - idx);
+                    string text = PTT.GetString(blocks, idx, index + count - idx);
                     /***
                     InlineUIContainer container = new InlineUIContainer
                     {
@@ -580,41 +580,73 @@ namespace LiPTT
 
 
             //IP
-            string ip = LiPTT.GetString(block, 51, 15);
-            regex = new Regex(LiPTT.ValidIpAddressRegex);
+            int ip_start = 51;
+            int ip_space = 16;
+            string ip = PTT.GetString(block, ip_start, ip_space);
+            regex = new Regex(PTT.ValidIpAddressRegex);
             match = regex.Match(ip);
-            int ip_space;
-            if (ptt.CurrentBoard.IPVisible && match.Success)
+
+            if (!match.Success)
             {
-                ip = match.ToString();
-                ip_space = 16;
+                ip_start += 6;
+                ip = PTT.GetString(block, ip_start, ip_space);
+                match = regex.Match(ip);
+                if (!match.Success)
+                {
+                    ip_space = 0;
+                }
+                else
+                {
+                    ip = match.ToString();
+                }
             }
             else
+            {
+                ip = match.ToString();
+            }
+
+
+            
+            if (!ptt.CurrentBoard.IPVisible)
             {
                 ip = "";
                 ip_space = 0;
             }
 
             //自訂日期和時間格式字串 https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
-            string time = LiPTT.GetString(block, 67, 11);
+            System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
+            int time_start = 67;
+            int time_space = 12;
+            bool shortTime = false;
+            string time = PTT.GetString(block, time_start, time_space).Replace('\0', ' ');
+
             try
             {
-                System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");
-                echo.Date = DateTimeOffset.ParseExact(time, "MM/dd HH:mm", provider);
+                echo.Date = DateTimeOffset.ParseExact(time, "MM/dd HH:mm ", provider);
                 echo.DateFormated = true;
             }
-            catch (Exception ex)
+            catch (FormatException)
             {
-                Debug.WriteLine(ex.ToString());
+                try
+                {
+                    time_start += 6;
+                    time_space -= 6;
+                    time = PTT.GetString(block, time_start, time_space).Replace('\0', ' ');
+                    echo.Date = DateTimeOffset.ParseExact(time, "MM/dd ", provider);
+                    shortTime = true;
+                    echo.DateFormated = true;
+                }
+                catch (FormatException)
+                {
+                    Debug.WriteLine(string.Format("推文時間格式不正確:\"{0}\"", time));
+                }
             }
 
-            //
-            string str = LiPTT.GetString(block, 0, 80 - 13 - ip_space).Replace('\0', ' ').Trim();
+            string str = PTT.GetString(block, 0, ptt.Screen.Width - time_space - ip_space - 1).Replace('\0', ' ').Trim();
 
-            int index = 2;
             int end = str.IndexOf(':');
 
-            string auth = str.Substring(index, end - index);
+            string auth = str.Substring(2, end - 2);
 
             echo.Author = auth.Trim();
 
@@ -657,7 +689,7 @@ namespace LiPTT
                 ConverterParameter = 3,
             };
 
-            Grid grid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch };
+            Grid grid = new Grid() { HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0) };
 
             ColumnDefinition c0 = new ColumnDefinition();
             BindingOperations.SetBinding(c0, ColumnDefinition.WidthProperty, binding0);
@@ -698,15 +730,15 @@ namespace LiPTT
                     break;
             }
 
-            var tb1 = new TextBlock()
+            var tb0 = new TextBlock()
             {
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Center,
                 Text = str[0].ToString(),
                 Foreground = EvalColor
             };
-            BindingOperations.SetBinding(tb1, TextBlock.FontSizeProperty, EchoFontSizeBinding);
-            g0.Children.Add(tb1);
+            BindingOperations.SetBinding(tb0, TextBlock.FontSizeProperty, EchoFontSizeBinding);
+            g0.Children.Add(tb0);
 
             //推文ID////高亮五樓/////高亮原PO/////////////////////
             SolidColorBrush authorColor = new SolidColorBrush(Colors.LightSalmon);
@@ -716,24 +748,24 @@ namespace LiPTT
                 authorColor = new SolidColorBrush(Colors.LightBlue);
             }
 
-            var tb2 = new TextBlock() {
+            var tb1 = new TextBlock() {
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Text = echo.Author,
                 Foreground = authorColor
             };
-            BindingOperations.SetBinding(tb2, TextBlock.FontSizeProperty, EchoFontSizeBinding);
-            g1.Children.Add(tb2);
+            BindingOperations.SetBinding(tb1, TextBlock.FontSizeProperty, EchoFontSizeBinding);
+            g1.Children.Add(tb1);
 
             //推文內容////////////////////////////////////////////
-            regex = new Regex(LiPTT.http_regex);
-            index = 0; //for string
-            RelativePanel panel = new RelativePanel()
+            regex = new Regex(PTT.HttpRegex);
+            int index = 0; //for string
+            StackPanel panel = new StackPanel()
             {
-
+                Orientation = Orientation.Horizontal,
             };
             List<PTTUri> ViewUri = new List<PTTUri>();
-            UIElement element = null;
+            //UIElement element = null;
             
             while ((match = regex.Match(echo.Content, index)).Success)
             {
@@ -742,17 +774,19 @@ namespace LiPTT
                     string text = echo.Content.Substring(index, match.Index - index);
                     var tb = new TextBlock()
                     {
+                        Margin = new Thickness(0),
                         IsTextSelectionEnabled = true,
                         Foreground = new SolidColorBrush(Colors.Gold),
                         Text = text,
+                        VerticalAlignment = VerticalAlignment.Center,
                     };
                     tb.SetBinding(TextBlock.FontSizeProperty, EchoFontSizeBinding);
 
                     panel.Children.Add(tb);
 
-                    if (element != null)
-                        RelativePanel.SetRightOf(tb, element);
-                    element = tb;
+                    //if (element != null)
+                    //    RelativePanel.SetRightOf(tb, element);
+                    //element = tb;
                 }
 
                 try
@@ -782,9 +816,9 @@ namespace LiPTT
 
                     panel.Children.Add(hb);
 
-                    if (element != null)
-                        RelativePanel.SetRightOf(hb, element);
-                    element = hb;
+                    //if (element != null)
+                    //    RelativePanel.SetRightOf(hb, element);
+                    //element = hb;
                 }
                 catch (UriFormatException)
                 {
@@ -794,13 +828,14 @@ namespace LiPTT
                         IsTextSelectionEnabled = true,
                         Foreground = new SolidColorBrush(Colors.Gold),
                         Text = text,
+                        VerticalAlignment = VerticalAlignment.Center,
                     };
                     BindingOperations.SetBinding(tb, TextBlock.FontSizeProperty, EchoFontSizeBinding);
 
                     panel.Children.Add(tb);
-                    if (element != null)
-                        RelativePanel.SetRightOf(tb, element);
-                    element = tb;
+                    //if (element != null)
+                    //    RelativePanel.SetRightOf(tb, element);
+                    //element = tb;
                     
                 }
 
@@ -815,12 +850,13 @@ namespace LiPTT
                     IsTextSelectionEnabled = true,
                     Foreground = new SolidColorBrush(Colors.Gold),
                     Text = text,
+                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 BindingOperations.SetBinding(tb, TextBlock.FontSizeProperty, EchoFontSizeBinding);
                 panel.Children.Add(tb);
-                if (element != null)
-                    RelativePanel.SetRightOf(tb, element);
-                element = tb;
+                //if (element != null)
+                //    RelativePanel.SetRightOf(tb, element);
+                //element = tb;
                 
             }
 
@@ -835,7 +871,7 @@ namespace LiPTT
                     HorizontalAlignment = HorizontalAlignment.Right,
                     VerticalAlignment = VerticalAlignment.Center,
                     Foreground = new SolidColorBrush(Colors.Wheat),
-                    Text = echo.Date.ToString("MM/dd HH:mm")
+                    Text = shortTime ? echo.Date.ToString("MM/dd") : echo.Date.ToString("MM/dd HH:mm")
                 };
                 BindingOperations.SetBinding(tb, TextBlock.FontSizeProperty, EchoFontSizeBinding);
                 g3.Children.Add(tb);
@@ -847,8 +883,7 @@ namespace LiPTT
             grid.Children.Add(g2);
             grid.Children.Add(g3);
 
-            ToolTip toolTip = new ToolTip() { Content = string.Format("{0}樓", echo.Floor) };
-
+            /***
             Button button = new Button
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -858,33 +893,41 @@ namespace LiPTT
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch,
             };
+            /***/
 
             switch (echo.Evaluation)
             {
                 case Evaluation.推:
-                    button.Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x13, 0x13, 0x00));
+                    grid.Background = new SolidColorBrush(Color.FromArgb(0x60, 0x50, 0x35, 0x00));
                     break;
                 case Evaluation.噓:
-                    button.Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x13, 0x00, 0x00));
+                    grid.Background = new SolidColorBrush(Color.FromArgb(0x60, 0x50, 0x00, 0x00));
                     break;
                 default:
-                    button.Background = new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x17, 0x07));
+                    grid.Background = new SolidColorBrush(Color.FromArgb(0x60, 0x00, 0x37, 0x2D));
                     break;
             }
 
-            button.Content = grid;
-            //ListView list = new ListView() { IsItemClickEnabled = true, HorizontalAlignment = HorizontalAlignment.Stretch, };
-            ToolTipService.SetToolTip(button, toolTip);
-            /***
+            //button.Content = grid;
+            ListView list = new ListView()
+            {
+                IsItemClickEnabled = true,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+            };
+            
+            //***
             list.Items.Add(new ListViewItem()
             {
+                Margin = new Thickness(0),
                 Content = grid,
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch,
                 AllowFocusOnInteraction = false,
             });
             /***/
-            Add(button);
+            ToolTip toolTip = new ToolTip() { Content = string.Format("{0}樓", echo.Floor) };
+            ToolTipService.SetToolTip(list, toolTip);
+            Add(list);
             LoadMoreItemsResult++;
 
             if (ViewUri.Count > 0)
@@ -1414,7 +1457,7 @@ namespace LiPTT
 
         private int ReadProgress(string msg)
         {
-            Regex regex = new Regex(LiPTT.bound_regex);
+            Regex regex = new Regex(PTT.BoundRegex);
             Match match = regex.Match(msg);
 
             if (match.Success)

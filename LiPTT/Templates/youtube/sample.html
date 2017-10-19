@@ -133,7 +133,7 @@
 		
 		function IsPlaying()
 		{
-			if (YTState)
+			if (typeof YTState != 'undefined')
 			{
 				if (YTState == YT.PlayerState.PLAYING)
 					return 'True';
@@ -141,7 +141,7 @@
 					return 'False';
 			}
 			else
-				return 'null';
+				return 'undefined';
 		}
 
 		///////////

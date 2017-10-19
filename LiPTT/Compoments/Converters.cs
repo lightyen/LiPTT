@@ -415,7 +415,7 @@ namespace LiPTT
             {
                 Match match;
 
-                if ((match = new Regex(LiPTT.http_regex).Match(str)).Success)
+                if ((match = new Regex(PTT.HttpRegex).Match(str)).Success)
                 {
                     StackPanel sp = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Stretch };
 

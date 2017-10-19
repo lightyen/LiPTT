@@ -6,6 +6,7 @@ using Windows.System;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -177,7 +178,7 @@ namespace LiPTT
 
         private async void Ptt_EnterBoardCompleted(object sender, EventArgs e)
         {
-            await LiPTT.RunInUIThread(() => {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                 ptt.GoToBoardCompleted -= Ptt_EnterBoardCompleted;
                 LiPTT.Frame.Navigate(typeof(BoardPage));
             });

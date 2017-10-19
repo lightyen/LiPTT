@@ -9,7 +9,7 @@
     <Page.Resources>
 
         <local:TestCollection x:Key="tCollection" x:Name="tCollection" />
-        <!--
+        
         <Flyout x:Key="myColorPickerFlyout">
             <RelativePanel>
                 <ColorPicker x:Name="myColorPicker"
@@ -32,7 +32,7 @@
                 </Grid>
             </RelativePanel>
         </Flyout>
-        -->
+
     </Page.Resources>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid>
@@ -42,11 +42,11 @@
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
                 <StackPanel>
-                    <!--
+                    
                     <Button x:Name="colorPickerButton"
                     Content="Pick a color"
                     Flyout="{StaticResource myColorPickerFlyout}"/>
-                    -->
+                    
                     <RelativePanel>
                         <TextBlock x:Name="hello" Text="hello" />
                         <TextBlock x:Name="world" Text="world" RelativePanel.RightOf="hello" />

@@ -124,14 +124,12 @@ namespace LiPTT
         {
             if (e.Key == VirtualKey.Enter && UserText.Text.Length >= 0)
             {
-                var action = LiPTT.RunInUIThread(() =>
-                {
+                var a = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                     UserText.IsEnabled = false;
                     PasswordText.IsEnabled = false;
                     MemoAcount.IsEnabled = false;
                     AutoLogin.IsEnabled = false;
                 });
-
 
                 e.Handled = true;
                 FocusManager.TryMoveFocus(FocusNavigationDirection.Next);
@@ -168,7 +166,7 @@ namespace LiPTT
             {
                 case PttState.WrongPassword:
                     {
-                        await LiPTT.RunInUIThread(() => {
+                        await PTT.RunInUIThread(() => {
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
@@ -200,7 +198,7 @@ namespace LiPTT
                     break;
                 case PttState.LoginSoMany:
                     {
-                        await LiPTT.RunInUIThread(() => {
+                        var a = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
@@ -210,7 +208,7 @@ namespace LiPTT
                     break;
                 case PttState.OverLoading:
                     {
-                        await LiPTT.RunInUIThread(() => {
+                        var a = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
@@ -221,7 +219,7 @@ namespace LiPTT
                 case PttState.ConnectFailedTCP:
                 case PttState.ConnectFailedWebSocket:
                     {
-                        var action = LiPTT.RunInUIThread(() => {
+                        var a = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                             UserText.IsEnabled = true;
                             PasswordText.IsEnabled = true;
                             MemoAcount.IsEnabled = true;
@@ -234,9 +232,8 @@ namespace LiPTT
                     break;
                 case PttState.MainPage:
                     ptt.PTTStateUpdated -= EnterAccount;
-                    { 
-                        await LiPTT.RunInUIThread(() =>
-                        {
+                    {
+                        var a = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                             LiPTT.Frame.Navigate(typeof(PTTPage));
                         });
                     }

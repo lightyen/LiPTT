@@ -121,7 +121,7 @@ namespace LiPTT
 
         private void OnPropertyChanged([CallerMemberName] String propertyName = "")
         {
-            var action = LiPTT.RunInUIThread(() =>
+            var action = PTT.RunInUIThread(() =>
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             });

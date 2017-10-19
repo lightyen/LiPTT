@@ -115,7 +115,7 @@ namespace LiPTT
 
                         //內文標題
                         tmps = e.Screen.ToString(1).Replace('\0', ' ').Trim();
-                        match = new Regex(LiPTT.bracket_regex).Match(tmps);
+                        match = new Regex(BracketRegex).Match(tmps);
                         if (match.Success)
                         {
                             if (match.Index + match.Length + 1 < tmps.Length)
@@ -173,7 +173,7 @@ namespace LiPTT
             }
             else if (e.State == PttState.AID)
             {
-                await LiPTT.RunInUIThread(() =>
+                await PTT.RunInUIThread(() =>
                 {
                     //AID
                     if (e.Article.AID?.Length != 9)
@@ -183,7 +183,7 @@ namespace LiPTT
                     }
                     //網頁版網址
                     string str = Screen.ToString(20);
-                    Regex regex = new Regex(LiPTT.http_regex);
+                    Regex regex = new Regex(HttpRegex);
                     Match match1 = regex.Match(str);
                     if (match1.Success)
                     {

@@ -6,7 +6,21 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-
+    <Page.Resources>
+        <Flyout x:Name="ColorPickerFlyout" x:Key="ColorPickerFlyout" Opened="ColorPicker_Open">
+            <RelativePanel>
+                <ColorPicker x:Name="myColorPicker" IsColorChannelTextInputVisible="True" IsColorPreviewVisible ="True" IsHexInputVisible="True" IsAlphaEnabled="True" IsAlphaSliderVisible="True" IsAlphaTextInputVisible="True"/>
+                <Grid RelativePanel.Below="myColorPicker" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Content="OK" Margin="0,12,2,0" HorizontalAlignment="Stretch" Grid.Column="0" Click="ColorPicker_Change"/>
+                    <Button Content="Cancel" Margin="2,12,0,0" HorizontalAlignment="Stretch" Grid.Column="1" Click="ColorPicker_Cancel"/>
+                </Grid>
+            </RelativePanel>
+        </Flyout>
+    </Page.Resources>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <ScrollViewer>
             <StackPanel>
@@ -39,6 +53,12 @@
                     <TextBox FontSize="28" Text="{Binding GoogleURLShortenerAPIKey, Source={StaticResource SettingProperty}, Mode=TwoWay}" IsEnabled="false"/>
                 </StackPanel>
                 <CheckBox Content="斷線或被踢時自動重新連線" FontSize="28" Margin="200,10,10,50" VerticalContentAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding AlwaysAlive, Source={StaticResource SettingProperty}, Mode=TwoWay}" />
+                <Button Margin="200,10,520,40" Click="TextColor_Click" Flyout="{StaticResource ColorPickerFlyout}">
+                    <TextBlock Text="TextColor" FontSize="28" Foreground="{Binding Source={StaticResource SettingProperty}, Path=TextColor, Converter={StaticResource ColorToBrushConverter}}"/>
+                </Button>
+                <Button Margin="200,10,520,40" Click="BoardTitleColor_Click" Flyout="{StaticResource ColorPickerFlyout}" Background="Transparent">
+                    <TextBlock Text="看板標題" FontSize="28" Foreground="{Binding Source={StaticResource SettingProperty}, Path=BoardTitleColor, Converter={StaticResource ColorToBrushConverter}}"/>
+                </Button>
             </StackPanel>
         </ScrollViewer>
     </Grid>

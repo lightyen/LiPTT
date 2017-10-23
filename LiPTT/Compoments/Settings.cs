@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.Storage;
 using Newtonsoft.Json;
@@ -22,6 +23,7 @@ namespace LiPTT
             googleURLShortenerAPIKey = "AIzaSyCEcRFJD94zXZeab1yDSZ__SLBISmpPm6Y";
             Space = 0.5;
             FontSizePercent = 0.5;
+            color = Colors.White;
         }
 
         /// <summary>
@@ -166,6 +168,32 @@ namespace LiPTT
             }
         }
 
+        public Color TextColor
+        {
+            get
+            {
+                return color;
+            }
+            set
+            {
+                color = value;
+                NotifyPropertyChanged("TextColor");
+            }
+        }
+
+        public Color BoardTitleColor
+        {
+            get
+            {
+                return boardTitleColor;
+            }
+            set
+            {
+                boardTitleColor = value;
+                NotifyPropertyChanged("BoardTitleColor");
+            }
+        }
+
         private bool alwaysAlive;
         private double space;
         private bool fullScreen;
@@ -174,6 +202,8 @@ namespace LiPTT
         private bool openshort;
         private string googleURLShortenerAPIKey;
         private bool autoload;
+        private Color color;
+        private Color boardTitleColor;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -185,7 +215,6 @@ namespace LiPTT
 
     public static partial class LiPTT
     {
-
         private static void DefaultSetting()
         {
             var container = ApplicationData.Current.RoamingSettings.CreateContainer(SettingPropertyName, ApplicationDataCreateDisposition.Always);

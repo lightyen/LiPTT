@@ -605,13 +605,13 @@ namespace LiPTT
                 ip = match.ToString();
             }
 
-
-            
+            /***
             if (!ptt.CurrentBoard.IPVisible)
             {
                 ip = "";
                 ip_space = 0;
             }
+            /***/
 
             //自訂日期和時間格式字串 https://msdn.microsoft.com/zh-tw/library/8kb3ddd4(v=vs.110).aspx
             System.Globalization.CultureInfo provider = new System.Globalization.CultureInfo("en-US");

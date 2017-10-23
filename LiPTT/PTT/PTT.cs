@@ -661,7 +661,7 @@ namespace LiPTT
         /// </summary>
         public string Password { get; set; }
 
-        SemaphoreSlim ExitSemaphore;
+        SemaphoreSlim ExitSemaphore = new SemaphoreSlim(0, 1);
 
         public async Task ExitPTT()
         {
@@ -712,7 +712,6 @@ namespace LiPTT
         {
             User = user;
             Password = password;
-            ExitSemaphore = new SemaphoreSlim(0, 1);
 
             PTTStateUpdated += EnterAccount;
 

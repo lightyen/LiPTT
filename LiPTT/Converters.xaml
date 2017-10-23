@@ -36,4 +36,5 @@
     <local:ImageButtonWidthConverter x:Key="ImageButtonWidthConverter" />
     <local:ImageButtonHeightConverter x:Key="ImageButtonHeightConverter" />
     <local:PttCoinTextConverter x:Key="PttCoinTextConverter" />
+    <local:ColorToBrushConverter x:Key="ColorToBrushConverter" />
 </ResourceDictionary>

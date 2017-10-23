@@ -15,6 +15,9 @@
                 <ColorPicker x:Name="myColorPicker"
                          IsColorChannelTextInputVisible="True"
                         IsColorPreviewVisible ="True"
+                             IsAlphaEnabled="True"
+                             IsAlphaSliderVisible="True"
+                             IsAlphaTextInputVisible="True"
                          IsHexInputVisible="True"/>
 
                 <Grid RelativePanel.Below="myColorPicker"

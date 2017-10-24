@@ -41,6 +41,8 @@ namespace LiPTT
 
         private bool control_visible;
 
+        private TimeSpan LoadingTime = TimeSpan.FromMilliseconds(100);
+
         public bool ControlVisible
         {
             get
@@ -107,16 +109,18 @@ namespace LiPTT
                 }, TimeSpan.FromMilliseconds(2000));
             };
 
+            /***
             TestContentUpdatedTimer = ThreadPoolTimer.CreateTimer(async (timer) => {
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    var scrollviewer = GetScrollViewer(ArticleListView);
-                    scrollviewer?.ChangeView(0, -10, null);
                     RingActive = false;
                     ControlVisible = true;
+                    back = false;
+                    var scrollviewer = GetScrollViewer(ArticleListView);
+                    scrollviewer?.ChangeView(null, 0, null, true);
                 });
                     
-            }, TimeSpan.FromMilliseconds(500));
+            }, LoadingTime);
 
             ContentCollection.ItemsUpdatd +=  (a, b) =>
             {
@@ -127,14 +131,16 @@ namespace LiPTT
                         TestContentUpdatedTimer = ThreadPoolTimer.CreateTimer(async (timer) => {
                             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                             {
-                                var scrollviewer = GetScrollViewer(ArticleListView);
-                                scrollviewer?.ChangeView(0, -10, null);
                                 RingActive = false;
                                 ControlVisible = true;
+                                back = false;
+                                var scrollviewer = GetScrollViewer(ArticleListView);
+                                scrollviewer?.ChangeView(null, 0, null, true);
                             });
-                        }, TimeSpan.FromMilliseconds(500));
+                        }, LoadingTime);
                     }
             };
+            /***/
 
             Debug.WriteLine("Article 訂閱事件");
             Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
@@ -151,8 +157,11 @@ namespace LiPTT
                 PTT ptt = Application.Current.Resources["PTT"] as PTT;
                 ptt.ArticleContentUpdated -= ArticleContentBeginLoad;
                 ContentCollection.BeginLoad(e);
+                RingActive = false;
+                ControlVisible = true;
                 back = false;
-                
+                var scrollviewer = GetScrollViewer(ArticleListView);
+                scrollviewer?.ChangeView(null, 0, null, true);
             });
         }
 

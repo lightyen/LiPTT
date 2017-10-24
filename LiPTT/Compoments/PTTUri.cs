@@ -8,7 +8,7 @@ using Windows.UI.Xaml;
 using System.Net;
 using System.IO;
 using Windows.Web.Http;
-
+using OpenGraph_Net;
 namespace LiPTT
 {
     class PTTUri : Uri
@@ -209,7 +209,6 @@ namespace LiPTT
 
             if (origin.EndsWith(".jpg") ||
                 origin.EndsWith(".png") ||
-                origin.EndsWith(".png") ||
                 origin.EndsWith(".gif") ||
                 origin.EndsWith(".bmp") ||
                 origin.EndsWith(".tiff") ||
@@ -233,6 +232,14 @@ namespace LiPTT
                         }
                     }
                 }
+                else
+                {
+                    OpenGraph openGraph = OpenGraph.ParseUrl(OriginalString);
+                    if (FindImageUrl(openGraph.Image.OriginalString) is string url)
+                    {
+                        PictureUri = new Uri(url);
+                    }
+                }
             }
             else if (Host == "i.imgur.com")
             {
@@ -249,6 +256,14 @@ namespace LiPTT
                         {
                             PictureUri = new Uri("http://i.imgur.com/" + ID + ".png");
                         }
+                    }
+                }
+                else
+                {
+                    OpenGraph openGraph = OpenGraph.ParseUrl(OriginalString);
+                    if (FindImageUrl(openGraph.Image.OriginalString) is string url)
+                    {
+                        PictureUri = new Uri(url);
                     }
                 }
             }
@@ -408,6 +423,29 @@ namespace LiPTT
                 Debug.WriteLine(string.Format("Exception: {0} - {1}", OriginalString, e.Message));
             }
             return this;
+        }
+
+        private string FindImageUrl(string origin)
+        {
+            int index = -1;
+            if (
+                ((index = origin.IndexOf(".jpg")) != -1) ||
+                ((index = origin.IndexOf(".png")) != -1) ||
+                ((index = origin.IndexOf(".gif")) != -1) ||
+                ((index = origin.IndexOf(".bmp")) != -1) ||
+                ((index = origin.IndexOf(".ico")) != -1)
+                )
+            {
+                return origin.Substring(0, index + 4);
+            }
+            else if (((index = origin.IndexOf(".tiff")) != -1))
+            {
+                return origin.Substring(0, index + 5);
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

@@ -113,9 +113,13 @@
     <Compile Include="Compoments\EchoContentDialog.xaml.cs">
       <DependentUpon>EchoContentDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PTT\Article.cs" />
-    <Compile Include="PTT\Board.cs" />
-    <Compile Include="PTT\PTT.cs" />
+    <Compile Include="Compoments\OpenGraph\HttpDownloader.cs" />
+    <Compile Include="Compoments\OpenGraph\InvalidSpecificationException.cs" />
+    <Compile Include="Compoments\OpenGraph\OpenGraph.cs" />
+    <Compile Include="Compoments\OpenGraph\ReadOnlyDictionaryException.cs" />
+    <Compile Include="Compoments\PTT\Article.cs" />
+    <Compile Include="Compoments\PTT\Board.cs" />
+    <Compile Include="Compoments\PTT\PTT.cs" />
     <Compile Include="Compoments\PTTUri.cs" />
     <Compile Include="Compoments\Settings.cs" />
     <Compile Include="Compoments\VisualTreeHelperExtensions.cs" />
@@ -770,6 +774,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack">
+      <Version>1.6.2</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.0.1</Version>
     </PackageReference>

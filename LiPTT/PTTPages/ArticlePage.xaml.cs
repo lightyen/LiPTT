@@ -71,6 +71,8 @@ namespace LiPTT
 
         private double VerticalScrollOffset;
 
+        private ThreadPoolTimer TestContentUpdatedTimer;
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -105,6 +107,35 @@ namespace LiPTT
                 }, TimeSpan.FromMilliseconds(2000));
             };
 
+            TestContentUpdatedTimer = ThreadPoolTimer.CreateTimer(async (timer) => {
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    var scrollviewer = GetScrollViewer(ArticleListView);
+                    scrollviewer?.ChangeView(0, -10, null);
+                    RingActive = false;
+                    ControlVisible = true;
+                });
+                    
+            }, TimeSpan.FromMilliseconds(500));
+
+            ContentCollection.ItemsUpdatd +=  (a, b) =>
+            {
+                TestContentUpdatedTimer.Cancel();
+                
+                    if (RingActive)
+                    {
+                        TestContentUpdatedTimer = ThreadPoolTimer.CreateTimer(async (timer) => {
+                            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                            {
+                                var scrollviewer = GetScrollViewer(ArticleListView);
+                                scrollviewer?.ChangeView(0, -10, null);
+                                RingActive = false;
+                                ControlVisible = true;
+                            });
+                        }, TimeSpan.FromMilliseconds(500));
+                    }
+            };
+
             Debug.WriteLine("Article 訂閱事件");
             Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
@@ -120,9 +151,8 @@ namespace LiPTT
                 PTT ptt = Application.Current.Resources["PTT"] as PTT;
                 ptt.ArticleContentUpdated -= ArticleContentBeginLoad;
                 ContentCollection.BeginLoad(e);
-                RingActive = false;
-                ControlVisible = true;
                 back = false;
+                
             });
         }
 
@@ -247,6 +277,11 @@ namespace LiPTT
             back = true;
             Debug.WriteLine("Article Page: 離開文章瀏覽");
             StopVideo();
+
+            if (!ContentCollection.DownloadTask.IsCompleted)
+            {
+                ContentCollection.DownloadCancellationTokenSource.Cancel();
+            }
 
             PTT ptt = Application.Current.Resources["PTT"] as PTT;
             ptt.GoBack();

@@ -25,6 +25,10 @@ namespace LiPTT
     {
         PTT ptt;
 
+        public Task DownloadTask;
+
+        public CancellationTokenSource DownloadCancellationTokenSource;
+
         public bool InitialLoaded { get; private set; }
 
         public Article ArticleTag
@@ -43,7 +47,7 @@ namespace LiPTT
 
         public List<Block[]> RawLines { get; set; } //文章生肉串
 
-        public List<Task<DownloadResult>> DownloadImageTasks { get; set; }
+        private List<Task<DownloadResult>> DownloadImageTasks { get; set; }
 
         /// <summary>
         /// 已過濾的行數(不包含標題頭)
@@ -62,6 +66,7 @@ namespace LiPTT
 
         public event FullScreenEventHandler FullScreenEntered;
         public event FullScreenEventHandler FullScreenExited;
+        public event EventHandler ItemsUpdatd;
 
         private SemaphoreSlim Semaphore;
 
@@ -97,6 +102,10 @@ namespace LiPTT
             Semaphore = new SemaphoreSlim(0, 1);
             RawLines = new List<Block[]>();
             DownloadImageTasks = new List<Task<DownloadResult>>();
+            CollectionChanged += (a, b) =>
+            {
+                ItemsUpdatd?.Invoke(this, new EventArgs());
+            };
 
             ImageButtonFontSizeBinding = new Binding
             {
@@ -312,13 +321,19 @@ namespace LiPTT
 
             ParsedLine = RawLines.Count;
 
-            var t = Task.Run(async () => {
+            DownloadCancellationTokenSource = new CancellationTokenSource();
+            var token = DownloadCancellationTokenSource.Token;
+
+
+            DownloadTask = Task.Run(async () => {
 
                 if (DownloadImageTasks.Count > 0)
                 {
                     while (DownloadImageTasks.Count > 0)
                     {
                         var firstFinishedTask = await Task.WhenAny(DownloadImageTasks);
+
+                        token.ThrowIfCancellationRequested();
 
                         var item = firstFinishedTask.Result.Item;
 
@@ -329,16 +344,16 @@ namespace LiPTT
                                 {
                                     this[firstFinishedTask.Result.Index] = item;
                                 }
-                                catch (IndexOutOfRangeException)
+                                catch (ArgumentOutOfRangeException)
                                 {
-                                    Debug.WriteLine(string.Format("DownloadImageTasks: index {0} IndexOutOfRangeException", firstFinishedTask.Result.Index));
+                                    Debug.WriteLine(string.Format("DownloadImageTasks: index {0} OutOfRangeException", firstFinishedTask.Result.Index));
                                 }
                             });
                         }
                         DownloadImageTasks.Remove(firstFinishedTask);
                     }
                 }
-            });
+            }, token);
         }
 
         public void AddLine(Block[] blocks, string str)
@@ -918,11 +933,9 @@ namespace LiPTT
             //***
             list.Items.Add(new ListViewItem()
             {
-                Margin = new Thickness(0),
                 Content = grid,
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch,
-                AllowFocusOnInteraction = false,
             });
             /***/
             ToolTip toolTip = new ToolTip() { Content = string.Format("{0}樓", echo.Floor) };

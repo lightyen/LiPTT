@@ -66,6 +66,9 @@ namespace LiPTT
                 case PttState.Synchronizing:
                     State = "更新與同步個人資訊中...";
                     break;
+                case PttState.Article:
+                    State = "瀏覽文章";
+                    break;
                 case PttState.Accept:
                     State = "密碼正確";
                     break;

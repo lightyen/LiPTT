@@ -181,6 +181,9 @@ namespace LiPTT
                         ptt.Yes();
                     }
                     break;
+                case PttState.Article:
+                    ptt.PressSpace();
+                    break;
                 case PttState.WrongLog:
                     ptt.Yes();
                     break;

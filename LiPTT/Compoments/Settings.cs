@@ -23,6 +23,7 @@ namespace LiPTT
             googleURLShortenerAPIKey = "AIzaSyCEcRFJD94zXZeab1yDSZ__SLBISmpPm6Y";
             Space = 0.5;
             FontSizePercent = 0.5;
+            BoardTitleColor = Colors.White;
             color = Colors.White;
         }
 

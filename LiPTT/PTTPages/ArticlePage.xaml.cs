@@ -73,8 +73,6 @@ namespace LiPTT
 
         private double VerticalScrollOffset;
 
-        private ThreadPoolTimer TestContentUpdatedTimer;
-
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -108,39 +106,6 @@ namespace LiPTT
                     });
                 }, TimeSpan.FromMilliseconds(2000));
             };
-
-            /***
-            TestContentUpdatedTimer = ThreadPoolTimer.CreateTimer(async (timer) => {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    RingActive = false;
-                    ControlVisible = true;
-                    back = false;
-                    var scrollviewer = GetScrollViewer(ArticleListView);
-                    scrollviewer?.ChangeView(null, 0, null, true);
-                });
-                    
-            }, LoadingTime);
-
-            ContentCollection.ItemsUpdatd +=  (a, b) =>
-            {
-                TestContentUpdatedTimer.Cancel();
-                
-                    if (RingActive)
-                    {
-                        TestContentUpdatedTimer = ThreadPoolTimer.CreateTimer(async (timer) => {
-                            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                            {
-                                RingActive = false;
-                                ControlVisible = true;
-                                back = false;
-                                var scrollviewer = GetScrollViewer(ArticleListView);
-                                scrollviewer?.ChangeView(null, 0, null, true);
-                            });
-                        }, LoadingTime);
-                    }
-            };
-            /***/
 
             Debug.WriteLine("Article 訂閱事件");
             Window.Current.CoreWindow.PointerPressed += ArticlePage_PointerPressed;

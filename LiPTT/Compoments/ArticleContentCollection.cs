@@ -1015,8 +1015,7 @@ namespace LiPTT
                 VerticalAlignment = VerticalAlignment.Stretch,
             };
 
-            ToolTip toolTip = new ToolTip() { Content = uri.OriginalString };
-            ToolTipService.SetToolTip(button, toolTip);
+            ToolTipService.SetToolTip(button, new ToolTip() { Content = uri.OriginalString });
 
             bool click = false;
 
@@ -1114,6 +1113,8 @@ namespace LiPTT
                         NavigateUri = uri,
                     };
 
+                    ToolTipService.SetToolTip(hyperlinkButton, new ToolTip { Content = uri.OriginalString });
+
                     hyperlinkButton.SetValue(Grid.ColumnProperty, 1);
                     ImgGrid.Children.Add(hyperlinkButton);
                 }
@@ -1147,6 +1148,7 @@ namespace LiPTT
                         VerticalAlignment = VerticalAlignment.Center,
                         TextAlignment = TextAlignment.Center,
                     };
+                    ToolTipService.SetToolTip(border, new ToolTip { Content = uri.OriginalString });
                     BindingOperations.SetBinding(textBlock, TextBlock.FontSizeProperty, NormalFontSizeBinding);
                     border.Child = textBlock;
                     ImgGrid.Children.Add(border); 
@@ -1202,7 +1204,7 @@ namespace LiPTT
                     Content = img,
                     NavigateUri = uri,
                 };
-
+                ToolTipService.SetToolTip(button, new ToolTip() { Content = uri.OriginalString });
                 button.SetValue(Grid.ColumnProperty, 1);
                 ImgGrid.Children.Add(button);
             }
@@ -1227,7 +1229,7 @@ namespace LiPTT
                 };
                 border.SetBinding(FrameworkElement.WidthProperty, bindingWidth);
                 border.SetBinding(FrameworkElement.HeightProperty, bindingHeight);
-
+                ToolTipService.SetToolTip(border, new ToolTip() { Content = uri.OriginalString });
                 TextBlock textBlock = new TextBlock() {
                     Text = "圖片下載失敗",
                     HorizontalAlignment = HorizontalAlignment.Stretch,

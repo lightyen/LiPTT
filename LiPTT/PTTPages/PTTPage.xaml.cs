@@ -27,9 +27,6 @@ namespace LiPTT
         {
             InitializeComponent();
             //LiPTT.GamepadPollTimer = ThreadPoolTimer.CreatePeriodicTimer(GamepadUpdate, TimeSpan.FromMilliseconds(50));
-            SvgImageSource source = new SvgImageSource(new Uri("ms-appx:///Icons/view-list-button.svg"));
-
-            myImage.Source = source; 
         }
 
         private static void GamepadUpdate(ThreadPoolTimer timer)
@@ -153,8 +150,6 @@ namespace LiPTT
                 {
                     Content = sp
                 };
-
-
 
                 gridView.Items.Add(item);
             }

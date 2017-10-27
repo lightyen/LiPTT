@@ -12,7 +12,7 @@
                 <PivotItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <!--<SymbolIcon Symbol="AllApps" Margin="0,10,10,8" />-->
-                        <Image x:Name="myImage" Width="27" Height="27" Opacity="1.0">
+                        <Image Source="ms-appx:///Icons/view-list-button.svg" Width="27" Height="27" Opacity="1.0">
                         </Image>
                         <TextBlock Text="主功能表" Margin="5,10,0,10" TextAlignment="Center" VerticalAlignment="Stretch" />
                     </StackPanel>

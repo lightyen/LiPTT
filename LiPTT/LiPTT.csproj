@@ -667,6 +667,7 @@
     <Content Include="Icons\world-shape-public-symbol.svg" />
     <Content Include="Icons\write-email-envelope-button.svg" />
     <Content Include="Icons\youtube-logo.svg" />
+    <Content Include="Logo\Li.png" />
     <Content Include="Logo\liptt-logo.png" />
     <Content Include="Logo\liptt-logo.svg" />
     <Content Include="Logo\liptt-logo2.png" />

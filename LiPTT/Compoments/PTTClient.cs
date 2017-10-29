@@ -445,6 +445,18 @@ namespace LiPTT
             KeepAliveTimer?.Cancel();
         }
 
+        private void SocketDispose()
+        {
+            if (security)
+            {
+                WebSocket?.Dispose();
+            }
+            else
+            {
+                stream?.Close();
+            }
+        }
+
         private void StartRecv()
         {
             if (stream == null) return;
@@ -543,7 +555,7 @@ namespace LiPTT
                 //發生意外了?
                 Debug.WriteLine(e.ToString());
                 IsAppExit = true;
-                WebSocket?.Dispose();
+                SocketDispose();
             }
         }
 
@@ -1043,6 +1055,7 @@ namespace LiPTT
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.ToString());
+                SocketDispose();
             }
         }
 
@@ -1069,6 +1082,7 @@ namespace LiPTT
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.ToString());
+                SocketDispose();
             }
         }
 
@@ -1093,6 +1107,7 @@ namespace LiPTT
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.ToString());
+                SocketDispose();
             }
         }
 
@@ -1141,6 +1156,7 @@ namespace LiPTT
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.ToString());
+                SocketDispose();
             }
         }
     }

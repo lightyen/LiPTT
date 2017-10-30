@@ -24,8 +24,11 @@ namespace LiPTT
             CoreApplication.Resuming += (a, b) =>
             {
                 ptt.PTTStateUpdated += Ptt_PTTStateUpdated;
-                State = "重新連線中...";
-                OnPropertyChanged("State");
+                if (LiPTT.Logined)
+                {
+                    State = "重新連線中...";
+                    OnPropertyChanged("State");
+                }
             };
         }
 

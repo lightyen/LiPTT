@@ -291,11 +291,20 @@ namespace LiPTT
             if (Setting.ConnectionSecurity is bool security)
                 ConnectionSecurity = security;
             State = PttState.Connecting;
+            PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
             this.Connect();
         }
 
         protected override void OnPTTConnectionFailed(object sender, NetworkEventArgs e)
         {
+
+            if (e.ConnectionType == PTTConnectionType.TCP)
+                State = PttState.ConnectFailedTCP;
+            else
+                State = PttState.ConnectFailedWebSocket;
+
+            PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
+
             base.OnPTTConnectionFailed(sender, e);
         }
 

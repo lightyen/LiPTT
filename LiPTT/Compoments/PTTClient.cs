@@ -236,7 +236,7 @@ namespace LiPTT
         protected bool isConnected;
         private DateTime connectDateTime;
         private DateTime websockRecvTime;
-        private TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(10);
+        private TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(1);
         private TimeSpan keepAlivePeriod = TimeSpan.FromMinutes(5);
 
         private void KeepAlive(ThreadPoolTimer timer)
@@ -398,15 +398,16 @@ namespace LiPTT
             try
             {
                 websockRecvTime = DateTime.Now;
+                isConnected = true;
 
                 if (!WebSocket.ConnectAsync(new Uri(WebSocketHost)).AsTask().Wait(ConnectionTimeout))
                 {
                     Debug.WriteLine("WebSocket: 連線失敗");
+                    isConnected = false;
                     OnPTTConnectionFailed(this, new NetworkEventArgs { ConnectionType = PTTConnectionType.WebSocket, Event = PTTNetworkEventType.Failed });
                 }
                 else
                 {
-                    isConnected = true;
                     OnPTTConnected(this, new NetworkEventArgs { ConnectionType = PTTConnectionType.WebSocket, Event = PTTNetworkEventType.Connected });
                     Debug.WriteLine("WebSocket: 已連線");
                     KeepAliveTimer = ThreadPoolTimer.CreatePeriodicTimer(KeepAlive, KeepAlivePeriod);
@@ -415,6 +416,7 @@ namespace LiPTT
             catch (Exception e)
             {
                 Debug.WriteLine(string.Format("WebSocket: 連線失敗 {0}", e.ToString()));
+                isConnected = false;
                 OnPTTConnectionFailed(this, new NetworkEventArgs { ConnectionType = PTTConnectionType.WebSocket, Event = PTTNetworkEventType.Failed });
             }
         }

@@ -154,8 +154,11 @@ namespace LiPTT
             ptt.IsAppExit = false;
             SaveUserAccount(UserText.Text, PasswordText.Password);
             enterAlreadyLogin = false;
+
             ptt.PTTStateUpdated += EnterAccount;
             ptt.Login(UserText.Text, PasswordText.Password);
+
+
         }
 
         private bool enterAlreadyLogin;

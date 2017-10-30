@@ -381,18 +381,6 @@ namespace LiPTT
                     PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
                 }
             }
-            else if (Match(@"\(a\)增加看板", 23))
-            {
-                Debug.WriteLine("我的最愛");
-                State = PttState.Favorite;
-                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
-            }
-            else if (Match(@"\(m\)加入/移出最愛", 23))
-            {
-                Debug.WriteLine("熱門看板");
-                State = PttState.Popular;
-                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, Screen = Screen, Article = CurrentArticle });
-            }
             else if (Match("相關資訊一覽表", 2))
             {
                 Debug.WriteLine("搜尋相關看板");
@@ -404,6 +392,18 @@ namespace LiPTT
                 Debug.WriteLine("請輸入看板名稱");
                 State = PttState.SearchBoard;
                 PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
+            }
+            else if (Match(@"\(a\)增加看板", 23))
+            {
+                Debug.WriteLine("我的最愛");
+                State = PttState.Favorite;
+                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
+            }
+            else if (Match(@"\(m\)加入/移出最愛", 23))
+            {
+                Debug.WriteLine("熱門看板");
+                State = PttState.Popular;
+                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State, Screen = Screen, Article = CurrentArticle });
             }
             else if (Match("看板設定", 3))
             {
@@ -663,10 +663,11 @@ namespace LiPTT
 
         SemaphoreSlim ExitSemaphore = new SemaphoreSlim(0, 1);
 
-        public async Task ExitPTT()
+        public void Exit()
         {
             if (IsConnected)
             {
+                PTTStateUpdated = null;
                 PTTStateUpdated += Exit_PTTStateUpdated;
 
                 if (State != PttState.MainPage)
@@ -680,7 +681,7 @@ namespace LiPTT
                 ExitSemaphore.Release();
             }
 
-            await ExitSemaphore.WaitAsync();
+            ExitSemaphore.Wait();
         }
 
         private void Exit_PTTStateUpdated(object sender, PTTStateUpdatedEventArgs e)
@@ -801,46 +802,59 @@ namespace LiPTT
             Send('s', search, 0x20);
         }
 
-        private void SearchBoardHandle(object sender, PTTStateUpdatedEventArgs e)
+        private async void SearchBoardHandle(object sender, PTTStateUpdatedEventArgs e)
         {
-            Regex regex = new Regex(@"([\w-_]+)");
+            Regex regex = new Regex(@"([\S]+)");
             Match match;
+            string msg;
 
             switch (e.State)
             {
                 case PttState.SearchBoard:
                     PTTStateUpdated -= SearchBoardHandle;
-                    var msg = Screen.ToString(1, 34, 20).Trim();
+                    msg = Screen.ToString(1, 34, 20).Replace('\0', ' ');
 
                     match = regex.Match(msg);
 
                     if (match.Success)
                     {
-                        string suggestion = msg.Substring(match.Index, match.Length);
+                        string suggestion = match.ToString();
 
-                        if (search.Length <= suggestion.Length)
+                        if (suggestion.StartsWith(search, true, System.Globalization.CultureInfo.InvariantCulture))
+                        {
                             SearchBoardList.Add(suggestion);
-
-                        SearchBoardUpdated?.Invoke(this, new SearchBoardUpdatedEventArgs { Boards = SearchBoardList });
-
-                        ClearSearch();
+                        }
+                        await Task.Run(() => {
+                            SearchComplete();
+                        });
                     }
                     break;
                 case PttState.RelatedBoard:
+                    msg = Screen.ToString(1, 34, 20).Replace('\0', ' ');
+                    match = regex.Match(msg);
+                    if (match.Success)
+                    {
+                        string suggestion = match.ToString();
+
+                        if (!suggestion.StartsWith(search, true, System.Globalization.CultureInfo.InvariantCulture))
+                        {
+                            PTTStateUpdated -= SearchBoardHandle;
+                            SearchBoardList.Clear();
+                            await Task.Run(() => {
+                                SearchComplete();
+                            });
+                            return;
+                        }
+                    }
 
                     for (int i = 3; i < 23; i++)
                     {
                         string k = Screen.ToString(i).Replace('\0', ' ');
 
-                        match = regex.Match(k, 0);
-                        if (match.Success) SearchBoardList.Add(k.Substring(match.Index, match.Length));
-
-                        match = regex.Match(k, 22);
-                        if (match.Success) SearchBoardList.Add(k.Substring(match.Index, match.Length));
-
-                        match = regex.Match(k, 44);
-                        if (match.Success) SearchBoardList.Add(k.Substring(match.Index, match.Length));
-
+                        foreach (Match m in regex.Matches(k))
+                        {
+                            SearchBoardList.Add(m.ToString());
+                        }
                     }
 
                     if (new Regex("按空白鍵可列出更多項目").Match(Screen.ToString(23)).Success)
@@ -853,27 +867,42 @@ namespace LiPTT
 
                         SearchBoardList.Sort();
 
-                        SearchBoardUpdated?.Invoke(this, new SearchBoardUpdatedEventArgs { Boards = SearchBoardList });
-
-                        ClearSearch();
+                        await Task.Run(() => {
+                            SearchComplete();
+                        });
+                        
                     }
                     break;
             }
         }
 
-        private void ClearSearch()
+        private SemaphoreSlim search_clear_sem = new SemaphoreSlim(0, 1);
+
+        private void SearchComplete()
         {
-            var msg = Screen.ToString(1, 34, 20).Trim();
+            var msg = Screen.ToString(1, 34, 20).Replace('\0', ' ');
             Regex regex = new Regex(@"([\w-_]+)");
             Match match = regex.Match(msg);
             if (match.Success)
             {
-                string search = msg.Substring(match.Index, match.Length);
+                PTTStateUpdated += OnClearSearch;
 
+                string search = msg.Substring(match.Index, match.Length);
                 byte[] back = new byte[search.Length + 1];
                 back[search.Length] = 0x0D;
                 for (int i = 0; i < search.Length; i++) back[i] = 0x08;
                 Send(back);
+                search_clear_sem.Wait();
+                SearchBoardUpdated?.Invoke(this, new SearchBoardUpdatedEventArgs { Boards = SearchBoardList });
+            }
+        }
+
+        private void OnClearSearch(object sender, PTTStateUpdatedEventArgs e)
+        {
+            if (e.State != PttState.SearchBoard && e.State != PttState.RelatedBoard)
+            {
+                PTTStateUpdated -= OnClearSearch;
+                search_clear_sem.Release();
             }
         }
 

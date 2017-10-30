@@ -90,18 +90,18 @@ namespace LiPTT
             Gamepads = new List<Gamepad>();
         }
 
-        public static async void ReleaseInstance()
+        public static void ReleaseInstance()
         {
             SaveSetting();
             Gamepads.Clear();
             PTT ptt = Application.Current.Resources["PTT"] as PTT;
-            Task exit = ptt.ExitPTT();
+            Task exit = Task.Run(() => { ptt.Exit(); });
 
             Debug.WriteLine("Clear Cache");
             Task ClearCacheTask = Task.Run(async () => { await ImageCache.ClearAllCache(); });
 
-            await exit;
-            await ClearCacheTask;
+            exit.Wait();
+            ClearCacheTask.Wait();
         }
 
         public static string GetBoardNick(string name)

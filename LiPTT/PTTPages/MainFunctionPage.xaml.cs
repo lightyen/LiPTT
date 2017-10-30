@@ -154,8 +154,6 @@ namespace LiPTT
             searching = false;
         }
 
-
-
         private void BoardAutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
             if (args.QueryText == "") return;

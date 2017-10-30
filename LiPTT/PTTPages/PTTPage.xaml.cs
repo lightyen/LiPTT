@@ -88,12 +88,12 @@ namespace LiPTT
             });
         }
 
-        private async void Exit()
+        private void Exit()
         {
             PTT ptt = Application.Current.Resources["PTT"] as PTT;
             ptt.PTTStateUpdated -= Updated;
 
-            await ptt.ExitPTT();
+            ptt.Exit();
             LiPTT.Logined = false;
             LiPTT.Frame.Navigate(typeof(LoginPage));
         }
@@ -145,7 +145,8 @@ namespace LiPTT
                     Foreground = new SolidColorBrush(Windows.UI.Colors.AntiqueWhite),
                     HorizontalAlignment = HorizontalAlignment.Stretch,
                     VerticalAlignment = VerticalAlignment.Stretch, Margin = new Thickness(0, 33, 0, 0) });
-                sp.Children.Add(new TextBlock{ Text = bol.ToString(), Foreground = new SolidColorBrush(Windows.UI.Colors.AntiqueWhite), TextAlignment = TextAlignment.Center , HorizontalAlignment = HorizontalAlignment.Stretch});
+                sp.Children.Add(new TextBlock { Text = bol.ToString(), Foreground = new SolidColorBrush(Windows.UI.Colors.AntiqueWhite), TextAlignment = TextAlignment.Center , HorizontalAlignment = HorizontalAlignment.Stretch});
+                sp.Children.Add(new TextBlock { Text = string.Format("{0}", (int)bol), Foreground = new SolidColorBrush(Windows.UI.Colors.AntiqueWhite), TextAlignment = TextAlignment.Center, HorizontalAlignment = HorizontalAlignment.Stretch });
                 GridViewItem item = new GridViewItem
                 {
                     Content = sp

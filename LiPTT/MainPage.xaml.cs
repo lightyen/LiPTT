@@ -189,7 +189,7 @@ namespace LiPTT
 
         private async void YoutubePageChecked(object sender, RoutedEventArgs e)
         {
-            if (DisplayFrame.CurrentSourcePageType != typeof(YoutubePage))
+            if (DisplayFrame.CurrentSourcePageType != typeof(AppPage))
             {
                 if (SplitView1.DisplayMode == SplitViewDisplayMode.CompactOverlay && LiPTT.IsYoutubeFullScreen)
                 {
@@ -205,7 +205,7 @@ namespace LiPTT
                     });
 
                     SplitView1.DisplayMode = SplitViewDisplayMode.Overlay;
-                    DisplayFrame.Navigate(typeof(YoutubePage));
+                    DisplayFrame.Navigate(typeof(AppPage));
                     SplitContentTransform.X = 0;                 
                     SplitContentTransform.Y = 20;
                     AnimateDouble(SplitContentTransform, "Y", 0, duration, () =>
@@ -226,7 +226,7 @@ namespace LiPTT
                         DissolveImage.Visibility = Visibility.Collapsed;
                     });
 
-                    DisplayFrame.Navigate(typeof(YoutubePage));
+                    DisplayFrame.Navigate(typeof(AppPage));
                     SplitContentTransform.X = SplitView1.CompactPaneLength;
 
                     SplitContentTransform.Y = 20;
@@ -239,7 +239,7 @@ namespace LiPTT
                 else
                 {
                     await StartDissolvingAsync();
-                    DisplayFrame.Navigate(typeof(YoutubePage));
+                    DisplayFrame.Navigate(typeof(AppPage));
                 }
             }
         }

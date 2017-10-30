@@ -9,5 +9,24 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <TextBlock Text="正在施工中..." FontSize="38"/>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="48" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="5*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <AutoSuggestBox x:Name="BoardAutoSuggestBox"
+                                Grid.Column="1" QueryIcon="Find" VerticalAlignment="Center" 
+                                TextChanged="BoardAutoSuggestBox_TextChanged"
+                                QuerySubmitted="BoardAutoSuggestBox_QuerySubmitted"/>
+            </Grid>
+            <Border Grid.Row="1" >
+            </Border>
+        </Grid>
     </Grid>
 </Page>

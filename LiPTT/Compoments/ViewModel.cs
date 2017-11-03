@@ -84,6 +84,9 @@ namespace LiPTT
                 case PttState.OverLoading:
                     State = "PTT被你玩壞惹?";
                     break;
+                case PttState.Maintenanced:
+                    State = "系統維護中";
+                    break;
                 case PttState.LoginSoMany:
                     State = "登入太頻繁 請稍後在試";
                     break;

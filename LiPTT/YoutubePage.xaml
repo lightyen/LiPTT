@@ -72,7 +72,7 @@
                     <Image Source="ms-appx:///Icons/burn-button.svg" Width="100" Height="100"/>
                     <Grid.Resources>
                         <local:ActualSizePropertyProxy Element="{Binding ElementName=MyGrid}" x:Key="proxy" x:Name="proxy" />
-                        </Grid.Resources>
+                    </Grid.Resources>
                     <!--
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*" />

@@ -224,6 +224,8 @@ namespace LiPTT
         }
         #endregion 屬性
 
+        protected PttState State { get; set; }
+
         private ScreenBuffer screenBuffer;
         private TcpClient tcpClient;
         private MessageWebSocket WebSocket;
@@ -378,7 +380,7 @@ namespace LiPTT
             {
                 if (PTTWrongResponse)
                 {
-                    Debug.WriteLine("WebSocket: 有錯誤訊息");
+                    Debug.WriteLine(string.Format("WebSocket: 有錯誤訊息 {0}", State.ToString()));
                     Dispose();
                 }
                 else if (!IsAppExit)

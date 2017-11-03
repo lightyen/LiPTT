@@ -53,6 +53,10 @@ namespace LiPTT
         /// </summary>
         OverLoading,
         /// <summary>
+        /// 系統維護中
+        /// </summary>
+        Maintenanced,
+        /// <summary>
         /// 登入畫面
         /// </summary>
         Login,
@@ -216,8 +220,6 @@ namespace LiPTT
 
     public partial class PTT : PTTClient
     {
-        private PttState State { get; set; }
-
         public bool IsKicked { get { return State == PttState.Kicked; } }
 
         public Article CurrentArticle { get; set; }
@@ -465,17 +467,26 @@ namespace LiPTT
                     PTTWrongResponse = true;
                     PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
                 }
-
             }
             else if (Match("系統過載", 13))
             {
-                if (State == PttState.OverLoading)
+                if (State != PttState.OverLoading)
                 {
                     Debug.WriteLine("系統過載");
                     State = PttState.OverLoading;
                     PTTWrongResponse = true;
                     PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
                 }
+            }
+            else if (Match("System maintenance", 0))
+            {
+                if (State != PttState.Maintenanced)
+                {
+                    Debug.WriteLine("系統維護中");
+                    State = PttState.Maintenanced;
+                    PTTWrongResponse = true;
+                    PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
+                }  
             }
             else if (Match("密碼正確", 21))
             {
@@ -679,7 +690,13 @@ namespace LiPTT
                 PTTStateUpdated = null;
                 PTTStateUpdated += Exit_PTTStateUpdated;
 
-                if (State != PttState.MainPage)
+                if (State == PttState.Maintenanced || State == PttState.OverLoading)
+                {
+                    PTTStateUpdated -= Exit_PTTStateUpdated;
+                    ExitSemaphore.Release();
+                    Disconnect();
+                }
+                else if (State != PttState.MainPage)
                     Left();
                 else
                     Send('G', 0x0D);

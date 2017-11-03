@@ -200,8 +200,6 @@ namespace LiPTT
             grid.Children.Add(wwvv);
             /***/
             //MyPanel.Children.Add(grid);
-            ActualSizePropertyProxy po = MyGrid.Resources["proxy"] as ActualSizePropertyProxy;
-
 
             ProgressRing ring = new ProgressRing() { IsActive = true, Foreground = new SolidColorBrush(Colors.Orange) };
             Binding ringBinding = new Binding { ElementName = "proxy", Path = new PropertyPath("ActualWidthValue"), Converter = Application.Current.Resources["MyRingRatioConverter"] as RingRatioConverter };

@@ -213,6 +213,7 @@ namespace LiPTT
                     }
                     break;
                 case PttState.OverLoading:
+                case PttState.Maintenanced:
                     {
                         var a = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
                             UserText.IsEnabled = true;
@@ -220,6 +221,7 @@ namespace LiPTT
                             MemoAcount.IsEnabled = true;
                             AutoLogin.IsEnabled = true;
                         });
+                        ptt.Exit();
                     }
                     break;
                 case PttState.ConnectFailedTCP:

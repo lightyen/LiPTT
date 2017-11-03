@@ -203,15 +203,6 @@ namespace LiPTT
                 case PttState.Synchronizing:
                     break;
                 case PttState.LoginSoMany:
-                    {
-                        var a = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-                            UserText.IsEnabled = true;
-                            PasswordText.IsEnabled = true;
-                            MemoAcount.IsEnabled = true;
-                            AutoLogin.IsEnabled = true;
-                        });
-                    }
-                    break;
                 case PttState.OverLoading:
                 case PttState.Maintenanced:
                     {

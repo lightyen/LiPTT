@@ -82,7 +82,7 @@ namespace LiPTT
                     State = "您有一篇文章尚未完成";
                     break;
                 case PttState.OverLoading:
-                    State = "PTT被你玩壞惹?";
+                    State = "系統過載, 別擠阿";
                     break;
                 case PttState.Maintenanced:
                     State = "系統維護中";

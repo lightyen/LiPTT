@@ -26,8 +26,7 @@ namespace LiPTT
                 ptt.PTTStateUpdated += Ptt_PTTStateUpdated;
                 if (LiPTT.Logined)
                 {
-                    State = "重新連線中...";
-                    OnPropertyChanged("State");
+                    PTTState = "重新連線中...";
                 }
             };
         }
@@ -37,84 +36,87 @@ namespace LiPTT
             switch (e.State)
             {
                 case PttState.Disconnected:
-                    State = "未連線";
+                    PTTState = "未連線";
                     break;
                 case PttState.Connecting:
-                    State = "連線中...";
+                    PTTState = "連線中...";
                     break;
                 case PttState.ConnectFailedTCP:
-                    State = "TCP 連線失敗";
+                    PTTState = "TCP 連線失敗";
                     break;
                 case PttState.ConnectFailedWebSocket:
-                    State = "WebSocket 連線失敗";
+                    PTTState = "WebSocket 連線失敗";
                     break;
                 case PttState.Board:
-                    State = "看板";
+                    PTTState = "看板";
                     break;
                 case PttState.SearchBoard:
-                    State = "搜尋看板";
+                    PTTState = "搜尋看板";
                     break;
                 case PttState.Disconnecting:
-                    State = "斷線中...";
+                    PTTState = "斷線中...";
                     break;
                 case PttState.Login:
-                    State = "(請輸入帳號)";
+                    PTTState = "(請輸入帳號)";
                     break;
                 case PttState.Password:
-                    State = "(請輸入密碼)";
+                    PTTState = "(請輸入密碼)";
                     break;
                 case PttState.Loginning:
-                    State = "登入中...";
+                    PTTState = "登入中...";
                     break;
                 case PttState.Synchronizing:
-                    State = "更新與同步個人資訊中...";
+                    PTTState = "更新與同步個人資訊中...";
                     break;
                 case PttState.Article:
-                    State = "瀏覽文章";
+                    PTTState = "瀏覽文章";
                     break;
                 case PttState.Accept:
-                    State = "密碼正確";
+                    PTTState = "密碼正確";
                     break;
                 case PttState.AlreadyLogin:
-                    State = "有重複登入，踢掉中...";
+                    PTTState = "有重複登入，踢掉中...";
                     break;
                 case PttState.ArticleNotCompleted:
-                    State = "您有一篇文章尚未完成";
+                    PTTState = "您有一篇文章尚未完成";
                     break;
                 case PttState.OverLoading:
-                    State = "系統過載, 別擠阿";
+                    PTTState = "系統過載, 別擠阿";
                     break;
                 case PttState.Maintenanced:
-                    State = "系統維護中";
+                    PTTState = "系統維護中";
                     break;
                 case PttState.LoginSoMany:
-                    State = "登入太頻繁 請稍後在試";
+                    PTTState = "登入太頻繁 請稍後在試";
                     break;
                 case PttState.Kicked:
-                    State = "誰踢我";
+                    PTTState = "誰踢我";
                     break;
                 case PttState.WrongPassword:
-                    State = "密碼不對或無此帳號";
+                    PTTState = "密碼不對或無此帳號";
                     break;
                 case PttState.Angel:
-                    State = "小天使?";
+                    PTTState = "小天使?";
                     break;
                 case PttState.WrongLog:
-                    State = "要刪除登入錯誤資訊嗎?";
+                    PTTState = "要刪除登入錯誤資訊嗎?";
                     break;
                 case PttState.MainPage:
-                    State = "主功能表";
+                    PTTState = "主功能表";
                     break;
                 case PttState.PressAny:
-                    State = "(請按任意鍵繼續...)";
+                    PTTState = "(請按任意鍵繼續...)";
+                    break;
+                case PttState.Exit:
+                    PTTState = "確定要離開?";
                     break;
                 default:
-                    State = "未定義狀態";
+                    PTTState = "未定義狀態";
                     break;
             }
         }
 
-        public string State
+        public string PTTState
         {
             get
             {
@@ -123,8 +125,9 @@ namespace LiPTT
             set
             {
                 state = value;
-                OnPropertyChanged("State");
-                
+                var run = PTT.RunInUIThread(() => {
+                    OnPropertyChanged(nameof(PTTState));
+                });
             }
         }
 

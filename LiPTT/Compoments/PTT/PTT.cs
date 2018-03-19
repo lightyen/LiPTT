@@ -683,24 +683,32 @@ namespace LiPTT
 
         SemaphoreSlim ExitSemaphore = new SemaphoreSlim(0, 1);
 
+        public void ClearPTTStateUpdatedSubscription()
+        {
+            PTTStateUpdated = null;
+        }
+
         public void Exit()
         {
             if (IsConnected)
             {
-                PTTStateUpdated = null;
-                PTTStateUpdated += Exit_PTTStateUpdated;
+                //PTTStateUpdated = null;
 
-                if (State == PttState.Maintenanced || State == PttState.OverLoading)
+                if (State == PttState.Maintenanced || State == PttState.OverLoading || State == PttState.LoginSoMany)
                 {
-                    PTTStateUpdated -= Exit_PTTStateUpdated;
                     ExitSemaphore.Release();
                     Disconnect();
                 }
                 else if (State != PttState.MainPage)
+                {
+                    PTTStateUpdated += Exit_PTTStateUpdated;
                     Left();
+                }  
                 else
+                {
+                    PTTStateUpdated += Exit_PTTStateUpdated;
                     Send('G', 0x0D);
-                //
+                }
             }
             else
             {
@@ -728,10 +736,10 @@ namespace LiPTT
             {
                 PTTStateUpdated -= Exit_PTTStateUpdated;
                 PressAnyKey();
-                State = PttState.Disconnected;
                 Disconnect();
-                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
                 ExitSemaphore.Release();
+                State = PttState.Disconnected;
+                PTTStateUpdated?.Invoke(this, new PTTStateUpdatedEventArgs { State = State });
             }
         }
 

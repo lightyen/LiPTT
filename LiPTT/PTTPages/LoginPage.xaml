@@ -25,7 +25,7 @@
                     <CheckBox Content="啟動時自動登入" x:Name ="AutoLogin" Padding="20,5" KeyDown="MemoAcount_KeyDown" HorizontalAlignment="Right" />
                 </Grid>
 
-                <TextBlock x:Name="State" FontSize="26" Height="60" Text="{Binding State, Source={StaticResource ViewModel}}" />
+                <TextBlock x:Name="State" FontSize="26" Height="60" Text="{Binding PTTState, Source={StaticResource ViewModel}}" />
             </StackPanel>
         </Grid>
     </Grid>

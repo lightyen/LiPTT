@@ -92,11 +92,10 @@ namespace LiPTT
 
         public static void ReleaseInstance()
         {
+            PTT ptt = Application.Current.Resources["PTT"] as PTT;
+            Task exit = Task.Run(() => { ptt.ClearPTTStateUpdatedSubscription(); ptt.Exit(); });
             SaveSetting();
             Gamepads.Clear();
-            PTT ptt = Application.Current.Resources["PTT"] as PTT;
-            Task exit = Task.Run(() => { ptt.Exit(); });
-
             Debug.WriteLine("Clear Cache");
             Task ClearCacheTask = Task.Run(async () => { await ImageCache.ClearAllCache(); });
 

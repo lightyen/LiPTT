@@ -93,7 +93,8 @@ namespace LiPTT
             PTT ptt = Application.Current.Resources["PTT"] as PTT;
             ptt.PTTStateUpdated -= Updated;
 
-            ptt.Exit();
+            System.Threading.Tasks.Task.Run(() => { ptt.Exit(); });
+
             LiPTT.Logined = false;
             LiPTT.Frame.Navigate(typeof(LoginPage));
         }

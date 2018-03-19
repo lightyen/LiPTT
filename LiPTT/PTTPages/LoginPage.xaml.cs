@@ -65,7 +65,7 @@ namespace LiPTT
             {
                 if (Resources["ViewModel"] is PttPageViewModel viewmodel)
                 {
-                    viewmodel.State = "被踢了，重新連線中...";
+                    viewmodel.PTTState = "被踢了，重新連線中...";
                 }
 
                 DelayLogin(TimeSpan.FromMilliseconds(4500));
@@ -212,7 +212,7 @@ namespace LiPTT
                             MemoAcount.IsEnabled = true;
                             AutoLogin.IsEnabled = true;
                         });
-                        ptt.Exit();
+                        await System.Threading.Tasks.Task.Run(() => { ptt.Exit(); });
                     }
                     break;
                 case PttState.ConnectFailedTCP:

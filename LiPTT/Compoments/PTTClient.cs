@@ -374,7 +374,7 @@ namespace LiPTT
             WebSocket = new MessageWebSocket();
             WebSocket.Control.MessageType = SocketMessageType.Binary;
             WebSocket.MessageReceived += WebSocket_MessageReceived;
-            WebSocket.SetRequestHeader("Origin", "https://www.ptt.cc");
+            WebSocket.SetRequestHeader("origin", "https://term.ptt.cc");
 
             WebSocket.Closed += (a, e) =>
             {
